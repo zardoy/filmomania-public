@@ -1,0 +1,89 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true
+    },
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended",
+        "plugin:@typescript-eslint/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaFeatures": {
+            "jsx": true
+        },
+        "ecmaVersion": 12,
+        "project": "tsconfig-eslint.json",
+        "sourceType": "module"
+    },
+    "plugins": [
+        "react",
+        "@typescript-eslint"
+    ],
+    "rules": {
+        // why do I need this options if I have .editorconfig
+        "indent": [
+            "error",
+            4,
+            {
+                "SwitchCase": 1
+            }
+        ],
+        // should be standard
+        "semi": [
+            "error",
+            "always"
+        ],
+        "no-trailing-spaces": "error",
+        "no-alert": "warn",
+        "no-var": "error",
+        "prefer-arrow-callback": "error",
+        "prefer-rest-params": "error",
+        "prefer-spread": "error",
+        "rest-spread-spacing": "error",
+        "prefer-template": "error",
+        // my opinion
+        // todo push this lines to root README
+        "@typescript-eslint/ban-ts-comment": "off",
+        "@typescript-eslint/ban-types": "off",
+        // I'm using TypeScript for prop validation
+        "react/prop-types": "off",
+        // I keep emty interfaces sometimes for easier refactoring. todo find better refactoring tools and switch to warn
+        "@typescript-eslint/no-empty-interface": "off",
+        "@typescript-eslint/no-floating-promises": [
+            "error"
+        ],
+        "no-script-url": "error",
+        "no-multi-spaces": "error",
+        // forbid usage of single quotes
+        "quotes": [
+            "error",
+            "double",
+            {
+                "allowTemplateLiterals": true
+            }
+        ],
+        "no-extra-parens": "error",
+        "quote-props": [
+            "error",
+            "consistent"
+        ],
+        "no-console": "warn",
+        // es6
+        "arrow-body-style": [
+            "error",
+            "as-needed"
+        ],
+        "arrow-parens": [
+            "error",
+            "as-needed"
+        ],
+        "arrow-spacing": "error",
+        // TODO review
+        // "no-confusing-arrow": "error",
+        "prefer-const": "off",
+        "prefer-destructuring": "error",
+        "prefer-numeric-literals": "error"
+    }
+}

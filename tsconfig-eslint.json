@@ -1,0 +1,7 @@
+// TODO explain
+{
+    // "extends": "tsconfig.json",
+    "include": [
+        "src"
+    ]
+}
