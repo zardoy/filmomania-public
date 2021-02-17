@@ -4,4 +4,12 @@
 
 See downloads in releases. TODO
 
-BLAZING EXPERIENCE
+FilmoMania is like OASIS - the world where you can do anything what you want.
+
+## Features
+
+- BLAZING EXPERIENCE. Easy to install and use
+- No ads, any limits or paid features etc... It always will be free
+- Many players support
+- Uses Ace Stream underneath
+- And the last... It's the best of the best
