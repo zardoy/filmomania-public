@@ -1,0 +1,96 @@
+{
+    "main": "dist/electron/index.js",
+    "repository": "https://github.com/zardoy/filmomania-public.git",
+    "author": "Vitaly Turovsky <vital2580@icloud.com>",
+    "license": "MIT",
+    "private": true,
+    "homepage": "./",
+    "build": {
+        "appId": "com.zardoy.filmomania",
+        "win": {
+            "target": "nsis"
+        },
+        "files": [
+            "build/**/*",
+            "node_modules/**/*"
+        ],
+        "directories": {
+            "buildResources": "assets"
+        }
+    },
+    "dependencies": {
+        "@apollo/client": "^3.3.9",
+        "@fontsource/roboto": "^4.2.1",
+        "@material-ui/core": "^4.11.3",
+        "@material-ui/icons": "^4.11.2",
+        "@material-ui/lab": "^4.0.0-alpha.57",
+        "@prisma/client": "^2.16.1",
+        "@types/electron-window-state": "^2.0.34",
+        "@types/ffmpeg-static": "^3.0.0",
+        "@types/node": "^14.14.27",
+        "@types/react": "^17.0.2",
+        "@types/react-dom": "^17.0.1",
+        "@types/react-router": "^5.1.11",
+        "@types/react-router-dom": "^5.1.7",
+        "@types/underscore": "^1.10.24",
+        "ace-connector": "https://github.com/zardoy/ace-connector#build",
+        "craco-electron": "^1.0.2",
+        "dayjs": "^1.10.4",
+        "electron-is-dev": "^1.2.0",
+        "electron-settings": "^4.0.2",
+        "electron-util": "^0.14.2",
+        "electron-window-state": "^5.0.3",
+        "execa": "^5.0.0",
+        "filesize": "^6.1.0",
+        "formik": "^2.2.6",
+        "framer-motion": "^3.3.0",
+        "got": "^11.8.1",
+        "graphql": "^15.5.0",
+        "lodash": "^4.17.20",
+        "material-ui-popup-state": "^1.7.1",
+        "prisma": "^2.16.1",
+        "react": "^17.0.1",
+        "react-dom": "^17.0.1",
+        "react-router": "^5.2.0",
+        "react-router-dom": "^5.2.0",
+        "read-browser-tabs": "^1.0.4",
+        "sanitize-filename": "^1.6.3",
+        "systeminformation": "^5.3.0",
+        "typed-ipc": "https://github.com/zardoy/typed-ipc#build",
+        "typescript": "^4.1.5",
+        "underscore": "^1.12.0"
+    },
+    "devDependencies": {
+        "@types/lodash": "^4.14.168",
+        "@typescript-eslint/eslint-plugin": "^4.15.0",
+        "@typescript-eslint/parser": "^4.15.0",
+        "electron": "^11.2.3",
+        "electron-builder": "^22.9.1",
+        "eslint": "^7.19.0",
+        "eslint-plugin-react": "^7.22.0",
+        "ts-node": "^9.1.1",
+        "tsc-watch": "^4.2.9",
+        "type-fest": "^0.21.0"
+    },
+    "scripts": {
+        "start-main": "tsc-watch -p \"./src/electron/tsconfig.json\" --onSuccess \"electron .\"",
+        "start-renderer": "craco-electron start",
+        "build-renderer": "craco-electron build",
+        "analyze-renderer": "source-map-explorer 'build/static/js/*.js'",
+        "run-local-test": "cd local-tests && ts-node --transpile-only index.ts",
+        "electron-pack": "electron-builder -w",
+        "preelectron-pack": "yarn build",
+        "postinstall": "electron-builder install-app-deps"
+    },
+    "eslintConfig": {
+        "extends": "react-app"
+    },
+    "browserslist": {
+        "development": [
+            "last 1 chrome version"
+        ],
+        "production": [
+            "last 1 chrome version"
+        ]
+    }
+}
