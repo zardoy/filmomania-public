@@ -7,13 +7,15 @@ interface GlobalFilmInfoCache {
     [filmId: string]: ParsedFilmInfo;
 }
 
-export const currentSearchFilmsVar = makeVar([] as ParsedFilmInfo[]);
+export const currentSearchFilmsVar = makeVar<ParsedFilmInfo[]>([]);
+export const appFirstLaunchVar = makeVar(false);
 
-export const externalModulesStatusVar = makeVar({
+export const externalModulesStatusVar = makeVar<ExternalModulesInfo>({
     aceStream: {
+        status: "disconnected"
+    },
+    defaultExternalPlayer: {
         connected: false
     },
-    externalPlayer: {
-        connected: false
-    }
-} as ExternalModulesInfo);
+    foundExternalPlayers: []
+});

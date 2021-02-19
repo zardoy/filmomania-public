@@ -1,17 +1,16 @@
 import { ExternalModulesInfo, ExternalPlayer } from "./ExternalModule";
 import { TorrentItem } from "./TorrentItem";
 
-export type UpdateModuleInfo<K extends keyof ExternalModulesInfo = keyof ExternalModulesInfo> = {
-    module: K;
-    newInfo: ExternalModulesInfo[K];
-};
+export type UpdateModuleInfo = Partial<ExternalModulesInfo>;
 
 declare module "typed-ipc" {
     interface IpcMainEvents {
-        appInit: null;
+        setupFirstLaunch: {
+            defaultPlayerIndex: number;
+        };
     }
 
-    interface IpcMainQueries {
+    interface IpcMainRequests {
         appInit: {
             data: {
                 isFirstLaunch: boolean;
@@ -36,7 +35,7 @@ declare module "typed-ipc" {
     }
 
     interface IpcRendererEvents {
-        openUrl: {
+        openRoute: {
             url: string;
         };
         updateConnectedModuleInfo: UpdateModuleInfo;

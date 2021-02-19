@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import { parseTrackerResult, trackerResult } from "../../../electron-shared/films";
 
 // interface trackerItemRawData {

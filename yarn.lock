@@ -2433,7 +2433,7 @@ accepts@~1.3.4, accepts@~1.3.5, accepts@~1.3.7:
 
 "ace-connector@https://github.com/zardoy/ace-connector#build":
   version "0.0.0"
-  resolved "https://github.com/zardoy/ace-connector#64c58075a62003a0e173fd3872f3cf6e43aa2d60"
+  resolved "https://github.com/zardoy/ace-connector#28aec3d3fac247cd3d9cf27a2ac6e30afa54c94b"
   dependencies:
     "@prisma/debug" "^2.17.0"
     cross-port-killer "^1.3.0"
@@ -12283,7 +12283,7 @@ typed-emitter@^1.3.1:
 
 "typed-ipc@https://github.com/zardoy/typed-ipc#build":
   version "0.0.0"
-  resolved "https://github.com/zardoy/typed-ipc#3fee60bcb31a53492a3fb1e4086075179d0da848"
+  resolved "https://github.com/zardoy/typed-ipc#e2bb8b0c8d137ba052ad4adfccd12fe6f9228c84"
   dependencies:
     type-fest "^0.21.0"
   optionalDependencies:

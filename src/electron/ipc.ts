@@ -4,23 +4,26 @@ import { typedIpcMain } from "typed-ipc";
 import { aceConnector } from "./";
 import { mainWindow } from "./mainWindow";
 
-const onFirstRun = async () => {
-    typedIpcMain.sendToWindow(mainWindow, "firstRun", null);
+import electronSettings from "electron-settings";
+
+const onFirstLaunch = async () => {
     let installedAceStreamVersion: string | null = null;
-    try {
-        await aceConnector.connect();
-        // todo-low simplify it
-        if (aceConnector.engine.status === "connected") {
-            installedAceStreamVersion = aceConnector.engine.version;
-        }
-    } catch (err) {
-        if (
-            err instanceof ConnectionError &&
-            err.type === "ACE_ENGINE_NOT_INSTALLED"
-        ) {
-            installedAceStreamVersion = null;
-        } else {
-            throw err;
+    if (aceConnector) {
+        try {
+            await aceConnector.connect();
+            // todo-low simplify it
+            if (aceConnector.engine.status === "connected") {
+                installedAceStreamVersion = aceConnector.engine.version;
+            }
+        } catch (err) {
+            if (
+                err instanceof ConnectionError &&
+                err.type === "ACE_ENGINE_NOT_INSTALLED"
+            ) {
+                installedAceStreamVersion = null;
+            } else {
+                throw err;
+            }
         }
     }
     // players
@@ -28,23 +31,28 @@ const onFirstRun = async () => {
         installedAceStreamVersion,
         installedPlayers: []
     });
+    await new Promise<void>(resolve => {
+        typedIpcMain.addEventListener("setupFirstLaunch", (_, { defaultPlayerIndex }) => {
+            typedIpcMain.removeAllListeners("setupFirstLaunch");
+            resolve();
+            // electronSettings.setSync("defaultPlayer", )
+        });
+    });
 };
 
-typedIpcMain.handleAllQueries({
-    appInit: async () => {
-        // const firstLaunch = fs.existsSync(
-        //     path.resolve(app.getPath("userData"), "settings.json")
-        // );
-        const isFirstLaunch = true;
-        return {
-            isFirstLaunch
-        };
-    },
-    torrentsList: async (event, { searchQuery }) => {
-        const;
+export const bindIPC = () => {
+    //@ts-ignore
+    typedIpcMain.handleAllRequests({
+        appInit: async () => {
+            // const firstLaunch = fs.existsSync(
+            //     path.resolve(app.getPath("userData"), "settings.json")
+            // );
+            const isFirstLaunch = false;
+            if (isFirstLaunch) void onFirstLaunch();
+            return {
+                isFirstLaunch
+            };
+        },
+    });
+};
 
-        return {
-            torrents: 
-        };
-    }
-});

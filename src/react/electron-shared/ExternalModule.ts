@@ -1,5 +1,8 @@
+import { EngineStatus } from "ace-connector";
+
 export type ExternalPlayer = {
     name: string;
+    // icon
     version: string;
     path: string;
 };
@@ -10,6 +13,7 @@ type ConnectableModuleInfo<T extends object> = {
 } & T);
 
 export type ExternalModulesInfo = {
-    aceStream: ConnectableModuleInfo<{ version: string; }>;
-    externalPlayer: ConnectableModuleInfo<ExternalPlayer>;
+    aceStream: EngineStatus;
+    defaultExternalPlayer: ConnectableModuleInfo<ExternalPlayer>;
+    foundExternalPlayers: ExternalPlayer[];
 };
