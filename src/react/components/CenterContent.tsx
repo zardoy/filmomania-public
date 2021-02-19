@@ -6,7 +6,9 @@ interface ComponentProps {
 }
 
 // todo-moderate component
-let CenterContent: React.FC<ComponentProps> = () =>
-    <Grid container direction="column" justify="center" alignItems="center" style={{ height: "100vh" }}></Grid>;
+let CenterContent: React.FC<ComponentProps> = ({ children }) =>
+    <Grid container direction="column" justify="center" alignItems="center" style={{ height: "100vh" }}>
+        {children}
+    </Grid>;
 
 export default CenterContent;
