@@ -8,6 +8,7 @@ FilmoMania is like OASIS - the world where you can do anything what you want.
 
 ## Coming Features
 
+- [ ] Client redesign
 - [ ] Auto install SodaPlayer via chocolatey
 - [ ] Patch for SodaPlayer. maybe soda player will be integrated into filmomania. Disable google analytics in SodaPlayer and enable picture in picture
 - [ ] Razer and aura sdk integration (light effects)
