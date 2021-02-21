@@ -36,6 +36,8 @@ export const createMainWindow = () => {
             devTools: true
         },
     });
+    // todo-high
+    if (electronIsDev) mainWindow.minimize();
     windowState.manage(mainWindow);
     if (electronIsDev) mainWindow.webContents.openDevTools();
     void mainWindow.loadURL(electronIsDev ? "http://localhost:3500" : `file://${path.join(__dirname, "../build/index.html")}`);
