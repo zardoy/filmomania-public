@@ -1,6 +1,9 @@
+
+
 import { makeVar } from "@apollo/client";
 
 import { ExternalModulesInfo } from "./electron-shared/ExternalModule";
+import { FirstLaunchSpecs } from "./electron-shared/ipcSchema";
 import { ParsedFilmInfo } from "./utils/search-engine";
 
 interface GlobalFilmInfoCache {
@@ -8,7 +11,33 @@ interface GlobalFilmInfoCache {
 }
 
 export const currentSearchFilmsVar = makeVar<ParsedFilmInfo[]>([]);
-export const appFirstLaunchVar = makeVar(false);
+
+type InitialSetupStatus = {
+    status: "pending";
+} | {
+    status: "setupNeeded";
+    // if null - they're loading
+    specs: FirstLaunchSpecs;
+} | {
+    status: "appReady";
+};
+
+export const appInitialSetupStatusVar = makeVar<InitialSetupStatus>({
+    status: "pending"
+});
+
+type ProxySetupState = {
+    state: "pending";
+} | {
+    state: "errored";
+    errorMessage: string;
+} | {
+    state: "success";
+};
+
+export const proxySetupStateVar = makeVar<ProxySetupState>({
+    state: "pending"
+});
 
 export const externalModulesStatusVar = makeVar<ExternalModulesInfo>({
     aceStream: {

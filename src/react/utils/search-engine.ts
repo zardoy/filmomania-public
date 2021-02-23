@@ -1,5 +1,6 @@
 import _ from "lodash";
 import { Merge, RequireExactlyOne } from "type-fest";
+import { typedIpcRenderer } from "typed-ipc";
 import { pluck } from "underscore";
 
 export type FilmsOrError = RequireExactlyOne<{
@@ -117,13 +118,25 @@ export const searchByQuery = async (query: string, { abortSignal }: RequestOptio
     if (searchFilmsCache.has(query)) {
         return searchFilmsCache.get(query)!;
     }
-    const requestURL = new URL(process.env.REACT_APP_SEARCH_ENGINE_ENTRYPOINT!);
+    console.log(await typedIpcRenderer.request("appSetting", {
+        scope: "searchEngine",
+        name: "apiEndpoint"
+    }));
+    let provider = await typedIpcRenderer.request("appSetting", {
+        scope: "searchEngine",
+        name: "apiEndpoint"
+    });
+    if (!provider!.startsWith("http")) provider = `https://${provider}`;
+    const requestURL = new URL(provider!);
     requestURL.searchParams.append("keyword", query);
     // todo-low make request from node in order to increase performace by several ms
     const response = await fetch(requestURL.toString(), {
         signal: abortSignal,
         headers: {
-            "X-API-KEY": process.env.REACT_APP_SEARCH_ENGINE_API_KEY!
+            "X-API-KEY": (await typedIpcRenderer.request("appSetting", {
+                scope: "searchEngine",
+                name: "apiKey"
+            }))!
         }
     });
     type SearchResultType = Merge<FilmsSearchEngineResponse, { films: RawFilmInfo[]; }>;

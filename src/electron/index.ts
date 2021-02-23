@@ -6,6 +6,8 @@ import { createMainWindow } from "./mainWindow";
 
 export const aceConnector = process.platform === "win32" ? new AceConnector() : null;
 
+export const debug = console.log;
+
 const loadApp = () => {
     bindIPC();
     createMainWindow();

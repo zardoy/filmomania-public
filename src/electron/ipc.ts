@@ -1,58 +1,71 @@
-import { ConnectionError } from "ace-connector";
 import { typedIpcMain } from "typed-ipc";
 
-import { aceConnector } from "./";
-import { mainWindow } from "./mainWindow";
-
-import electronSettings from "electron-settings";
+import { setupProxy } from "./proxySetup";
+import { bindIPC as bindSettingsIPC, getAppSetting } from "./settings";
+import { bindIPCEvents, isSodaPlayerInstalled } from "./sodaPlayer";
 
 const onFirstLaunch = async () => {
-    let installedAceStreamVersion: string | null = null;
-    if (aceConnector) {
-        try {
-            await aceConnector.connect();
-            // todo-low simplify it
-            if (aceConnector.engine.status === "connected") {
-                installedAceStreamVersion = aceConnector.engine.version;
-            }
-        } catch (err) {
-            if (
-                err instanceof ConnectionError &&
-                err.type === "ACE_ENGINE_NOT_INSTALLED"
-            ) {
-                installedAceStreamVersion = null;
-            } else {
-                throw err;
-            }
-        }
-    }
-    // players
-    typedIpcMain.sendToWindow(mainWindow, "firstRunSpecs", {
-        installedAceStreamVersion,
-        installedPlayers: []
-    });
-    await new Promise<void>(resolve => {
-        typedIpcMain.addEventListener("setupFirstLaunch", (_, { defaultPlayerIndex }) => {
-            typedIpcMain.removeAllListeners("setupFirstLaunch");
-            resolve();
-            // electronSettings.setSync("defaultPlayer", )
-        });
-    });
+    // let installedAceStreamVersion: string | null = null;
+    // if (aceConnector) {
+    //     try {
+    //         await aceConnector.connect();
+    //         // todo-low simplify it
+    //         if (aceConnector.engine.status === "connected") {
+    //             installedAceStreamVersion = aceConnector.engine.version;
+    //         }
+    //     } catch (err) {
+    //         if (
+    //             err instanceof ConnectionError &&
+    //             err.type === "ACE_ENGINE_NOT_INSTALLED"
+    //         ) {
+    //             installedAceStreamVersion = null;
+    //         } else {
+    //             throw err;
+    //         }
+    //     }
+    // }
+    // // players
+    // typedIpcMain.sendToWindow(mainWindow, "firstRunSpecs", {
+    //     installedAceStreamVersion,
+    //     installedPlayers: []
+    // });
+    // await new Promise<void>(resolve => {
+    //     typedIpcMain.addEventListener("setupFirstLaunch", (_, { defaultPlayerIndex }) => {
+    //         typedIpcMain.removeAllListeners("setupFirstLaunch");
+    //         resolve();
+    //         // electronSettings.setSync("defaultPlayer", )
+    //     });
+    // });
 };
 
 export const bindIPC = () => {
-    //@ts-ignore
     typedIpcMain.handleAllRequests({
         appInit: async () => {
-            // const firstLaunch = fs.existsSync(
-            //     path.resolve(app.getPath("userData"), "settings.json")
-            // );
-            const isFirstLaunch = false;
-            if (isFirstLaunch) void onFirstLaunch();
-            return {
-                isFirstLaunch
-            };
+            const isFirstLaunch = !await getAppSetting("searchEngine", "apiKey");
+            void setupProxy();
+            if (isFirstLaunch) {
+                return {
+                    isFirstLaunch: true,
+                    specs: {
+                        sodaPlayerInstalled: isSodaPlayerInstalled()
+                    }
+                };
+            } else {
+                return {
+                    isFirstLaunch: false
+                };
+            }
         },
+        appSetting: async (_e, { scope, name }) => await getAppSetting(scope, name),
+        //@ts-ignore
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        torrentsList() { }
     });
+
+    bindIPCEvents();
+
+    bindSettingsIPC();
+
+    typedIpcMain.addEventListener("retryProxySetup", () => setupProxy());
 };
 
