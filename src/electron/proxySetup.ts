@@ -4,7 +4,6 @@ import dns from "dns";
 import electronSettings from "electron-settings";
 import got, { Response } from "got";
 import { typedIpcMain } from "typed-ipc";
-import util from "util";
 
 import { debug } from "./";
 import { mainWindow } from "./mainWindow";
@@ -18,28 +17,46 @@ import { getAppSetting } from "./settings";
 //     promise.then(handler).then(result => "nextPromise" in result ? loop(result.nextPromise, handler) : result.doneValue);
 
 
+// todo add support for https://gimmeproxy.com/api/getProxy?protocol=http <-- in avarage there're faster
 const proxySources = [
     {
         name: "Spys.me",//special thanks to site maintainer!
         url: "http://spys.me/proxy.txt",
-        additionalCheck(response: Response): boolean {
-            let contentType = response.headers["content-type"];
-            return contentType === "text/plain";
+        // todo use generator
+        parseProxies(response: Response<string>): Iterable<string> {
+            if (response.headers["content-type"] !== "text/plain") {
+                throw new TypeError("Wrong content-type");
+            }
+            const regex = /\b(?<ip>(\d+\.){3}\d+:\d+) (?!RU)/gi;
+            return {
+                [Symbol.iterator]() {
+                    // standard regex for proxy but with ignoring russian proxies
+                    return {
+                        next: () => {
+                            const ipEntry = regex.exec(response.body);
+                            if (ipEntry) {
+                                return {
+                                    done: false,
+                                    value: ipEntry.groups!.ip
+                                };
+                            } else {
+                                return { done: true, value: undefined };
+                            }
+                        }
+                    };
+                }
+            };
         }
     }
 ];
 
-const getProxiesString = async (): Promise<string | undefined> => {
-    for (let { url, additionalCheck, name } of proxySources) {
+const getProxiesIp = async (): Promise<string[] | Iterable<string> | undefined> => {
+    for (let { url, parseProxies, name = url } of proxySources) {
         try {
             let response = await got(url, {
                 responseType: "text"
             });
-            if (additionalCheck(response)) {
-                return response.body;
-            } else {
-                throw new Error("Additional check failed");
-            }
+            return parseProxies(response);
         } catch (err) {
             debug(`Unable to get proxy list from ${name}: ${err.message}`);
             continue;
@@ -55,55 +72,57 @@ interface HttpProxyEntry {
 }
 
 interface GetAliveProxyProps {
-    proxies: string,
+    proxies: string[] | Iterable<string>,
     testingSite: string,
     timeout: number,
-    // parallel: number,
-    // maxAttemps?: null | number,
-    onNextAttemp?: (attempNumber: number, proxyEntry: HttpProxyEntry) => any;
+    parallel: number,
+    // onNextAttemp?: (attempNumber: number, proxyEntry: HttpProxyEntry) => any;
 }
 type GetAliveProxyResult = Promise<
     { errorMessage: string; } |
-    { proxy: HttpProxyEntry; }
+    { proxyIp: string; }
 >;
 
 //todo maxAttemps
-const getAliveProxy = async ({ proxies, testingSite, timeout, onNextAttemp }: GetAliveProxyProps): GetAliveProxyResult => {
-    let getErrMsg = (msg: string) => `Proxies source spys.me: ${msg}`;
-
-    //REGEXP FOR SEARCH ENTRIES IN PROXY LIST
-    let spysMeIpRegexp = /\b(?<host>(\d+\.){3}\d+):(?<port>\d+) (?!RU)/gi;
-
-    let attemps = 0,
-        regexMatch: undefined | null | RegExpExecArray,
-        lastErrorMsg = "no regex to match. check to source file";
-    // eslint-disable-next-line no-cond-assign
-    while (regexMatch = spysMeIpRegexp.exec(proxies)) {
-        const { groups } = regexMatch;
-        let { host, port } = groups!;
-        onNextAttemp && onNextAttemp(++attemps, { host, port });
-        const checkResult = await checkTargetSiteWithProxy({
-            proxy: { host, port },
-            testingSite,
-            timeout
-        });
-        if (checkResult.success) {
+const getAliveProxy = async ({ proxies, testingSite, timeout, parallel }: GetAliveProxyProps): GetAliveProxyResult => {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        const currentProxies: string[] = [];
+        let i = 0;
+        for (let proxy of proxies) {
+            currentProxies.push(proxy);
+            if (++i >= parallel) break;
+        }
+        debug(`Check proxy next attemp. Proxies: ${currentProxies.length}(${currentProxies.length === parallel ? "max" : "last"})`);
+        const checkResults = await Promise.all(
+            currentProxies.map(proxyIp =>
+                checkTargetSiteWithProxy({
+                    proxyIp,
+                    testingSite,
+                    timeout
+                })
+            )
+        );
+        const succeededProxy = checkResults.findIndex(result => result.success);
+        if (succeededProxy >= 0) {
             return {
-                proxy: { host, port }
+                proxyIp: currentProxies[succeededProxy]
             };
         } else {
-            lastErrorMsg = checkResult.errorMsg;
-            continue;
+            if (currentProxies.length < parallel) {
+                // todo describe it in book
+                const lastResult = checkResults.slice(-1)[0] as { errorMsg: string; };
+                return {
+                    errorMessage: `Proxies source ${proxySources[0].name}: ${lastResult.errorMsg}`
+                };
+            }
         }
     }
-    return {
-        errorMessage: getErrMsg(lastErrorMsg)
-    };
 };
 
 type CheckTargetSiteWithProxy = (
     props: {
-        proxy: HttpProxyEntry;
+        proxyIp: string;
     } & Pick<GetAliveProxyProps, "testingSite" | "timeout">
 ) => Promise<{
     success: false;
@@ -112,9 +131,10 @@ type CheckTargetSiteWithProxy = (
     success: true;
 }>;
 
-const checkTargetSiteWithProxy: CheckTargetSiteWithProxy = async ({ proxy, timeout: CHECK_TIMEOUT, testingSite }) => {
-    const { host } = proxy,
-        port = +proxy.port;
+const checkTargetSiteWithProxy: CheckTargetSiteWithProxy = async ({ proxyIp, timeout: CHECK_TIMEOUT, testingSite }) => {
+    debug(`Checking proxy: ${proxyIp}`);
+    let [host, ...rest] = proxyIp.split(":");
+    let port = +rest[0];
     if (isNaN(port)) throw TypeError("Port is not a number. Check the source.");
     let cancelSource = axios.CancelToken.source(),
         timeout = setTimeout(() => cancelSource.cancel("proxy_timeout"), CHECK_TIMEOUT);
@@ -128,9 +148,9 @@ const checkTargetSiteWithProxy: CheckTargetSiteWithProxy = async ({ proxy, timeo
         });
         let $ = cheerio.load(data);
         const testingElementFound = !!$("div#index > table")[0];
-        debug("Found working proxy ", proxy);
+        debug("Found working proxy ", proxyIp);
         if (!testingElementFound) {
-            debug("Can't find table on working proxy!!!", proxy);
+            debug("Can't find table on working proxy!", proxyIp);
             throw new Error("Coundn't find testing element, skipping...");
         }
         return {
@@ -156,13 +176,15 @@ const reportProxySetupStatus = (message: string) => {
 
 export const setupProxy = async () => {
     const setupResult = await setupProxyInternal();
-    if ("proxy" in setupResult) {
+    if ("proxyIp" in setupResult) {
+        const { proxyIp } = setupResult;
+        debug(`Proxy setup success: ${proxyIp}`);
+        await electronSettings.set(["torrentTrackers", "activeProxy"], proxyIp);
         typedIpcMain.sendToWindow(mainWindow, "proxySetup", {
             success: true
         });
-        const { proxy } = setupResult;
-        await electronSettings.set(["torrentTrackers", "activeProxy"], [proxy.host, proxy.port].join(":"));
     } else {
+        debug(`Proxy setup fatal`);
         typedIpcMain.sendToWindow(mainWindow, "proxySetup", {
             success: false,
             errorMessage: setupResult.errorMessage
@@ -179,7 +201,7 @@ const setupProxyInternal = async (): GetAliveProxyResult => {
         //todo show user that internet is down
         reportProxySetupStatus("Internet is down");
         return {
-            errorMessage: "Internet is down. Failed to checked dns of google.com."
+            errorMessage: "Internet is down. Failed to get dns of google.com."
         };
     } else {
         reportProxySetupStatus("Internet is up!");
@@ -190,16 +212,14 @@ const setupProxyInternal = async (): GetAliveProxyResult => {
     if (prevActiveProxy) {
         // todo-low more clear messages?
         reportProxySetupStatus("Checking proxy from previous session");
-        const [host, port] = prevActiveProxy.split(":");
-
         const checkPrevProxyResult = await checkTargetSiteWithProxy({
-            proxy: { host, port },
+            proxyIp: prevActiveProxy,
             testingSite,
             timeout: checkTimeout
         });
         if (checkPrevProxyResult.success) {
             return {
-                proxy: { host, port }
+                proxyIp: prevActiveProxy
             };
         } else {
             reportProxySetupStatus("Previous proxy dead, obtaining new one");
@@ -207,7 +227,7 @@ const setupProxyInternal = async (): GetAliveProxyResult => {
     }
 
     reportProxySetupStatus("Feting list or proxies to check");
-    let proxies = await getProxiesString();
+    let proxies = await getProxiesIp();
     if (!proxies) {
         return { errorMessage: "unable to fetch any proxy list" };
     }
@@ -215,11 +235,8 @@ const setupProxyInternal = async (): GetAliveProxyResult => {
         proxies,
         testingSite,
         // todo-moderate implement
-        // parallel: 10,
+        parallel: 5,
         timeout: checkTimeout,
-        onNextAttemp(attempNumber, proxyEntry) {
-            debug(`Attemp number ${attempNumber}. Cheking proxy: ${util.format(proxyEntry)}`);
-        }
     });
     if ("errorMessage" in checkResult) {
         return {
@@ -227,9 +244,7 @@ const setupProxyInternal = async (): GetAliveProxyResult => {
             errorMessage: checkResult.errorMessage
         };
     }
-    let { proxy } = checkResult;
-
-    reportProxySetupStatus(`Approved working proxy: ${JSON.stringify(proxy)}`);
-
-    return { proxy };
+    let { proxyIp } = checkResult;
+    reportProxySetupStatus(`Approved working proxy: ${JSON.stringify(proxyIp)}`);
+    return { proxyIp };
 };
