@@ -18,7 +18,7 @@ const isWin = process.platform === "win32";
 // todo-high add irl tests with checksum
 const sodaPlayerDownloadUrl = `https://www.sodaplayer.com/${isWin ? "win" : "mac"}/download`;
 
-export const sodaPlayerExecPath = path.join(process.env.LOCALAPPDATA || "", "sodaplyer/Soda Player.exe");
+export const sodaPlayerExecPath = path.join(process.env.LOCALAPPDATA || "", "sodaplayer/Soda Player.exe");
 
 export const isSodaPlayerInstalled = (): boolean =>
     fs.existsSync(sodaPlayerExecPath);
@@ -60,5 +60,6 @@ export const bindIPCEvents = () => {
 export const playWithSodaPlayer = async (magnet: string) => {
     if (!isSodaPlayerInstalled()) return;
     // todo-high check arg
-    await open(`${sodaPlayerExecPath} --fullscreen ${magnet}`);
+    console.log(`${sodaPlayerExecPath} --fullscreen ${magnet}`);
+    await open(`${sodaPlayerExecPath} ${magnet}`);
 };
