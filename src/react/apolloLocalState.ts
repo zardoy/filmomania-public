@@ -1,8 +1,5 @@
-
-
 import { makeVar } from "@apollo/client";
 
-import { ExternalModulesInfo } from "./electron-shared/ExternalModule";
 import { FirstLaunchSpecs } from "./electron-shared/ipcSchema";
 import { ParsedFilmInfo } from "./utils/search-engine";
 
@@ -37,14 +34,4 @@ type ProxySetupState = {
 
 export const proxySetupStateVar = makeVar<ProxySetupState>({
     state: "pending"
-});
-
-export const externalModulesStatusVar = makeVar<ExternalModulesInfo>({
-    aceStream: {
-        status: "disconnected"
-    },
-    defaultExternalPlayer: {
-        connected: false
-    },
-    foundExternalPlayers: []
 });
