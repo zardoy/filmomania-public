@@ -3,7 +3,7 @@ import { typedIpcMain } from "typed-ipc";
 import { setupProxy } from "./proxySetup";
 import { requestTorrentsList } from "./requests/torrentsList";
 import { bindIPC as bindSettingsIPC, getAppSetting } from "./settings";
-import { bindIPCEvents, isSodaPlayerInstalled } from "./sodaPlayer";
+import { bindIPCEvents, isSodaPlayerInstalled, playWithSodaPlayer } from "./sodaPlayer";
 
 const onFirstLaunch = async () => {
     // let installedAceStreamVersion: string | null = null;
@@ -66,5 +66,8 @@ export const bindIPC = () => {
     bindSettingsIPC();
 
     typedIpcMain.addEventListener("retryProxySetup", () => setupProxy());
+    typedIpcMain.addEventListener("playInPlayer", async (_e, { magnet }) => {
+        await playWithSodaPlayer(magnet);
+    });
 };
 
