@@ -10,6 +10,6 @@ export const getAppSetting = async <S extends keyof SettingsSchema, N extends ke
 
 export const bindIPC = () => {
     typedIpcMain.addEventListener("setSetting", async (_event, { scope, name, newValue }) => {
-        await electronSettings.set([scope, name], newValue);
+        electronSettings.setSync([scope, name], newValue);
     });
 };
