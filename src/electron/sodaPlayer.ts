@@ -1,8 +1,8 @@
+import child_process from "child_process";
 import { app } from "electron";
 import execa from "execa";
 import fs from "fs";
 import got, { Progress } from "got";
-import open from "open";
 import path from "path";
 import stream from "stream";
 import { typedIpcMain } from "typed-ipc";
@@ -60,6 +60,8 @@ export const bindIPCEvents = () => {
 export const playWithSodaPlayer = async (magnet: string) => {
     if (!isSodaPlayerInstalled()) return;
     // todo-high check arg
-    console.log(`${sodaPlayerExecPath} --fullscreen ${magnet}`);
-    await open(`${sodaPlayerExecPath} ${magnet}`);
+    child_process.spawn(`C:\\Users\\Professional\\AppData\\Local\\sodaplayer\\Soda Player.exe`, [magnet], {
+        detached: true,
+        stdio: "ignore"
+    });
 };
