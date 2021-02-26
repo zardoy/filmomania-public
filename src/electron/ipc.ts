@@ -42,7 +42,8 @@ const onFirstLaunch = async () => {
 export const bindIPC = () => {
     typedIpcMain.handleAllRequests({
         appInit: async () => {
-            const isFirstLaunch = !await getAppSetting("searchEngine", "apiKey");
+            //todo-high use schema
+            const isFirstLaunch = !await getAppSetting("searchEngine", "apiKey") || !await getAppSetting("searchEngine", "apiEndpoint");
             void setupProxy();
             if (isFirstLaunch) {
                 return {

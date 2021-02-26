@@ -118,10 +118,6 @@ export const searchByQuery = async (query: string, { abortSignal }: RequestOptio
     if (searchFilmsCache.has(query)) {
         return searchFilmsCache.get(query)!;
     }
-    console.log(await typedIpcRenderer.request("appSetting", {
-        scope: "searchEngine",
-        name: "apiEndpoint"
-    }));
     let provider = await typedIpcRenderer.request("appSetting", {
         scope: "searchEngine",
         name: "apiEndpoint"
