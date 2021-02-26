@@ -1,9 +1,6 @@
 import React from "react";
 
-import { useReactiveVar } from "@apollo/client";
 import { Typography } from "@material-ui/core";
-
-import { externalModulesStatusVar } from "../apolloLocalState";
 
 interface ComponentProps {
 }
