@@ -9,7 +9,7 @@ interface ComponentProps {
 }
 
 let ExternalModulesState: React.FC<ComponentProps> = () => {
-    const { aceStream, defaultExternalPlayer } = useReactiveVar(externalModulesStatusVar);
+    const { aceStream, defaultExternalPlayer } = {} as any;
 
     const colorMaps = {
         connected: "lime",
