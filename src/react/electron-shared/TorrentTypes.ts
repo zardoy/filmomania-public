@@ -1,5 +1,11 @@
 import { LiteralUnion } from "type-fest";
 
+export type TorrentEngineParseResult = {
+    hiddenResults: number;
+    totalResults: number;
+    results: TorrentItem[];
+};
+
 export interface TorrentItem {
     // basic info
     /**
@@ -33,11 +39,11 @@ export interface TorrentItem {
     /**
      * File size in bytes
      */
-    // size: number;
+    sizeInBytes: number;
     /**
-     * Human readable size of file
+     * Localized human readable size of file
      */
-    sizeDisplay: number;
+    displaySize: string;
 
     // video info
     /**

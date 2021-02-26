@@ -2,6 +2,7 @@ import { app } from "electron";
 import execa from "execa";
 import fs from "fs";
 import got, { Progress } from "got";
+import open from "open";
 import path from "path";
 import stream from "stream";
 import { typedIpcMain } from "typed-ipc";
@@ -54,4 +55,10 @@ export const bindIPCEvents = () => {
             stage: "installed"
         });
     });
+};
+
+export const playWithSodaPlayer = async (magnet: string) => {
+    if (!isSodaPlayerInstalled()) return;
+    // todo-high check arg
+    await open(`${sodaPlayerExecPath} --fullscreen ${magnet}`);
 };

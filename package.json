@@ -52,6 +52,7 @@
         "graphql": "^15.5.0",
         "lodash": "^4.17.20",
         "material-ui-popup-state": "^1.7.1",
+        "open": "^7.4.2",
         "prisma": "^2.16.1",
         "react": "^17.0.1",
         "react-dom": "^17.0.1",
@@ -63,7 +64,8 @@
         "tunnel": "^0.0.6",
         "typed-ipc": "https://github.com/zardoy/typed-ipc#build",
         "typescript": "^4.1.5",
-        "underscore": "^1.12.0"
+        "underscore": "^1.12.0",
+        "xbytes": "^1.7.0"
     },
     "devDependencies": {
         "@types/lodash": "^4.14.168",

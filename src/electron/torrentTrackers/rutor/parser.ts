@@ -1,76 +1,95 @@
-//@ts-nocheck
+import cheerio from "cheerio";
+import xbytes from "xbytes";
 
-import { parseTrackerResult, trackerResult } from "../../../electron-shared/films";
+import { TorrentEngineParseResult, TorrentItem } from "../../../react/electron-shared/TorrentTypes";
 
-// interface trackerItemRawData {
-//     title: string,
-//     size: string,
-//     magnet: string,
-//     torrentFileUrl: string,
-//     pageUrl: string,
-//     seeders: number
-// }
-
-const normolizeAllLinks = (elem: HTMLElement) => {
-    [].forEach.call(
-        elem.querySelectorAll(`a[href^="http://azuae.com/proxy1/index.php?q=`),
-        (a: HTMLAnchorElement) => {
-            a.href = decodeURIComponent(a.href.slice(36));
-        }
-    );
+const mapUnits = {
+    MB: "МБ",
+    GB: "ГБ"
 };
 
-export default (fetchedHtml: string): parseTrackerResult => {
-    let html = document.createElement("html");
-    html.innerHTML = fetchedHtml;
-    let indexElem = html.querySelector("#index");
-    if (!indexElem) {
-        return {
-            error: "Ошибка парсинга. Отсутствует #index из ответа rutor.info."
-        };
+// error format. Parse [full_url] error: message
+export default (searchResultsHtml: string, onlyMovies: boolean): TorrentEngineParseResult => {
+    const $ = cheerio.load(searchResultsHtml);
+    const indexEl = $("#index");
+    if (!indexEl.length) {
+        throw new TypeError(
+            `No #index table with results in html`
+        );
     }
-    let resultsTextNode = indexElem.childNodes[1];
-    let actualResultsCount = (resultsTextNode && resultsTextNode.textContent) ? parseInt(resultsTextNode.textContent.slice(20)) : NaN;
-    let table = indexElem.querySelector("table");
-    if (!table) {
-        return {
-            error: "Ошибка парсинга. Отсутствует таблица table с результатами."
-        };
-    }
-    let trElems = table.querySelectorAll("tr:not(.backgr)");
-    let trackerRawList = [].map.call(trElems, (trElem: HTMLTableRowElement, index: number): trackerResult | null => {
-        normolizeAllLinks(trElem);
-        let titleRow = trElem.children[1];
-        if (!titleRow || !titleRow.textContent) return null;
-        let aMagnet = titleRow.querySelector(`a[href*="magnet:"]`);
-        let aFile = titleRow.querySelector(`a.downgif`);
-        let aPage = titleRow.querySelector(`a[href^="http://rutor.info/torrent/"]`);
-        if (!aMagnet || !aFile || !aPage) return null;
-        let pageURL = (aPage as HTMLAnchorElement).href;
-        let torrentID = pageURL.slice("http://rutor.info/torrent/".length);
-        torrentID = torrentID.slice(0, torrentID.indexOf("/"));
-        let dirtyMagnetHref = (aMagnet as HTMLAnchorElement).href;
-        let sizeElem = [].slice.call(trElem.children, -2)[0] as HTMLTableCellElement;
-        let seedersElem = trElem.querySelector("span.green");
-        if (!sizeElem || !sizeElem.textContent || !seedersElem || !seedersElem.textContent) return null;
-        return {
-            title: titleRow.textContent.slice(1),
-            magnet: dirtyMagnetHref.slice(dirtyMagnetHref.lastIndexOf("magnet:")),
-            torrentURL: (aFile as HTMLAnchorElement).href,
-            torrentID: +torrentID,
+    const actualResultsCount =
+        //@ts-ignore
+        $("#index").contents().filter((_index, elem) => elem.nodeType === 3)[0]?.data.match(/\d+/);
+    let table = indexEl.find("table");
+    let trElems = table.find("tr:not(.backgr)");
+    let torrentItems: TorrentItem[] = trElems.map((_index, rawElem): TorrentItem | null => {
+        const elem = $(rawElem);
+
+        const titleRow = elem.find(":nth-child(2)"),
+            title = titleRow.text();
+
+        // filter only movies
+        if (title && onlyMovies) {
+            const badRegexps = [
+                /\bmp3\b/i,
+                /\bost\b/i,
+                /\bflac\b/i,
+                /\bsoundtrack\b/i,
+                /\bjpg\b/i,
+                /\bpng\b/i,
+            ];
+            for (const badRegexp of badRegexps) {
+                if (badRegexp.test(title)) return null;
+            }
+        }
+
+        const torrentURL = titleRow.find("a.downgif").attr("href"),
+            torrentID = torrentURL?.match(/\d+/)?.[0];
+
+
+        let pageURL = titleRow.find(`a[href*="/torrent/"]`).attr("href")?.trim();
+        if (pageURL) pageURL = `http://rutor.info${pageURL}`;
+
+        const rawSize = elem.find(":nth-last-child(2)").text().trim();
+        const xbytesInfo = xbytes.parseBytes(rawSize);
+        const sizeInBytes = xbytesInfo.bytes;
+        //@ts-ignore
+        const displaySize = `${parseFloat(rawSize).toFixed(1)} ${mapUnits[xbytesInfo["unit"]] ?? xbytesInfo["unit"]}`;
+
+        const result = {
+            title,
+            // magnet: dirtyMagnetHref.slice(dirtyMagnetHref.lastIndexOf("magnet:")),
+            magnet: titleRow.find(`a[href*="magnet:"]`).attr("href"),
+            torrentURL,
+            torrentID: torrentID && +torrentID,
             pageURL,
-            size: Math.floor(parseFloat(sizeElem.textContent) * 10) / 10 + " " + sizeElem.textContent.slice(-2).replace(/GB/g, "ГБ").replace(/MB/g, "МБ"),
-            seeders: +seedersElem.textContent.slice(1)
-        };
-    }).filter(a => a) as trackerResult[];
-    if (trElems.length && !trackerRawList.length) {
-        return {
-            error: "Ошибка парсинга всех результатов из таблицы table."
-        };
+            displaySize,
+            sizeInBytes,
+            seeders: +elem.find(".green").text(),
+            quality: "unknown",
+            hdr: false
+        } as TorrentItem;
+        for (const [key, val] of Object.entries(result)) {
+            // if value is empty or undefined - something went wrong
+            if (val === "" || val === undefined) {
+                // throw
+                return null;
+            }
+            // normalize all string fields
+            if (typeof val !== "string") continue;
+            //@ts-ignore
+            result[key] = val.trim();
+        }
+        return result;
+    }).get().filter(a => a);
+    if (trElems.length && !torrentItems.length) {
+        // todo-low translate why not
+        throw new Error("Ошибка парсинга всех результатов из таблицы table.");
     }
-    let resultsDiff = actualResultsCount > trackerRawList.length ? actualResultsCount - trackerRawList.length : 0;
+    let hiddenResults = actualResultsCount > torrentItems.length ? actualResultsCount - torrentItems.length : 0;
     return {
-        resultsDiff,
-        trackerResults: trackerRawList
+        hiddenResults,
+        totalResults: actualResultsCount,
+        results: torrentItems
     };
 };

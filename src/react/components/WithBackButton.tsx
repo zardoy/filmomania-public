@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 
 import { useHistory } from "react-router";
 
@@ -11,8 +11,16 @@ interface ComponentProps {
 let WithBackButton: React.FC<ComponentProps> = ({ children }) => {
     const routerHistory = useHistory();
 
+    const clickBackHandle = useCallback(() => {
+        if (routerHistory.length > 1) {
+            routerHistory.goBack();
+        } else {
+            routerHistory.push("/");
+        }
+    }, []);
+
     return <Grid container direction="column">
-        <Button startIcon={<ArrowBackIos />} onClick={routerHistory.goBack}>BACK</Button>
+        <Button startIcon={<ArrowBackIos />} onClick={clickBackHandle}>BACK</Button>
         {children}
     </Grid>;
 };

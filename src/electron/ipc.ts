@@ -1,6 +1,7 @@
 import { typedIpcMain } from "typed-ipc";
 
 import { setupProxy } from "./proxySetup";
+import { requestTorrentsList } from "./requests/torrentsList";
 import { bindIPC as bindSettingsIPC, getAppSetting } from "./settings";
 import { bindIPCEvents, isSodaPlayerInstalled } from "./sodaPlayer";
 
@@ -57,9 +58,7 @@ export const bindIPC = () => {
             }
         },
         appSetting: async (_e, { scope, name }) => await getAppSetting(scope, name),
-        //@ts-ignore
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        torrentsList() { }
+        torrentsList: requestTorrentsList
     });
 
     bindIPCEvents();

@@ -1,6 +1,6 @@
 import { ExternalModulesInfo } from "./ExternalModule";
 import { SettingsSchema } from "./settingsSchema";
-import { TorrentItem } from "./TorrentItem";
+import { TorrentEngineParseResult } from "./TorrentTypes";
 
 export type UpdateModuleInfo = Partial<ExternalModulesInfo>;
 
@@ -38,6 +38,11 @@ declare module "typed-ipc" {
         };
 
         retryProxySetup: null;
+
+        playInPlayer: {
+            player: "sodaPlayer";
+            magnet: string;
+        };
     }
 
     interface IpcMainRequests {
@@ -55,12 +60,13 @@ declare module "typed-ipc" {
                 searchQuery: string;
             };
 
+            // todo remove error
             data: {
                 metdata: {
                     engines: string[];
                     warnings: ("TOO_MANY_RESULTS")[];
                 },
-                torrents: TorrentItem[];
+                parseResult: TorrentEngineParseResult;
             } | {
                 error: string;
             };
