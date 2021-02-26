@@ -1,3 +1,5 @@
+import "./handleErrors";
+
 import { app } from "electron";
 
 import { bindIPC } from "./ipc";
