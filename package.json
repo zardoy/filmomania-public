@@ -35,7 +35,6 @@
         "@types/react-router-dom": "^5.1.7",
         "@types/tunnel": "^0.0.1",
         "@types/underscore": "^1.10.24",
-        "ace-connector": "https://github.com/zardoy/ace-connector#build",
         "axios": "^0.21.1",
         "cheerio": "^1.0.0-rc.5",
         "craco-electron": "^1.0.2",
