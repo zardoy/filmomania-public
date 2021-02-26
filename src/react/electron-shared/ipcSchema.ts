@@ -1,8 +1,5 @@
-import { ExternalModulesInfo } from "./ExternalModule";
 import { SettingsSchema } from "./settingsSchema";
 import { TorrentEngineParseResult } from "./TorrentTypes";
-
-export type UpdateModuleInfo = Partial<ExternalModulesInfo>;
 
 export interface FirstLaunchSpecs {
     sodaPlayerInstalled: boolean;
@@ -95,7 +92,6 @@ declare module "typed-ipc" {
         openRoute: {
             url: string;
         };
-        updateConnectedModuleInfo: UpdateModuleInfo;
 
         // events could be seen in top left corner
         showEvent: {

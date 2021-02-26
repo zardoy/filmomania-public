@@ -16,15 +16,6 @@ let ElectronEvents: React.FC<ComponentProps> = () => {
             routerHistory.push(url);
         });
 
-        // todo-low you know what to use
-        // typedIpcRenderer.addEventListener("updateConnectedModuleInfo", (_, newModuleInfo) => {
-        //     const newState = {
-        //         ...externalModulesStatusVar(),
-        //         ...newModuleInfo
-        //     };
-        //     externalModulesStatusVar(newState);
-        // });
-
         void (async () => {
             const data = await typedIpcRenderer.request("appInit");
             if (data.isFirstLaunch) {
@@ -54,7 +45,6 @@ let ElectronEvents: React.FC<ComponentProps> = () => {
 
         return () => {
             typedIpcRenderer.removeAllListeners("openRoute");
-            typedIpcRenderer.removeAllListeners("updateConnectedModuleInfo");
             typedIpcRenderer.removeAllListeners("proxySetup");
         };
     }, []);
