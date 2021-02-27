@@ -94,8 +94,11 @@ let SearchBox: React.FC<ComponentProps> = () => {
             onBlur={() => setInputFocused(false)}
             onChange={fieldChangeHandler}
         />
+        {
+            process.env.NODE_ENV !== "production" && <Button onClick={() => history.push("/search/gthdjve")}>Test router</Button>
+        }
+        {/* toggle between search engine and raw search */}
         {/* TODO end button for filters */}
-        <Button onClick={() => history.push("/search/gthdjve")}>Test router</Button>
     </form>;
 };
 
