@@ -6,7 +6,7 @@ See downloads in releases. TODO
 
 - Fast proxy setup (speed still might be increased by increasing parallel param)
 - It works
-- ~~Uses Ace Stream underneath~~ now SodaPlayer with patch (but you don't need to install anything)
+- ~~Uses Ace Stream underneath~~ now SodaPlayer (https://github.com/zardoy/soda-player-plus) (but you don't need to install anything)
 - And the last... It's the best of the best
 
 ## Roadmap
@@ -15,5 +15,4 @@ See downloads in releases. TODO
 - [ ] A lot of integrations!
 - [ ] Client redesign
 - [ ] Auto install SodaPlayer via chocolatey
-- [ ] Patch for SodaPlayer. maybe soda player will be integrated into filmomania. SodaPlayer integration and PIP support
 - [ ] Razer and aura sdk integration (light effects)
