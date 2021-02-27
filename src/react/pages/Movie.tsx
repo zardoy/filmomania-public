@@ -10,6 +10,7 @@ import { Alert } from "@material-ui/lab";
 
 import { currentSearchFilmsVar } from "../apolloLocalState";
 import CenterContent from "../components/CenterContent";
+import { settingsStore } from "../electron-shared/settings";
 import { TorrentEngineParseResult } from "../electron-shared/TorrentTypes";
 
 type State = {
@@ -30,7 +31,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
 
     const films = useReactiveVar(currentSearchFilmsVar);
 
-    const [state, setState] = useState({ state: "loading" } as State);
+    const [state, setState] = useState<State>({ state: "loading" });
 
     const loadList = async () => {
         const filmInfo = films.find(({ filmId }) => filmId === +selectedFilmId);
@@ -47,18 +48,21 @@ const FilmPage: React.FC<ComponentProps> = () => {
         });
         const { cleanName, ...rest } = filmInfo;
         const yearForSearch = rest.type === "film" ? rest.year : rest.yearFrom;
-        const result = await typedIpcRenderer.request("torrentsList", {
-            searchQuery: `${cleanName} ${yearForSearch}`
-        });
-        if ("error" in result) {
-            setState({
-                state: "errored",
-                error: result.error
+        try {
+            const result = await typedIpcRenderer.request("torrentsList", {
+                searchQuery: `${cleanName} ${yearForSearch}`
             });
-        } else {
+            if ("error" in result) {
+                throw new Error(result.error);
+            }
             setState({
                 state: "done",
                 result: result.parseResult
+            });
+        } catch (err) {
+            setState({
+                state: "errored",
+                error: err.message
             });
         }
     };
@@ -79,7 +83,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
             }
         </CenterContent> :
         <Grid container direction="column">
-            <Typography variant="h4">Result from rutor.info: {state.result.totalResults}</Typography>
+            <Typography variant="h4">Results from rutor.info: {state.result.totalResults}</Typography>
             {
                 state.result.hiddenResults > 0 &&
                 <Alert severity="warning">We have hidden results: {state.result.hiddenResults}</Alert>
@@ -88,7 +92,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
                 _.sortBy(state.result.results, o => o.sizeInBytes).reverse().map(({ title, magnet, torrentID, seeders, displaySize }) => {
                     const playWithSoda = () => {
                         typedIpcRenderer.send("playInPlayer", {
-                            player: "sodaPlayer",
+                            player: settingsStore.get("generalDefaultPlayer") as any,
                             magnet
                         });
                     };
