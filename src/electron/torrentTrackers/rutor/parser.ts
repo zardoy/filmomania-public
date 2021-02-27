@@ -19,7 +19,7 @@ export default (searchResultsHtml: string, onlyMovies: boolean): TorrentEnginePa
     }
     const actualResultsCount =
         //@ts-ignore
-        $("#index").contents().filter((_index, elem) => elem.nodeType === 3)[0]?.data.match(/\d+/);
+        +$("#index").contents().filter((_index, elem) => elem.nodeType === 3)[0]?.data.match(/\d+/)?.[0];
     let table = indexEl.find("table");
     let trElems = table.find("tr:not(.backgr)");
     let torrentItems: TorrentItem[] = trElems.map((_index, rawElem): TorrentItem | null => {
