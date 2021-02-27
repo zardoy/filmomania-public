@@ -1,21 +1,31 @@
+import { shell } from "electron";
+import { isPatchAvailable, patchSodaPlayer } from "soda-player-patch";
 import { typedIpcMain } from "typed-ipc";
 
+import { settingsStore } from "../react/electron-shared/settings";
 import { setupProxy } from "./proxySetup";
 import { requestTorrentsList } from "./requests/torrentsList";
-import { bindIPC as bindSettingsIPC, getAppSetting } from "./settings";
-import { bindIPCEvents, isSodaPlayerInstalled, playWithSodaPlayer } from "./sodaPlayer";
+import { installSodaPlayer, isSodaPlayerInstalled, playWithSodaPlayer } from "./sodaPlayer";
 
 export const bindIPC = () => {
     typedIpcMain.handleAllRequests({
         appInit: async () => {
-            //todo-high use schema
-            const isFirstLaunch = !await getAppSetting("searchEngine", "apiKey") || !await getAppSetting("searchEngine", "apiEndpoint");
             void setupProxy();
-            if (isFirstLaunch) {
+            const engineNeedsSetup = !await settingsStore.get("searchEngineApiEndpoint") || !await settingsStore.get("searchEngineApiKey");
+            const defaultPlayer = await settingsStore.get("generalDefaultPlayer");
+            const sodaPlayerNeedsToBeInstalled = defaultPlayer !== "system" && !isSodaPlayerInstalled();
+            if (
+                engineNeedsSetup ||
+                sodaPlayerNeedsToBeInstalled
+            ) {
                 return {
                     isFirstLaunch: true,
                     specs: {
-                        sodaPlayerInstalled: isSodaPlayerInstalled()
+                        sodaPlayer: {
+                            installed: isSodaPlayerInstalled(),
+                            patched: !await isPatchAvailable()
+                        },
+                        engineNeedsSetup
                     }
                 };
             } else {
@@ -24,17 +34,25 @@ export const bindIPC = () => {
                 };
             }
         },
-        appSetting: async (_e, { scope, name }) => await getAppSetting(scope, name),
-        torrentsList: requestTorrentsList
+        torrentsList: requestTorrentsList,
+        patchSodaPlayer: async () => {
+            await patchSodaPlayer();
+        }
     });
 
-    bindIPCEvents();
-
-    bindSettingsIPC();
-
-    typedIpcMain.addEventListener("retryProxySetup", () => setupProxy());
-    typedIpcMain.addEventListener("playInPlayer", async (_e, { magnet }) => {
-        await playWithSodaPlayer(magnet);
+    typedIpcMain.bindAllEventListeners({
+        retryProxySetup: () => setupProxy(),
+        playInPlayer: async (_e, { magnet, player }) => {
+            if (player === "system") {
+                await shell.openExternal(magnet);
+            } else if (player === "sodaPlayer") {
+                await playWithSodaPlayer(magnet);
+            }
+        },
+        installSodaPlayer: installSodaPlayer,
+        cancelSodaPlayerDownload: () => {
+            // NOT IMPLEMENTED YET
+        }
     });
 };
 

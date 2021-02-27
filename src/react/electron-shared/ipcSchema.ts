@@ -1,43 +1,22 @@
-import { SettingsSchema } from "./settingsSchema";
 import { TorrentEngineParseResult } from "./TorrentTypes";
 
 export interface FirstLaunchSpecs {
-    sodaPlayerInstalled: boolean;
+    sodaPlayer: {
+        installed: boolean;
+        patched: boolean;
+    };
+    engineNeedsSetup: boolean;
 }
-
-type SetSettingVariables<S extends keyof SettingsSchema = keyof SettingsSchema, N extends keyof SettingsSchema[S] = keyof SettingsSchema[S]> = {
-    scope: S,
-    name: N;
-    newValue: SettingsSchema[S][N];
-};
-
-type GetAppSetting<S extends keyof SettingsSchema = keyof SettingsSchema, N extends keyof SettingsSchema[S] = keyof SettingsSchema[S]> = {
-    variables: {
-        scope: S,
-        name: N;
-    },
-    data: SettingsSchema[S][N];
-};
 
 declare module "typed-ipc" {
     interface IpcMainEvents {
-        setupFirstLaunch: {
-            defaultPlayerIndex: number;
-        };
-
         installSodaPlayer: null;
         cancelSodaPlayerDownload: null;
-
-        setSetting: {
-            scope: keyof SettingsSchema,
-            name: string,
-            newValue: string;
-        };
 
         retryProxySetup: null;
 
         playInPlayer: {
-            player: "sodaPlayer";
+            player: "sodaPlayer" | "system";
             magnet: string;
         };
     }
@@ -69,13 +48,7 @@ declare module "typed-ipc" {
             };
         };
 
-        appSetting: {
-            variables: {
-                scope: keyof SettingsSchema,
-                name: string;
-            },
-            data: string | undefined;
-        };
+        patchSodaPlayer: null;
     }
 
     interface IpcRendererEvents {

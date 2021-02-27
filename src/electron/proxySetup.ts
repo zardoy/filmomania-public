@@ -1,13 +1,12 @@
 import axios from "axios";
 import cheerio from "cheerio";
 import dns from "dns";
-import electronSettings from "electron-settings";
 import got, { Response } from "got";
 import { typedIpcMain } from "typed-ipc";
 
+import { settingsStore } from "../react/electron-shared/settings";
 import { debug } from "./";
 import { mainWindow } from "./mainWindow";
-import { getAppSetting } from "./settings";
 
 //for parser: "512 GB mb".replace(new RegExp(Object.keys(sizeMap).join("|"), "gi"), match => sizeMap[match.toUpperCase()])
 
@@ -179,7 +178,7 @@ export const setupProxy = async () => {
     if ("proxyIp" in setupResult) {
         const { proxyIp } = setupResult;
         debug(`Proxy setup success: ${proxyIp}`);
-        await electronSettings.set(["torrentTrackers", "activeProxy"], proxyIp);
+        settingsStore.set("internalActiveProxy", proxyIp);
         typedIpcMain.sendToWindow(mainWindow, "proxySetup", {
             success: true
         });
@@ -207,7 +206,7 @@ const setupProxyInternal = async (): GetAliveProxyResult => {
         reportProxySetupStatus("Internet is up!");
     }
 
-    const prevActiveProxy = await getAppSetting("torrentTrackers", "activeProxy");
+    const prevActiveProxy = settingsStore.get("internalActiveProxy") as string;
 
     if (prevActiveProxy) {
         // todo-low more clear messages?

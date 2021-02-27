@@ -46,7 +46,7 @@ let App: React.FC<ComponentProps> = () => {
         () => createMuiTheme({
             palette: {
                 // type: isDarkTheme ? "dark" : "light",
-                type: "light",
+                type: "dark",
                 primary: lightBlue,
                 secondary: blue
             }
