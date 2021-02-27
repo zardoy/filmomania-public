@@ -5,7 +5,7 @@ import { useParams } from "react-router";
 import { typedIpcRenderer } from "typed-ipc";
 
 import { useReactiveVar } from "@apollo/client";
-import { Button, CircularProgress, Grid, List, ListItem, ListItemSecondaryAction, Typography } from "@material-ui/core";
+import { Button, CircularProgress, Grid, List, ListItem, Typography } from "@material-ui/core";
 import { Alert } from "@material-ui/lab";
 
 import { currentSearchFilmsVar } from "../apolloLocalState";
@@ -90,18 +90,20 @@ const FilmPage: React.FC<ComponentProps> = () => {
             }
             <List>{
                 _.sortBy(state.result.results, o => o.sizeInBytes).reverse().map(({ title, magnet, torrentID, seeders, displaySize }) => {
-                    const playWithSoda = () => {
+                    const playTorrent = () => {
                         typedIpcRenderer.send("playInPlayer", {
                             player: settingsStore.get("generalDefaultPlayer") as any,
                             magnet
                         });
                     };
-                    return <ListItem key={torrentID} divider button onClick={playWithSoda}>
-                        {title}
-                        <ListItemSecondaryAction>
-                            <Typography color="textSecondary">{seeders}</Typography>
-                            <Typography>{displaySize}</Typography>
-                        </ListItemSecondaryAction>
+                    return <ListItem key={torrentID} divider button onClick={playTorrent}>
+                        <Grid container justify="space-between" wrap="nowrap">
+                            <Typography>{title}</Typography>
+                            <div style={{ float: "right", display: "flex" }}>
+                                <Typography style={{ color: seeders === 0 ? "red" : seeders < 8 ? "yellow" : "limegreen" }}>{seeders}</Typography>
+                                <Typography style={{ marginLeft: 15 }}>{displaySize}</Typography>
+                            </div>
+                        </Grid>
                     </ListItem>;
                 })
             }</List>
