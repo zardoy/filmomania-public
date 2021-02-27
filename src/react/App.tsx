@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 
-import { HashRouter, Link as RouterLink, Route } from "react-router-dom";
+import { HashRouter, Link as RouterLink, Route, Switch } from "react-router-dom";
 
 import { useReactiveVar } from "@apollo/client";
 import {
@@ -17,6 +17,8 @@ import { blue, lightBlue } from "@material-ui/core/colors";
 import { appInitialSetupStatusVar, proxySetupStateVar } from "./apolloLocalState";
 import CenterContent from "./components/CenterContent";
 import ElectronEvents from "./components/ElectronEvents";
+import ErrorBoundary from "./components/ErrorBoundary";
+import OSD from "./components/OSD";
 import WithBackButton from "./components/WithBackButton";
 import { pageURLS } from "./electron-shared/URLS";
 import HomePage from "./pages/Home";
@@ -56,38 +58,41 @@ let App: React.FC<ComponentProps> = () => {
 
     return <ThemeProvider theme={muiTheme}>
         <CssBaseline />
-        <div className={classes.content}>
-            <HashRouter>
-                <ElectronEvents />
-                {
-                    appStatus === "pending" ? null :
-                        appStatus === "setupNeeded" ? <WelcomePage /> :
-                            proxyNeededSetup ? <ProxySetupPage /> :
-                                <>
-                                    <Route path="/" exact>
-                                        <HomePage />
-                                    </Route>
-                                    <Route path={pageURLS.SEARCH}>
-                                        <WithBackButton>
-                                            <Search />
-                                        </WithBackButton>
-                                    </Route>
-                                    <Route path={pageURLS.FILM}>
-                                        <WithBackButton>
-                                            <FilmPage />
-                                        </WithBackButton>
-                                    </Route>
-                                    <Route path="/">
-                                        <CenterContent>
-                                            <Typography variant="h3">404</Typography>
-                                            <Button component={RouterLink} to="/">GO HOME</Button>
-                                        </CenterContent>
-                                    </Route>
-                                    {/* <Redirect from="/" /> */}
-                                </>
-                }
-            </HashRouter>
-        </div>
+        <ErrorBoundary>
+            <div className={classes.content}>
+                <HashRouter>
+                    <ElectronEvents />
+                    <OSD />
+                    {
+                        appStatus === "pending" ? null :
+                            appStatus === "setupNeeded" ? <WelcomePage /> :
+                                proxyNeededSetup ? <ProxySetupPage /> :
+                                    <Switch>
+                                        <Route path="/" exact>
+                                            <HomePage />
+                                        </Route>
+                                        <Route path={pageURLS.SEARCH}>
+                                            <WithBackButton>
+                                                <Search />
+                                            </WithBackButton>
+                                        </Route>
+                                        <Route path={pageURLS.FILM}>
+                                            <WithBackButton>
+                                                <FilmPage />
+                                            </WithBackButton>
+                                        </Route>
+                                        <Route path="*">
+                                            <CenterContent>
+                                                <Typography variant="h3">404</Typography>
+                                                <Button component={RouterLink} to="/">GO HOME</Button>
+                                            </CenterContent>
+                                        </Route>
+                                        {/* <Redirect from="/" /> */}
+                                    </Switch>
+                    }
+                </HashRouter>
+            </div>
+        </ErrorBoundary>
     </ThemeProvider>;
 };
 
