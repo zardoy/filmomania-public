@@ -12,7 +12,6 @@ See downloads in releases. TODO
 ## Roadmap
 
 - [ ] Rename project?
-- [ ] A lot of integrations!
 - [ ] Client redesign
-- [ ] Auto install SodaPlayer via chocolatey
+- [ ] A lot of integrations!
 - [ ] Razer and aura sdk integration (light effects)
