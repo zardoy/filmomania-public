@@ -30,6 +30,7 @@ export default (searchResultsHtml: string, onlyMovies: boolean): TorrentEnginePa
 
         // filter only movies
         if (title && onlyMovies) {
+            // todo very high exclude that are present in name
             const badRegexps = [
                 /\bmp3\b/i,
                 /\bost\b/i,
