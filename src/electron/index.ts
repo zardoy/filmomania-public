@@ -7,7 +7,9 @@ import electronDebug from "electron-debug";
 import { bindIPC } from "./ipc";
 import { createMainWindow } from "./mainWindow";
 
-electronDebug();
+electronDebug({
+    showDevTools: true
+});
 
 export const debug = console.log;
 
