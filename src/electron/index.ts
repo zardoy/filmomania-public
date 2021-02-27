@@ -11,6 +11,8 @@ electronDebug({
     showDevTools: true
 });
 
+process.noAsar = true;
+
 export const debug = console.log;
 
 const loadApp = () => {
