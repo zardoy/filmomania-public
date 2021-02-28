@@ -1,4 +1,7 @@
+import downloadFile from "download";
 import { shell } from "electron";
+import { tmpdir } from "os";
+import { join } from "path";
 import { isPatchAvailable, patchSodaPlayer } from "soda-player-patch";
 import { typedIpcMain } from "typed-ipc";
 
@@ -13,7 +16,7 @@ export const bindIPC = () => {
             void setupProxy();
             const engineNeedsSetup = !await settingsStore.get("searchEngineApiEndpoint") || !await settingsStore.get("searchEngineApiKey");
             const defaultPlayer = await settingsStore.get("generalDefaultPlayer");
-            const sodaPlayerNeedsToBeInstalled = defaultPlayer !== "system" && !isSodaPlayerInstalled();
+            const sodaPlayerNeedsToBeInstalled = defaultPlayer === undefined || defaultPlayer === "system" && !isSodaPlayerInstalled();
             if (
                 engineNeedsSetup ||
                 sodaPlayerNeedsToBeInstalled
@@ -45,13 +48,21 @@ export const bindIPC = () => {
         playInPlayer: async (_e, { magnet, player }) => {
             if (player === "system") {
                 await shell.openExternal(magnet);
-            } else if (player === "sodaPlayer") {
+            } else if (!player || player === "sodaPlayer") {
                 await playWithSodaPlayer(magnet);
             }
         },
         installSodaPlayer: installSodaPlayer,
         cancelSodaPlayerDownload: () => {
             // NOT IMPLEMENTED YET
+        },
+        downloadAndOpenTorrentFile: async (_e, { torrentFileUrl }) => {
+            const tempDir = tmpdir();
+            //todo-high preserve torrent name
+            await downloadFile(tempDir, torrentFileUrl, {
+                filename: "torrent"
+            });
+            await shell.openPath(join(tempDir, "torrent"));
         }
     });
 };

@@ -19,6 +19,10 @@ declare module "typed-ipc" {
             player: "sodaPlayer" | "system";
             magnet: string;
         };
+
+        downloadAndOpenTorrentFile: {
+            torrentFileUrl: string;
+        };
     }
 
     interface IpcMainRequests {

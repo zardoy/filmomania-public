@@ -32,6 +32,7 @@
         "cheerio": "^1.0.0-rc.5",
         "craco-electron": "^1.0.2",
         "dayjs": "^1.10.4",
+        "download": "^8.0.0",
         "electron-debug": "^3.2.0",
         "electron-is-dev": "^1.2.0",
         "electron-squirrel-startup": "^1.0.0",

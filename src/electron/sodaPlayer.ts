@@ -58,6 +58,7 @@ export const installSodaPlayer = async () => {
 export const playWithSodaPlayer = async (magnet: string) => {
     if (!isSodaPlayerInstalled()) return;
     // todo-high check arg
+    // todo-very-high
     child_process.spawn(`C:\\Users\\Professional\\AppData\\Local\\sodaplayer\\Soda Player.exe`, [magnet], {
         detached: true,
         stdio: "ignore"

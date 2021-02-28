@@ -1,11 +1,28 @@
 import React, { useEffect, useState } from "react";
 
+import { shell } from "electron";
 import _ from "lodash";
+import { bindPopover, usePopupState } from "material-ui-popup-state/hooks";
 import { useParams } from "react-router";
 import { typedIpcRenderer } from "typed-ipc";
 
 import { useReactiveVar } from "@apollo/client";
-import { Button, CircularProgress, Grid, List, ListItem, Typography } from "@material-ui/core";
+import {
+    Button,
+    CircularProgress,
+    ClickAwayListener,
+    Grid,
+    List,
+    ListItem,
+    ListItemIcon,
+    MenuItem,
+    MenuList,
+    Paper,
+    Popper,
+    Typography
+} from "@material-ui/core";
+import { Launch as LaunchIcon } from "@material-ui/icons";
+import OpenInBrowserIcon from "@material-ui/icons/OpenInBrowser";
 import { Alert } from "@material-ui/lab";
 
 import { currentSearchFilmsVar } from "../apolloLocalState";
@@ -72,6 +89,11 @@ const FilmPage: React.FC<ComponentProps> = () => {
         void loadList();
     }, [films]);
 
+    const moreOptionsPopoverState = usePopupState({ variant: "popover", popupId: "torrentIdMoreOptions" });
+
+    //fsdkf;'s'
+    const [dropdownTorrentIndex, setDropdownTorrentIndex] = useState<[string, string]>(["", ""]);
+
     return state.state !== "done" ?
         <CenterContent>
             {
@@ -83,18 +105,50 @@ const FilmPage: React.FC<ComponentProps> = () => {
             }
         </CenterContent> :
         <Grid container direction="column">
+            <Popper
+                {...bindPopover(moreOptionsPopoverState)}
+            >
+                <Paper>
+                    <ClickAwayListener onClickAway={moreOptionsPopoverState.close}>
+                        <MenuList>
+                            <MenuItem onClick={() => {
+                                void shell.openExternal(dropdownTorrentIndex[0]);
+                            }}>
+                                <ListItemIcon>
+                                    <OpenInBrowserIcon />
+                                </ListItemIcon>
+                                <Typography variant="inherit">Open torrent page</Typography>
+                            </MenuItem>
+                            <MenuItem onClick={() => {
+                                typedIpcRenderer.send("downloadAndOpenTorrentFile", {
+                                    torrentFileUrl: dropdownTorrentIndex[1]
+                                });
+                            }}>
+                                <ListItemIcon>
+                                    <LaunchIcon />
+                                </ListItemIcon>
+                                <Typography variant="inherit">Open .torrent file</Typography>
+                            </MenuItem>
+                        </MenuList>
+                    </ClickAwayListener>
+                </Paper>
+            </Popper>
             <Typography variant="h4">Results from rutor.info: {state.result.totalResults}</Typography>
             {
                 state.result.hiddenResults > 0 &&
                 <Alert severity="warning">We have hidden results: {state.result.hiddenResults}</Alert>
             }
             <List>{
-                _.sortBy(state.result.results, o => o.sizeInBytes).reverse().map(({ title, magnet, torrentID, seeders, displaySize }) => {
+                _.sortBy(state.result.results, o => o.sizeInBytes).reverse().map(({ title, magnet, torrentID, seeders, displaySize, pageURL, torrentURL }) => {
                     const playTorrent = () => {
                         typedIpcRenderer.send("playInPlayer", {
                             player: settingsStore.get("generalDefaultPlayer") as any,
                             magnet
                         });
+                    };
+                    const contextM = (event: React.MouseEvent<HTMLElement>) => {
+                        setDropdownTorrentIndex([pageURL, torrentURL]);
+                        moreOptionsPopoverState.open(event);
                     };
                     return <ListItem key={torrentID} divider button onClick={playTorrent}>
                         <Grid container justify="space-between" wrap="nowrap">
