@@ -15,7 +15,9 @@
 
 # production
 /build
+/build-*
 /dist
+/out
 
 .env.local
 
