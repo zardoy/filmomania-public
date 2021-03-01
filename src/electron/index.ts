@@ -17,6 +17,7 @@ process.noAsar = true;
 export const debug = console.log;
 
 const loadApp = () => {
+    app.setName("FilmoMania Beta");
     bindIPC();
     createMainWindow();
 };
