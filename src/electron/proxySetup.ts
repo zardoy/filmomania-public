@@ -156,6 +156,7 @@ const checkTargetSiteWithProxy: CheckTargetSiteWithProxy = async ({ proxyIp, tim
             success: true
         };
     } catch (err) {
+        console.error(`${proxyIp} failed. Reason: ${err.message}`);
         return {
             success: false,
             errorMsg: err.message
@@ -234,7 +235,7 @@ const setupProxyInternal = async (): GetAliveProxyResult => {
         proxies,
         testingSite,
         // todo-moderate implement
-        parallel: 6,
+        parallel: 5,
         timeout: checkTimeout,
     });
     if ("errorMessage" in checkResult) {
