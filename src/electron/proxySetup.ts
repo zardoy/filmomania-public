@@ -193,7 +193,7 @@ export const setupProxy = async () => {
 
 const setupProxyInternal = async (): GetAliveProxyResult => {
     const testingSite = "http://rutor.info/top",
-        checkTimeout = 6000;
+        checkTimeout = 7000;
 
     reportProxySetupStatus("Checking internet connection");
     if (await isOnline() === false) {
@@ -234,7 +234,7 @@ const setupProxyInternal = async (): GetAliveProxyResult => {
         proxies,
         testingSite,
         // todo-moderate implement
-        parallel: 5,
+        parallel: 6,
         timeout: checkTimeout,
     });
     if ("errorMessage" in checkResult) {
