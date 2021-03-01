@@ -25,8 +25,7 @@ let ProxySetupPage: React.FC<ComponentProps> = () => {
         {
             state.state === "pending" ? <>
                 <CircularProgress />
-                <Typography color="textPrimary">Setting the best proxy...</Typography>
-                <Typography color="textSecondary">(It might take a few minutes)</Typography>
+                <Typography color="textSecondary">Setting the best proxy...</Typography>
             </> :
                 state.state === "errored" ? <>
                     <Typography variant="h3">Setup Errored: {state.errorMessage}</Typography>
