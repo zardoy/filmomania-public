@@ -10,8 +10,6 @@ import { createMainWindow } from "./mainWindow";
 //     showDevTools: true
 // });
 
-process.noAsar = true;
-
 export const debug = console.log;
 
 const loadApp = () => {
