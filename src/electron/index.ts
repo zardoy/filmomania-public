@@ -10,8 +10,6 @@ import { createMainWindow } from "./mainWindow";
 //     showDevTools: true
 // });
 
-if (require("electron-squirrel-startup")) app.quit();
-
 process.noAsar = true;
 
 export const debug = console.log;
