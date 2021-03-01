@@ -235,7 +235,7 @@ const setupProxyInternal = async (): GetAliveProxyResult => {
         proxies,
         testingSite,
         // todo-moderate implement
-        parallel: 5,
+        parallel: 6,
         timeout: checkTimeout,
     });
     if ("errorMessage" in checkResult) {
