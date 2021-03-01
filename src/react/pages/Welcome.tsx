@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 
 import prettyFilesize from "filesize";
-import { typedIpcRenderer } from "typed-ipc";
+import { IpcRendererEvents, typedIpcRenderer } from "typed-ipc";
 
 import { useReactiveVar } from "@apollo/client";
 import {
@@ -63,82 +63,37 @@ interface InsatllAceStreamButtonProps {
     completeCallback?: any;
 }
 
-type InstallState = {
-    state: "downloadNeeded";
-} | {
-    state: "downloading",
-    progress: number; //0-1
-    downloadedBytes: number;
-} | {
-    state: "installing";
-};
-
-const SodaPlayerPatchStatus: React.FC = () => {
-    const initialSetupStatus = useReactiveVar(appInitialSetupStatusVar);
-
-    const patchCallback = useCallback(async () => {
-        try {
-            await typedIpcRenderer.request("patchSodaPlayer");
-            const prevState = { ...appInitialSetupStatusVar() };
-            if (prevState.status !== "setupNeeded") return;
-            appInitialSetupStatusVar({
-                status: "setupNeeded",
-                specs: {
-                    ...prevState.specs,
-                    sodaPlayer: {
-                        ...prevState.specs.sodaPlayer,
-                        patched: true
-                    }
-                }
-            });
-        } catch (err) {
-            // todo-low do not use alert
-            alert(`Unable to patch: ${err.message}`);
-        }
-    }, []);
-
-    if (initialSetupStatus.status !== "setupNeeded") return null;
-    const { patched, installed } = initialSetupStatus.specs.sodaPlayer;
-    return !installed ? <Typography>Must be installed before patching</Typography> :
-        patched ? <Typography>Patched</Typography> :
-            <Button
-                variant="contained"
-                onClick={patchCallback}
-            >Patch</Button>;
-};
+type InstallState = { stage: "initial"; } | Exclude<IpcRendererEvents["updateSodaPlayerInstallationState"], { stage: "done"; }>;
 
 const SodaPlayerStatus: React.FC<InsatllAceStreamButtonProps> = () => {
     const initialSetupStatus = useReactiveVar(appInitialSetupStatusVar);
 
     const [installState, setInstallState] = useState<InstallState>({
-        state: "downloadNeeded"
+        stage: "initial"
     });
 
     useEffect(() => {
         typedIpcRenderer.addEventListener("updateSodaPlayerInstallationState", (_event, state) => {
-            if (state.stage === "downloading") {
-                setInstallState({
-                    state: state.stage,
-                    ...state
-                });
-            } else if (state.stage === "installing") {
-                setInstallState({
-                    state: state.stage
-                });
-            } else {
-                const prevState = { ...appInitialSetupStatusVar() };
-                if (prevState.status !== "setupNeeded") return;
+            if (state.stage === "done") {
+                if (!state.patched) {
+                    alert(`Unfortunately we failed on patching Soda Player, but the player should work as expected!`);
+                }
+                setInstallState({ stage: "initial" });
+                const prevStatus = { ...appInitialSetupStatusVar() };
+                if (prevStatus.status !== "setupNeeded") return;
                 appInitialSetupStatusVar({
                     status: "setupNeeded",
                     specs: {
-                        ...prevState.specs,
+                        ...prevStatus.specs,
                         sodaPlayer: {
-                            ...prevState.specs.sodaPlayer,
-                            installed: true
+                            installed: true,
+                            patched: state.patched
                         }
                     }
                 });
+                return;
             }
+            setInstallState(state);
         });
 
         return () => {
@@ -146,30 +101,37 @@ const SodaPlayerStatus: React.FC<InsatllAceStreamButtonProps> = () => {
         };
     });
 
-    const installButtonClickHandler = useCallback(() => {
-        typedIpcRenderer.send("installSodaPlayer");
+    const installAndPatchHandle = useCallback(() => {
+        typedIpcRenderer.send("installOrAndPatchSodaPlayer");
     }, []);
 
     if (initialSetupStatus.status !== "setupNeeded") return null;
 
-    const { installed: sodaPlayerInstalled } = initialSetupStatus.specs.sodaPlayer;
+    const { installed, patched } = initialSetupStatus.specs.sodaPlayer;
 
     // todo nice green checkbox
-    return sodaPlayerInstalled ? <Typography>Installed</Typography> :
-        installState.state === "downloadNeeded" ?
-            <Button
-                variant="contained"
-                onClick={installButtonClickHandler}
-                disabled={process.platform === "darwin"}
-            >Install SodaPlayer</Button> :
-            installState.state === "downloading" ?
-                <LinearProgressWithLabel
-                    variant="determinate"
-                    value={installState.progress * 100}
-                    label={prettyFilesize(installState.downloadedBytes, { round: 0 })}
-                /> :
-                installState.state === "installing" ?
-                    <LinearProgressWithLabel label="Installing..." /> : null;
+    if (installed && patched) {
+        return <Typography>Installed and Patched</Typography>;
+    }
+    if (installState.stage === "initial") {
+        return <Button
+            variant="contained"
+            onClick={installAndPatchHandle}
+            disabled={process.platform === "darwin"}
+        >{`${!installed ? "Install and " : ""}Patch`}</Button>;
+    } else if (installState.stage === "downloading") {
+        // todo disable animation
+        return <LinearProgressWithLabel
+            variant="determinate"
+            value={installState.progress * 100}
+            label={prettyFilesize(installState.downloadedBytes, { round: 0 })}
+        />;
+    } else {
+        return <LinearProgressWithLabel
+            variant="indeterminate"
+            label={installState.stage === "installing" ? "Installing..." : "Patching..."}
+        />;
+    }
 };
 
 const getUrlEndpointBase = () => {
@@ -231,12 +193,17 @@ const SearchEngineStep: React.FC<StepProps> = ({ setStep }) => {
 };
 
 const SodaPlayerStep: React.FC = () => {
+    const setupStatus = useReactiveVar(appInitialSetupStatusVar);
     const finishSetupCallback = useCallback(() => {
-        settingsStore.set("generalDefaultPlayer", "sodaPlayer");
+        if (setupStatus.status !== "setupNeeded") return;
+        settingsStore.set("generalDefaultPlayer", setupStatus.specs.sodaPlayer.patched ? "sodaPlayerPatched" : "sodaPlayer");
         appInitialSetupStatusVar({
             status: "appReady"
         });
-    }, []);
+    }, [setupStatus]);
+    if (setupStatus.status !== "setupNeeded") return null;
+
+    const canFinishSetup = setupStatus.specs.sodaPlayer.installed;
 
     return <>
         <Grid item>
@@ -246,12 +213,6 @@ const SodaPlayerStep: React.FC = () => {
                     <ListItemText primary="Soda Player" />
                     <ListItemSecondaryAction>
                         <SodaPlayerStatus />
-                    </ListItemSecondaryAction>
-                </ListItem>
-                <ListItem divider>
-                    <ListItemText primary="Soda Player Patch" />
-                    <ListItemSecondaryAction>
-                        <SodaPlayerPatchStatus />
                     </ListItemSecondaryAction>
                 </ListItem>
             </List>
@@ -277,6 +238,7 @@ const SodaPlayerStep: React.FC = () => {
             <Button
                 variant="contained"
                 onClick={finishSetupCallback}
+                disabled={!canFinishSetup}
             >Finish Setup</Button>
         </Grid>
     </>;

@@ -10,7 +10,7 @@ export interface FirstLaunchSpecs {
 
 declare module "typed-ipc" {
     interface IpcMainEvents {
-        installSodaPlayer: null;
+        installOrAndPatchSodaPlayer: null;
         cancelSodaPlayerDownload: null;
 
         retryProxySetup: null;
@@ -51,8 +51,6 @@ declare module "typed-ipc" {
                 error: string;
             };
         };
-
-        patchSodaPlayer: null;
     }
 
     interface IpcRendererEvents {
@@ -63,7 +61,10 @@ declare module "typed-ipc" {
         } | {
             stage: "installing";
         } | {
-            stage: "installed";
+            stage: "patching";
+        } | {
+            stage: "done";
+            patched: boolean;
         };
 
         openRoute: {

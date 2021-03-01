@@ -4,9 +4,11 @@ import { Box, LinearProgress, LinearProgressProps, Typography } from "@material-
 
 type LinearProgressWithLabelProps = LinearProgressProps & { label: string; };
 
+// todo dont use with min-width its hard coded
+
 const LinearProgressWithLabel: React.FC<LinearProgressWithLabelProps> = props =>
     <Box display="flex" alignItems="center" width="80%">
-        <Box width="100%" mr={1}>
+        <Box width="100%" minWidth={150} mr={1}>
             <LinearProgress variant="determinate" {...props} />
         </Box>
         <Box minWidth={65}>
