@@ -191,32 +191,33 @@ let Search: React.FC<ComponentProps> = () => {
                 // TODO LIST PROPS
                 <List>
                     {
-                        state.result.films.map(({ filmId, nameRu, nameEn, posterUrlPreview, description, rating, ...restInfo }) => {
-                            const openFilmPage = () => {
-                                history.push(`/film/${filmId}`);
-                            };
-                            const displayYear = restInfo.type === "film" ? restInfo.year :
-                                restInfo.yearTo === "nowadays" ? `From ${restInfo.yearFrom}` : `${restInfo.yearFrom} — ${restInfo.yearTo}`;
-                            return <FilmItem
-                                key={filmId}
-                                title={nameRu || nameEn}
-                                description={`${displayYear} ${description}`}
-                                posterUrl={posterUrlPreview}
-                                rating={rating}
-                                onClick={openFilmPage}
-                            />;
-                            // return <ListItem button key={filmId} onClick={openFilmPage}>
-                            //     {hasPoster && <ListItemAvatar>
-                            //         <img alt="poster" src={posterUrlPreview} className={classes.poster} />
-                            //     </ListItemAvatar>}
-                            //     <ListItemText inset={!hasPoster} primary={nameRu || nameEn} secondary={description} />
-                            //     <ListItemSecondaryAction>
-                            //         <IconButton edge="end" {...bindTrigger(moreOptionsPopoverState)}>
-                            //             <MoreHorizIcon />
-                            //         </IconButton>
-                            //     </ListItemSecondaryAction>
-                            // </ListItem>;
-                        })
+                        state.result.films.length ?
+                            state.result.films.map(({ filmId, nameRu, nameEn, posterUrlPreview, description, rating, ...restInfo }) => {
+                                const openFilmPage = () => {
+                                    history.push(`/film/${filmId}`);
+                                };
+                                const displayYear = restInfo.type === "film" ? restInfo.year :
+                                    restInfo.yearTo === "nowadays" ? `From ${restInfo.yearFrom}` : `${restInfo.yearFrom} — ${restInfo.yearTo}`;
+                                return <FilmItem
+                                    key={filmId}
+                                    title={nameRu || nameEn}
+                                    description={`${displayYear} ${description}`}
+                                    posterUrl={posterUrlPreview}
+                                    rating={rating}
+                                    onClick={openFilmPage}
+                                />;
+                                // return <ListItem button key={filmId} onClick={openFilmPage}>
+                                //     {hasPoster && <ListItemAvatar>
+                                //         <img alt="poster" src={posterUrlPreview} className={classes.poster} />
+                                //     </ListItemAvatar>}
+                                //     <ListItemText inset={!hasPoster} primary={nameRu || nameEn} secondary={description} />
+                                //     <ListItemSecondaryAction>
+                                //         <IconButton edge="end" {...bindTrigger(moreOptionsPopoverState)}>
+                                //             <MoreHorizIcon />
+                                //         </IconButton>
+                                //     </ListItemSecondaryAction>
+                                // </ListItem>;
+                            }) : <CenterContent><Typography>No results for {routeParams.query}</Typography></CenterContent>
                     }
                 </List> :
                 <CenterContent>

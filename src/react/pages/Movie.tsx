@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { shell } from "electron";
 import _ from "lodash";
 import { bindPopover, usePopupState } from "material-ui-popup-state/hooks";
-import { useParams } from "react-router";
+import { useHistory, useParams } from "react-router";
 import { typedIpcRenderer } from "typed-ipc";
 
 import { useReactiveVar } from "@apollo/client";
@@ -50,6 +50,8 @@ const FilmPage: React.FC<ComponentProps> = () => {
 
     const [state, setState] = useState<State>({ state: "loading" });
 
+    const routerHistory = useHistory();
+
     const loadList = async () => {
         const filmInfo = films.find(({ filmId }) => filmId === +selectedFilmId);
         if (!filmInfo) {
@@ -58,6 +60,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
                 state: "errored",
                 error: "Perform search again."
             });
+            routerHistory.replace("/");
             return;
         }
         setState({
@@ -79,7 +82,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
         } catch (err) {
             setState({
                 state: "errored",
-                error: err.message
+                error: `${err.message}\nTry to CTRL+R to find another proxy`
             });
         }
     };
@@ -139,27 +142,29 @@ const FilmPage: React.FC<ComponentProps> = () => {
                 <Alert severity="warning">We have hidden results: {state.result.hiddenResults}</Alert>
             }
             <List>{
-                _.sortBy(state.result.results, o => o.sizeInBytes).reverse().map(({ title, magnet, torrentID, seeders, displaySize, pageURL, torrentURL }) => {
-                    const playTorrent = () => {
-                        typedIpcRenderer.send("playInPlayer", {
-                            player: settingsStore.get("generalDefaultPlayer") as any,
-                            magnet
-                        });
-                    };
-                    const contextM = (event: React.MouseEvent<HTMLElement>) => {
-                        setDropdownTorrentIndex([pageURL, torrentURL]);
-                        moreOptionsPopoverState.open(event);
-                    };
-                    return <ListItem key={torrentID} divider button onClick={playTorrent}>
-                        <Grid container justify="space-between" wrap="nowrap">
-                            <Typography>{title}</Typography>
-                            <div style={{ float: "right", display: "flex" }}>
-                                <Typography style={{ color: seeders === 0 ? "red" : seeders < 8 ? "yellow" : "limegreen" }}>{seeders}</Typography>
-                                <Typography style={{ marginLeft: 15 }}>{displaySize}</Typography>
-                            </div>
-                        </Grid>
-                    </ListItem>;
-                })
+                state.result.results.length ?
+                    _.sortBy(state.result.results, o => o.sizeInBytes).reverse().map(({ title, magnet, torrentID, seeders, displaySize, pageURL, torrentURL }) => {
+                        const playTorrent = () => {
+                            typedIpcRenderer.send("playInPlayer", {
+                                player: settingsStore.get("generalDefaultPlayer") as any,
+                                magnet
+                            });
+                        };
+                        const contextM = (event: React.MouseEvent<HTMLElement>) => {
+                            setDropdownTorrentIndex([pageURL, torrentURL]);
+                            moreOptionsPopoverState.open(event);
+                        };
+                        return <ListItem key={torrentID} divider button onClick={playTorrent} onContextMenu={contextM}>
+                            <Grid container justify="space-between" wrap="nowrap">
+                                <Typography>{title}</Typography>
+                                <div style={{ float: "right", display: "flex" }}>
+                                    <Typography style={{ color: seeders === 0 ? "red" : seeders < 8 ? "yellow" : "limegreen" }}>{seeders}</Typography>
+                                    <Typography style={{ marginLeft: 15 }}>{displaySize}</Typography>
+                                </div>
+                            </Grid>
+                        </ListItem>;
+                    })
+                    : <Typography>No results on rutor.info!</Typography>
             }</List>
         </Grid>;
 };
