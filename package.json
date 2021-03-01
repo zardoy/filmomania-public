@@ -2,69 +2,62 @@
     "name": "filmomania",
     "main": "dist/electron/index.js",
     "author": "Vitaly Turovsky",
-    "version": "0.0.1",
+    "version": "0.0.1-beta",
+    "repository": "https://github.com/zardoy/filmomania-public.git",
     "description": "best hub for movies",
     "license": "MIT",
     "private": true,
-    "homepage": "./",
     "build": {
+        "productName": "FilmoMania Beta",
         "appId": "com.zardoy.filmomania",
         "win": {
             "target": "nsis"
         },
         "files": [
             "build/**/*",
-            "node_modules/**/*"
+            "dist/**/*"
         ],
         "directories": {
-            "buildResources": "assets"
+            "buildResources": "assets",
+            "output": "build-app"
         }
     },
     "dependencies": {
-        "@apollo/client": "^3.3.9",
-        "@fontsource/roboto": "^4.2.1",
-        "@material-ui/core": "^4.11.3",
-        "@material-ui/icons": "^4.11.2",
-        "@material-ui/lab": "^4.0.0-alpha.57",
-        "@prisma/client": "^2.16.1",
-        "@prisma/debug": "^2.17.0",
         "axios": "^0.21.1",
         "cheerio": "^1.0.0-rc.5",
         "craco-electron": "^1.0.2",
-        "dayjs": "^1.10.4",
         "download": "^8.0.0",
         "electron-debug": "^3.2.0",
         "electron-is-dev": "^1.2.0",
-        "electron-squirrel-startup": "^1.0.0",
         "electron-store": "^7.0.2",
         "electron-unhandled": "^3.0.2",
         "electron-util": "^0.14.2",
         "electron-window-state": "^5.0.3",
         "execa": "^5.0.0",
         "filesize": "^6.1.0",
-        "formik": "^2.2.6",
-        "framer-motion": "^3.3.0",
         "got": "^11.8.1",
-        "graphql": "^15.5.0",
         "lodash": "^4.17.20",
-        "material-ui-popup-state": "^1.7.1",
-        "prisma": "^2.16.1",
-        "react": "^17.0.1",
-        "react-dom": "^17.0.1",
-        "react-router": "^5.2.0",
-        "react-router-dom": "^5.2.0",
-        "read-browser-tabs": "^1.0.4",
         "rimraf": "^3.0.2",
         "sanitize-filename": "^1.6.3",
         "soda-player-patch": "https://github.com/zardoy/soda-player-plus#build",
-        "systeminformation": "^5.3.0",
         "typed-ipc": "https://github.com/zardoy/typed-ipc#build",
         "underscore": "^1.12.0",
-        "xbytes": "^1.7.0"
+        "xbytes": "^1.7.0",
+        "@apollo/client": "^3.3.9",
+        "graphql": "^15.5.0",
+        "@fontsource/roboto": "^4.2.1",
+        "@material-ui/core": "^4.11.3",
+        "@material-ui/icons": "^4.11.2",
+        "@material-ui/lab": "^4.0.0-alpha.57",
+        "formik": "^2.2.6",
+        "framer-motion": "^3.3.0",
+        "material-ui-popup-state": "^1.7.1",
+        "react": "^17.0.1",
+        "react-dom": "^17.0.1",
+        "react-router": "^5.2.0",
+        "react-router-dom": "^5.2.0"
     },
     "devDependencies": {
-        "@electron-forge/cli": "^6.0.0-beta.54",
-        "@electron-forge/maker-squirrel": "^6.0.0-beta.54",
         "@types/electron-window-state": "^2.0.34",
         "@types/ffmpeg-static": "^3.0.0",
         "@types/lodash": "^4.14.168",
@@ -80,6 +73,7 @@
         "@typescript-eslint/parser": "^4.15.0",
         "electron": "^11.2.3",
         "electron-builder": "^22.9.1",
+        "electron-builder-squirrel-windows": "^22.10.5",
         "eslint": "^7.19.0",
         "eslint-plugin-react": "^7.22.0",
         "ts-node": "^9.1.1",
@@ -88,26 +82,14 @@
         "typescript": "^4.1.5"
     },
     "scripts": {
-        "start-main": "tsc-watch -p \"./src/electron/tsconfig.json\" --onSuccess \"electron .\"",
+        "start-main": "tsc-watch -p ./src/electron/tsconfig.json --onSuccess \"electron .\"",
         "start-renderer": "craco-electron start",
+        "build-main": "tsc -p ./src/electron/tsconfig.build.json",
         "build-renderer": "craco-electron build",
         "analyze-renderer": "source-map-explorer 'build/static/js/*.js'",
         "run-local-test": "cd local-tests && ts-node --transpile-only index.ts",
-        "electron-pack": "electron-builder -w",
-        "make": "cd build-all && electron-forge make"
-    },
-    "config": {
-        "forge": {
-            "packagerConfig": {},
-            "makers": [
-                {
-                    "name": "@electron-forge/maker-squirrel",
-                    "config": {
-                        "name": "filmomania"
-                    }
-                }
-            ]
-        }
+        "build-app": "yarn build-main && yarn build-renderer && yarn electron-pack",
+        "electron-pack": "electron-builder --win"
     },
     "eslintConfig": {
         "extends": "react-app"
