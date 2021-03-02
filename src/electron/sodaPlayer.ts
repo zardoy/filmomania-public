@@ -87,7 +87,7 @@ export const playWithSodaPlayer = async (magnet: string) => {
     const defaultPlayer = settingsStore.get("generalDefaultPlayer") as string;
     // todo-high check arg
     // todo-very-high
-    child_process.spawn(`C:\\Users\\Professional\\AppData\\Local\\sodaplayer\\Soda Player.exe`, [magnet, ...defaultPlayer === "sodaPlayerPatched" ? ["--fullscreen"] : []], {
+    child_process.spawn(sodaPlayerExecPath, [magnet, ...defaultPlayer === "sodaPlayerPatched" ? ["--fullscreen"] : []], {
         detached: true,
         stdio: "ignore"
     });
