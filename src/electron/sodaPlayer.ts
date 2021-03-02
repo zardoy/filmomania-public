@@ -5,7 +5,7 @@ import fs from "fs";
 import got, { Progress } from "got";
 import path from "path";
 import rifraf from "rimraf";
-import { patchSodaPlayer, sodaPlayerBasicConfig } from "soda-player-patch";
+import { sodaPlayerBasicConfig } from "soda-player-patch";
 import { getPaths } from "soda-player-patch/build/patchElectronApp";
 import stream from "stream";
 import { typedIpcMain } from "typed-ipc";
@@ -60,8 +60,8 @@ export const installOrAndPatchSodaPlayer = async () => {
     });
     let patched = false;
     try {
-        await patchSodaPlayer();
-        patched = true;
+        // await patchSodaPlayer();
+        // patched = true;
     } catch (err) {
         console.error(err);
         // something went wrong while patching. try to restore original version

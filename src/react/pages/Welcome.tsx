@@ -76,7 +76,7 @@ const SodaPlayerStatus: React.FC<InsatllAceStreamButtonProps> = () => {
         typedIpcRenderer.addEventListener("updateSodaPlayerInstallationState", (_event, state) => {
             if (state.stage === "done") {
                 if (!state.patched) {
-                    alert(`Unfortunately we failed on patching Soda Player, but the player should work as expected!`);
+                    alert(`Patching temporarily unavailable as it has some critical issues :(`);
                 }
                 setInstallState({ stage: "initial" });
                 const prevStatus = { ...appInitialSetupStatusVar() };
