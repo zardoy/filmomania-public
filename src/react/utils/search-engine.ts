@@ -144,7 +144,7 @@ export const searchByQuery = async (query: string, { abortSignal }: RequestOptio
                 console.error(`Skipping film with id ${filmId} as it missing both names (en and ru)`);
                 return false;
             }
-            const badNamesRegex = /\(видео\)$/;
+            const badNamesRegex = /\(видео|короткометражка\)$/;
             if (
                 nameEn && nameEn.match(badNamesRegex) ||
                 nameRu && nameRu.match(badNamesRegex)
