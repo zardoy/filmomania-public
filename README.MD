@@ -16,12 +16,13 @@ I know, design is bad. I'll use [arwes](https://playground.arwes.dev/core) in fu
 
 - Node.js git and yarn must be installed
 - After cloning this repo and installing dependencies (just run `yarn` in terminal) run `yarn build-app`
+- If everything is okay, you will find installer in `build-app` folder
 
 ## Features
 
 - Fast proxy setup (speed'll be increased in future releases)
 - It works (I mean it should work)
-- ~~Uses Ace Stream underneath~~ now Soda Player Plus (https://github.com/zardoy/soda-player-plus) (but you don't need to install anything manually) UPDATE: I'll migrate to 
+- ~~Uses Ace Stream underneath~~ now Soda Player Plus (<https://github.com/zardoy/soda-player-plus>) (but you don't need to install anything manually) UPDATE: I'll migrate to [Stremio](https://www.stremio.com/) since it's faster and much more stable than Soda.
 - And the last... I don't know any alternatives to it
 
 ## Roadmap
