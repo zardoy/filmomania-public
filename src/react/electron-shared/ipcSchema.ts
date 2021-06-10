@@ -27,7 +27,7 @@ declare module "typed-ipc" {
 
     interface IpcMainRequests {
         appInit: {
-            data: {
+            response: {
                 isFirstLaunch: false;
             } | {
                 isFirstLaunch: true;
@@ -41,7 +41,7 @@ declare module "typed-ipc" {
             };
 
             // todo remove error
-            data: {
+            response: {
                 metdata: {
                     engines: string[];
                     warnings: ("TOO_MANY_RESULTS")[];
@@ -50,6 +50,10 @@ declare module "typed-ipc" {
             } | {
                 error: string;
             };
+        };
+
+        getHelloMessage: {
+            response: string;
         };
     }
 

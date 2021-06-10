@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import { TorrentEngineParseResult } from "../../../react/electron-shared/TorrentTypes";
+import { TorrentEngineParseResult } from "../../../react/electron-shared/torrentTypes";
 import htmlParser from "./parser";
 
 export default {
@@ -21,8 +21,8 @@ export default {
         const [host, port] = proxyIp.split(":");
         const { data } = await axios.get(encodeURI(url), {
             proxy: {
-                host,
-                port: +port
+                host: host!,
+                port: +port!
             }
         });
 

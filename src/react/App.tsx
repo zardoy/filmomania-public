@@ -3,15 +3,7 @@ import React, { useMemo } from "react";
 import { HashRouter, Link as RouterLink, Route, Switch } from "react-router-dom";
 
 import { useReactiveVar } from "@apollo/client";
-import {
-    Button,
-    createMuiTheme,
-    CssBaseline,
-    makeStyles,
-    ThemeProvider,
-    Typography,
-    useMediaQuery
-} from "@material-ui/core";
+import { Button, createMuiTheme, CssBaseline, ThemeProvider, Typography, useMediaQuery } from "@material-ui/core";
 import { blue, lightBlue } from "@material-ui/core/colors";
 
 import { appInitialSetupStatusVar, proxySetupStateVar } from "./apolloLocalState";
@@ -30,15 +22,7 @@ import WelcomePage from "./pages/Welcome";
 interface ComponentProps {
 }
 
-const useStyles = makeStyles(() => ({
-    content: {
-        // padding: theme.spacing(4)
-    }
-}));
-
 let App: React.FC<ComponentProps> = () => {
-    const classes = useStyles();
-
     const { status: appStatus } = useReactiveVar(appInitialSetupStatusVar);
     const proxyNeededSetup = useReactiveVar(proxySetupStateVar).state !== "success";
 
@@ -59,7 +43,7 @@ let App: React.FC<ComponentProps> = () => {
     return <ThemeProvider theme={muiTheme}>
         <CssBaseline />
         <ErrorBoundary>
-            <div className={classes.content}>
+            <div>
                 <HashRouter>
                     <ElectronEvents />
                     <OSD />

@@ -14,7 +14,7 @@ import { installOrAndPatchSodaPlayer, isSodaPlayerInstalled, playWithSodaPlayer 
 export const bindIPC = () => {
     typedIpcMain.handleAllRequests({
         appInit: async () => {
-            void setupProxy();
+            void setupProxy(); //runs in parallel
             const engineNeedsSetup = !await settingsStore.get("searchEngineApiEndpoint") || !await settingsStore.get("searchEngineApiKey");
             const defaultPlayer = await settingsStore.get("generalDefaultPlayer");
 
@@ -42,7 +42,8 @@ export const bindIPC = () => {
                 };
             }
         },
-        torrentsList: requestTorrentsList
+        torrentsList: requestTorrentsList,
+        getHelloMessage: async () => "Hey there!"
     });
 
     typedIpcMain.bindAllEventListeners({

@@ -95,7 +95,7 @@ let SearchBox: React.FC<ComponentProps> = () => {
             onChange={fieldChangeHandler}
         />
         {
-            process.env.NODE_ENV !== "production" && <Button onClick={() => history.push("/search/gthdjve")}>Test router</Button>
+            import.meta.env.MODE !== "production" && <Button onClick={() => history.push("/search/gthdjve")}>Test router</Button>
         }
         {/* toggle between search engine and raw search */}
         {/* TODO end button for filters */}

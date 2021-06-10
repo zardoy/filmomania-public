@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 
-import { shell } from "electron";
 import _ from "lodash";
 import { bindPopover, usePopupState } from "material-ui-popup-state/hooks";
 import { useHistory, useParams } from "react-router";
@@ -28,7 +27,7 @@ import { Alert } from "@material-ui/lab";
 import { currentSearchFilmsVar } from "../apolloLocalState";
 import CenterContent from "../components/CenterContent";
 import { settingsStore } from "../electron-shared/settings";
-import { TorrentEngineParseResult } from "../electron-shared/TorrentTypes";
+import { TorrentEngineParseResult } from "../electron-shared/torrentTypes";
 
 type State = {
     state: "loading";
@@ -115,7 +114,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
                     <ClickAwayListener onClickAway={moreOptionsPopoverState.close}>
                         <MenuList>
                             <MenuItem onClick={() => {
-                                void shell.openExternal(dropdownTorrentIndex[0]);
+                                // void shell.openExternal(dropdownTorrentIndex[0]);
                             }}>
                                 <ListItemIcon>
                                     <OpenInBrowserIcon />

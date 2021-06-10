@@ -51,6 +51,8 @@
         "react/prop-types": "off",
         // I keep emty interfaces sometimes for easier refactoring. todo find better refactoring tools and switch to warn
         "@typescript-eslint/no-empty-interface": "off",
+        // I'm not making a public library so I don't want to waste my time to define types TS can do it for me
+        "@typescript-eslint/explicit-module-boundary-types": "off",
         "@typescript-eslint/no-floating-promises": [
             "error"
         ],
@@ -84,6 +86,6 @@
         // "no-confusing-arrow": "error",
         "prefer-const": "off",
         "prefer-destructuring": "error",
-        "prefer-numeric-literals": "error"
+        "prefer-numeric-literals": "error",
     }
 }

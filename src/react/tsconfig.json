@@ -1,0 +1,9 @@
+{
+    "extends": "@zardoy/tsconfig/react",
+    "compilerOptions": {
+        "module": "ESNext"
+    },
+    "include": [
+        "."
+    ]
+}

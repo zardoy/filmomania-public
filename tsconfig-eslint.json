@@ -1,4 +1,5 @@
 // TODO explain
+// tsconfig for proper linting
 {
     // "extends": "tsconfig.json",
     "include": [
