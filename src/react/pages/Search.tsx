@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { bindPopover, usePopupState } from "material-ui-popup-state/hooks";
 import { useHistory, useRouteMatch } from "react-router";
+import { useAsync } from "react-use";
 
 import {
     Chip,
@@ -121,41 +122,27 @@ let Search: React.FC<ComponentProps> = () => {
 
     const moreOptionsPopoverState = usePopupState({ variant: "popover", popupId: "filmMoreOptions" });
 
-    const [state, setState] = useState({ state: "loading" } as State);
-
     const { params: routeParams } = useRouteMatch<{ query: string; }>();
 
-    useEffect(() => {
+    const abortController = useRef(new AbortController());
+
+    const state = useAsync(async () => {
+        abortController.current = new AbortController();
         const { query } = routeParams;
-        if (query.length < SEARCH_QUERY_MIN_LENGTH) {
-            return;
+        if (query.length < SEARCH_QUERY_MIN_LENGTH) return null;
+        try {
+            const result = await searchByQuery(query, {
+                abortSignal: abortController.current.signal
+            });
+            currentSearchFilmsVar(result.films);
+            return result;
+        } catch (err) {
+            console.error(err);
+            throw err;
         }
-        const abortController = new AbortController();
-        setState({
-            state: "loading"
-        });
-        void (async () => {
-            try {
-                const result = await searchByQuery(query, {
-                    abortSignal: abortController.signal
-                });
-                setState({
-                    state: "done",
-                    result
-                });
-                currentSearchFilmsVar(result.films);
-            } catch (err) {
-                console.error(err);
-                setState({
-                    state: "errored",
-                    error: err.message
-                });
-            }
-        })();
-        return () => {
-            abortController.abort();
-        };
     }, [routeParams]);
+
+    useEffect(() => () => abortController.current.abort(), [routeParams]);
 
     const [dropdownFilmId, setDropdownFilmId] = useState(null as number | null);
 
@@ -187,12 +174,12 @@ let Search: React.FC<ComponentProps> = () => {
             </Paper>
         </Popper>
         {
-            state.state === "done" ?
+            state.value ?
                 // TODO LIST PROPS
                 <List>
                     {
-                        state.result.films.length ?
-                            state.result.films.map(({ filmId, nameRu, nameEn, posterUrlPreview, description, rating, ...restInfo }) => {
+                        state.value.films.length ?
+                            state.value.films.map(({ filmId, nameRu, nameEn, posterUrlPreview, description, rating, ...restInfo }) => {
                                 const openFilmPage = () => {
                                     history.push(`/film/${filmId}`);
                                 };
@@ -222,8 +209,8 @@ let Search: React.FC<ComponentProps> = () => {
                 </List> :
                 <CenterContent>
                     {
-                        state.state === "loading" ? <CircularProgress /> :
-                            state.state === "errored" && <Typography variant="body1">Error {state.error}</Typography>
+                        state.loading ? <CircularProgress /> :
+                            <Typography variant="body1">Error {state.error?.message}</Typography>
                     }
                 </CenterContent>
         }

@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import _ from "lodash";
 import { bindPopover, usePopupState } from "material-ui-popup-state/hooks";
 import { useHistory, useParams } from "react-router";
+import { useAsync } from "react-use";
 import { typedIpcRenderer } from "typed-ipc";
 
 import { useReactiveVar } from "@apollo/client";
 import {
-    Button,
     CircularProgress,
     ClickAwayListener,
     Grid,
@@ -27,17 +27,6 @@ import { Alert } from "@material-ui/lab";
 import { currentSearchFilmsVar } from "../apolloLocalState";
 import CenterContent from "../components/CenterContent";
 import { settingsStore } from "../electron-shared/settings";
-import { TorrentEngineParseResult } from "../electron-shared/torrentTypes";
-
-type State = {
-    state: "loading";
-} | {
-    state: "errored";
-    error: string;
-} | {
-    state: "done";
-    result: TorrentEngineParseResult;
-};
 
 interface ComponentProps {
 }
@@ -47,62 +36,38 @@ const FilmPage: React.FC<ComponentProps> = () => {
 
     const films = useReactiveVar(currentSearchFilmsVar);
 
-    const [state, setState] = useState<State>({ state: "loading" });
-
-    const routerHistory = useHistory();
-
-    const loadList = async () => {
+    const state = useAsync(async () => {
         const filmInfo = films.find(({ filmId }) => filmId === +selectedFilmId);
         if (!filmInfo) {
             // todo high
-            setState({
-                state: "errored",
-                error: "Perform search again."
-            });
-            routerHistory.replace("/");
-            return;
+            throw new Error("Perform search again.");
         }
-        setState({
-            state: "loading",
-        });
         const { cleanName, ...rest } = filmInfo;
         const yearForSearch = rest.type === "film" ? rest.year : rest.yearFrom;
         try {
             const result = await typedIpcRenderer.request("torrentsList", {
                 searchQuery: `${cleanName} ${yearForSearch}`
             });
-            if ("error" in result) {
-                throw new Error(result.error);
-            }
-            setState({
-                state: "done",
-                result: result.parseResult
-            });
+            if ("error" in result) throw new Error(result.error);
+            return result.parseResult;
         } catch (err) {
-            setState({
-                state: "errored",
-                error: `${err.message}\nTry to CTRL+R to find another proxy`
-            });
+            throw new Error(`${err.message}\nTry to CTRL+R to find another proxy`);
         }
-    };
+    }, []);
 
-    useEffect(() => {
-        // abortController
-        void loadList();
-    }, [films]);
+    const routerHistory = useHistory();
 
     const moreOptionsPopoverState = usePopupState({ variant: "popover", popupId: "torrentIdMoreOptions" });
 
     //fsdkf;'s'
     const [dropdownTorrentIndex, setDropdownTorrentIndex] = useState<[string, string]>(["", ""]);
 
-    return state.state !== "done" ?
+    return !state.value ?
         <CenterContent>
             {
-                state.state === "loading" ? <CircularProgress /> :
+                state.loading ? <CircularProgress /> :
                     <>
-                        <Typography color="error">{state.error}</Typography>
-                        <Button onClick={loadList}>Reload</Button>
+                        <Typography color="error">{state.error?.message}</Typography>
                     </>
             }
         </CenterContent> :
@@ -135,14 +100,14 @@ const FilmPage: React.FC<ComponentProps> = () => {
                     </ClickAwayListener>
                 </Paper>
             </Popper>
-            <Typography variant="h4">Results from rutor.info: {state.result.totalResults}</Typography>
+            <Typography variant="h4">Results from rutor.info: {state.value.totalResults}</Typography>
             {
-                state.result.hiddenResults > 0 &&
-                <Alert severity="warning">We have hidden results: {state.result.hiddenResults}</Alert>
+                state.value.hiddenResults > 0 &&
+                <Alert severity="warning">We have hidden results: {state.value.hiddenResults}</Alert>
             }
             <List>{
-                state.result.results.length ?
-                    _.sortBy(state.result.results, o => o.sizeInBytes).reverse().map(({ title, magnet, torrentID, seeders, displaySize, pageURL, torrentURL }) => {
+                state.value.results.length ?
+                    _.sortBy(state.value.results, o => o.sizeInBytes).reverse().map(({ title, magnet, torrentID, seeders, displaySize, pageURL, torrentURL }) => {
                         const playTorrent = () => {
                             typedIpcRenderer.send("playInPlayer", {
                                 player: settingsStore.get("generalDefaultPlayer") as any,
