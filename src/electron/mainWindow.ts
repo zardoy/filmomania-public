@@ -32,9 +32,9 @@ export const createMainWindow = () => {
         darkTheme: true,
         alwaysOnTop: electronIsDev && (!!+process.env.WINDOW_ALWAYS_ON_TOP! ?? false),
         webPreferences: {
-            nodeIntegration: true,
-            // preload: path.join(__dirname, "./preload.js"),
-            contextIsolation: false
+            // nodeIntegration: true,
+            preload: path.join(__dirname, "./preload.js"),
+            // contextIsolation: false
         },
     });
     // todo-high

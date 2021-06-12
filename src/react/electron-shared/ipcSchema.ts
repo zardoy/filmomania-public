@@ -1,4 +1,5 @@
-import { TorrentEngineParseResult } from "./TorrentTypes";
+import { SettingType } from "./settings";
+import { TorrentEngineParseResult } from "./torrentTypes";
 
 export interface FirstLaunchSpecs {
     sodaPlayer: {
@@ -15,8 +16,8 @@ declare module "typed-ipc" {
 
         retryProxySetup: null;
 
-        playInPlayer: {
-            player: "sodaPlayer" | "system";
+        playTorrent: {
+            player: SettingType<"player", "defaultPlayer">;
             magnet: string;
         };
 
@@ -52,8 +53,22 @@ declare module "typed-ipc" {
             };
         };
 
-        getHelloMessage: {
-            response: string;
+        // should be internal
+        getStoredSettingValue: {
+            variables: {
+                path: string;
+            };
+
+            response: {
+                value: any;
+            };
+        };
+
+        setStoredSettingValue: {
+            variables: {
+                path: string;
+                newValue: any;
+            };
         };
     }
 
@@ -75,7 +90,7 @@ declare module "typed-ipc" {
             url: string;
         };
 
-        // events could be seen in top left corner
+        // events could be seen in bottom right corner
         showEvent: {
             type: "proxy";
             message: string;

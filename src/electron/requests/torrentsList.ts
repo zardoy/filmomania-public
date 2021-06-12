@@ -1,16 +1,16 @@
 import { IpcMainHandler } from "typed-ipc";
 
-import { settingsStore } from "../../react/electron-shared/settings";
+import { settingsStore } from "../settings";
 import rutorConfig from "../torrentTrackers/rutor/config";
 
 //@ts-ignore
 export const requestTorrentsList: IpcMainHandler<"torrentsList"> = async (_event, { searchQuery }) => {
     const torrentEngineConfig = rutorConfig;
 
-    const proxyIp = settingsStore.get("internalActiveProxy") as string;
+    const proxyIp = await settingsStore.get("internal", "activeProxy");
 
     if (!proxyIp) {
-        throw new Error("Proxy isn't ready");
+        throw new Error("Proxy is not set");
     }
 
     try {

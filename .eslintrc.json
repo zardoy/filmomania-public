@@ -56,6 +56,9 @@
         "@typescript-eslint/no-floating-promises": [
             "error"
         ],
+        // TODO! error on production
+        "@typescript-eslint/no-unused-vars": "off",
+        "@typescript-eslint/no-non-null-assertion": "off",
         "no-script-url": "error",
         "no-multi-spaces": "error",
         // forbid usage of single quotes
@@ -86,6 +89,6 @@
         // "no-confusing-arrow": "error",
         "prefer-const": "off",
         "prefer-destructuring": "error",
-        "prefer-numeric-literals": "error",
+        "prefer-numeric-literals": "error"
     }
 }

@@ -2,9 +2,10 @@
     "extends": "@zardoy/tsconfig/node",
     "compilerOptions": {
         // "sourceMap": true,
-        "declaration": false,
-        "outDir": "../../node_modules/.cache/tsc-electron/",
-        "rootDir": "..",
+        "lib": [
+            "ES2020"
+        ],
+        "noEmit": true,
         "forceConsistentCasingInFileNames": false
     },
     "include": [

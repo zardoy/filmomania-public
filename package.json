@@ -1,6 +1,6 @@
 {
     "name": "filmomania",
-    "main": "node_modules/.cache/tsc-electron/electron/index.js",
+    "main": "electron-out/index.js",
     "author": "Vitaly Turovsky",
     "version": "0.0.1-beta",
     "repository": "https://github.com/zardoy/filmomania-public.git",
@@ -23,7 +23,6 @@
         }
     },
     "dependencies": {
-        "@apollo/client": "^3.3.9",
         "@fontsource/roboto": "^4.2.1",
         "@material-ui/core": "^4.11.3",
         "@material-ui/icons": "^4.11.2",
@@ -44,20 +43,24 @@
         "filesize": "^6.1.0",
         "formik": "^2.2.6",
         "framer-motion": "^4.1.17",
+        "git-remote-origin-url": "^3.1.0",
         "got": "^11.8.1",
         "graphql": "^15.5.0",
+        "json-schema-typed": "^7.0.3",
         "lodash": "^4.17.20",
         "material-ui-popup-state": "^1.7.1",
         "react": "^17.0.1",
         "react-dom": "^17.0.1",
         "react-router": "^5.2.0",
         "react-router-dom": "^5.2.0",
+        "react-use": "^17.2.4",
         "rimraf": "^3.0.2",
         "sanitize-filename": "^1.6.3",
-        "soda-player-patch": "https://github.com/zardoy/soda-player-plus#build",
+        "soda-player-patch": "https://github.com/zardoy/soda-player-plus#4a1590c48741210e9a42f403e2736868f88fdb25",
         "typed-ipc": "^0.0.3",
         "underscore": "^1.12.0",
-        "xbytes": "^1.7.0"
+        "xbytes": "^1.7.0",
+        "zustand": "^3.5.2"
     },
     "devDependencies": {
         "@codeshift/utils": "^0.1.2",
@@ -88,6 +91,7 @@
     },
     "scripts": {
         "start-main": "tsc-watch -p ./src/electron/tsconfig.json --onSuccess \"electron .\"",
+        "start-main-new": "node electron-esbuild.mjs && electron .",
         "start-renderer": "vite",
         "build-main": "tsc -p ./src/electron/tsconfig.build.json",
         "build-renderer": "craco-electron build",

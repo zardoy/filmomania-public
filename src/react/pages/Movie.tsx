@@ -26,7 +26,7 @@ import { Alert } from "@material-ui/lab";
 
 import { currentSearchFilmsVar } from "../apolloLocalState";
 import CenterContent from "../components/CenterContent";
-import { settingsStore } from "../electron-shared/settings";
+import { settingsStore } from "../settingsStore";
 
 interface ComponentProps {
 }
@@ -108,9 +108,9 @@ const FilmPage: React.FC<ComponentProps> = () => {
             <List>{
                 state.value.results.length ?
                     _.sortBy(state.value.results, o => o.sizeInBytes).reverse().map(({ title, magnet, torrentID, seeders, displaySize, pageURL, torrentURL }) => {
-                        const playTorrent = () => {
-                            typedIpcRenderer.send("playInPlayer", {
-                                player: settingsStore.get("generalDefaultPlayer") as any,
+                        const playTorrent = async () => {
+                            typedIpcRenderer.send("playTorrent", {
+                                player: await settingsStore.get("player", "defaultPlayer"),
                                 magnet
                             });
                         };

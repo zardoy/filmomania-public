@@ -2,7 +2,7 @@ import _ from "lodash";
 import { Merge, RequireExactlyOne } from "type-fest";
 import { pluck } from "underscore";
 
-import { settingsStore } from "../electron-shared/settings";
+import { settingsStore } from "../settingsStore";
 
 export type FilmsOrError = RequireExactlyOne<{
     error?: string;
@@ -89,6 +89,7 @@ interface RequestOptions {
 
 export const SEARCH_QUERY_MIN_LENGTH = 3;
 
+// todo lib
 const numberOrUndefined = (value: string | number | undefined, intOrFloat: "float" | "int" = "float") => {
     const correctlyTypedValue = value as string;
     const parsedValue = intOrFloat === "float" ? parseFloat(correctlyTypedValue) : parseInt(correctlyTypedValue);
@@ -102,7 +103,7 @@ const numberOrUndefined = (value: string | number | undefined, intOrFloat: "floa
 const ensureIsNumber = <K extends object>(obj: K, props: (keyof K)[], ifNaN: "throw" | "setUndefined" = "setUndefined") => {
     Object.entries(_.pick(obj, props)).forEach(([propName, value]) => {
         if (typeof value === "number") return;
-        const parsedValue = numberOrUndefined(value as string);
+        const parsedValue = numberOrUndefined(value as unknown as string);
         if (parsedValue === undefined && ifNaN === "throw") {
             throw new TypeError(`Property ${propName} is not a number!`);
         }
@@ -120,7 +121,8 @@ export const searchByQuery = async (query: string, { abortSignal }: RequestOptio
         return searchFilmsCache.get(query)!;
     }
 
-    let endpoint = settingsStore.get("searchEngineApiEndpoint") as string;
+    let endpoint = await settingsStore.get("movieSearchEngine", "endpoint");
+    if (!endpoint) throw new TypeError(`Endpoint is not set`);
     if (!endpoint.startsWith("http")) endpoint = `https://${endpoint}`;
     const requestURL = new URL(endpoint);
     requestURL.searchParams.append("keyword", query);
@@ -128,7 +130,7 @@ export const searchByQuery = async (query: string, { abortSignal }: RequestOptio
     const response = await fetch(requestURL.toString(), {
         signal: abortSignal,
         headers: {
-            "X-API-KEY": settingsStore.get("searchEngineApiKey") as string
+            "X-API-KEY": (await settingsStore.get("movieSearchEngine", "apiKey"))!
         }
     });
     type SearchResultType = Merge<FilmsSearchEngineResponse, { films: RawFilmInfo[]; }>;
@@ -168,7 +170,7 @@ export const searchByQuery = async (query: string, { abortSignal }: RequestOptio
                     const execResult = /(\d{1,2})\s?:\s?(\d{1,2})/.exec(film.filmLength.trim());
                     if (execResult) {
                         const [, hours, minutes] = execResult;
-                        newProps.filmLength = numberOrUndefined(+hours * +minutes);
+                        newProps.filmLength = numberOrUndefined(+hours! * +minutes!);
                     }
                 }
                 // ignore other indicators for now
@@ -179,8 +181,8 @@ export const searchByQuery = async (query: string, { abortSignal }: RequestOptio
                     newProps.year = film.year as unknown as number;
                 } else if (newProps.type === "show") {
                     const [, yearFrom, yearTo] = /(.+)-(.+)/.exec(film.year!.trim())!;
-                    newProps.yearFrom = +yearFrom;
-                    newProps.yearTo = yearTo === "..." ? "nowadays" : +yearTo;
+                    newProps.yearFrom = +yearFrom!;
+                    newProps.yearTo = yearTo === "..." ? "nowadays" : +yearTo!;
                     ensureIsNumber(newProps, ["yearFrom"]);
                 }
 

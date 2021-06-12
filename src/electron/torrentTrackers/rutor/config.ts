@@ -14,7 +14,7 @@ export default {
         //TODO: исключать пробельные символы - investigate
         const getURL = (category_number: number) => `http://rutor.info/search/0/${category_number}/100/2/${searchQuery}`;//nameru and nameen TODO: escaping spec symbols
         const url = getURL(0);
-        console.log("Tracker URL", url);
+        console.log("Tracker request URL", url);
         // return [getURL(categories.foreign), ...film.country.filter(({ country }) => country === "Россия").length ? [getURL(categories.native)] : []];
 
 
