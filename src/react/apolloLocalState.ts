@@ -1,13 +1,6 @@
-import { makeVar } from "@apollo/client";
+import createStore from "zustand";
 
 import { FirstLaunchSpecs } from "./electron-shared/ipcSchema";
-import { ParsedFilmInfo } from "./utils/search-engine";
-
-interface GlobalFilmInfoCache {
-    [filmId: string]: ParsedFilmInfo;
-}
-
-export const currentSearchFilmsVar = makeVar<ParsedFilmInfo[]>([]);
 
 type InitialSetupStatus = {
     status: "pending";
@@ -19,11 +12,17 @@ type InitialSetupStatus = {
     status: "appReady";
 };
 
-export const appInitialSetupStatusVar = makeVar<InitialSetupStatus>({
+export const useAppStatus = createStore<InitialSetupStatus>(() => ({
     status: "pending"
-});
+}));
 
-type ProxySetupState = {
+export const useCurrentSearch = createStore(() => ({
+    query: "",
+}));
+
+// export const currentSearchFilmsVar = makeVar<ParsedFilmInfo[]>([]);
+
+type BasicState = {
     state: "pending";
 } | {
     state: "errored";
@@ -32,6 +31,6 @@ type ProxySetupState = {
     state: "success";
 };
 
-export const proxySetupStateVar = makeVar<ProxySetupState>({
+export const useProxyState = createStore<BasicState>(() => ({
     state: "pending"
-});
+}));
