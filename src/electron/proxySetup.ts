@@ -4,9 +4,9 @@ import dns from "dns";
 import got, { Response } from "got";
 import { typedIpcMain } from "typed-ipc";
 
-import { settingsStore } from "../react/electron-shared/settings";
 import { debug } from "./";
 import { mainWindow } from "./mainWindow";
+import { settingsStore } from "./settings";
 
 //for parser: "512 GB mb".replace(new RegExp(Object.keys(sizeMap).join("|"), "gi"), match => sizeMap[match.toUpperCase()])
 
@@ -174,7 +174,7 @@ export const setupProxy = async () => {
     if ("proxyIp" in setupResult) {
         const { proxyIp } = setupResult;
         debug(`Proxy setup success: ${proxyIp}`);
-        settingsStore.set("internalActiveProxy", proxyIp);
+        await settingsStore.set("internal", "activeProxy", proxyIp);
         typedIpcMain.sendToWindow(mainWindow, "proxySetup", {
             success: true
         });
@@ -202,7 +202,7 @@ const setupProxyInternal = async (): GetAliveProxyResult => {
         reportProxySetupStatus("Internet is up!");
     }
 
-    const prevActiveProxy = settingsStore.get("internalActiveProxy") as string;
+    const prevActiveProxy = await settingsStore.get("internal", "activeProxy");
 
     if (prevActiveProxy) {
         // todo-low more clear messages?
