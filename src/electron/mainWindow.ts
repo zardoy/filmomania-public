@@ -1,7 +1,6 @@
 import { BrowserWindow } from "electron";
 import electronIsDev from "electron-is-dev";
-import windowStateKeeper from "electron-window-state";
-import _ from "lodash";
+import ElectronWindowKeeper from "electron-window-keeper";
 import path from "path";
 
 export let mainWindow: BrowserWindow | null;
@@ -15,15 +14,12 @@ export const createMainWindow = () => {
     // todo add fullscreenable to electron general settings
 
     // todo manage update on resize and move if is in development
-    const windowState = windowStateKeeper({
-        defaultWidth: 700,
-        defaultHeight: 400
-    });
-    // todo is that mandatory?
-    const windowPosAndSize = _.pick(windowState, ["x", "y", "width", "height"]);
+    const windowState = new ElectronWindowKeeper();
 
     mainWindow = new BrowserWindow({
-        ...windowPosAndSize,
+        width: 700,
+        height: 400,
+        ...windowState.restoredState,
         minWidth: 800,
         minHeight: 600,
         center: true,
@@ -32,8 +28,9 @@ export const createMainWindow = () => {
         darkTheme: true,
         alwaysOnTop: electronIsDev && (!!+process.env.WINDOW_ALWAYS_ON_TOP! ?? false),
         webPreferences: {
-            nodeIntegration: true,
-            devTools: true
+            // nodeIntegration: true,
+            preload: path.join(__dirname, "./preload.js"),
+            // contextIsolation: false
         },
     });
     // todo-high

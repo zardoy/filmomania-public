@@ -14,21 +14,29 @@ I know, design is bad. I'll use [arwes](https://playground.arwes.dev/core) in fu
 
 ## Build EXE
 
-- Node.js git and yarn must be installed
-- After cloning this repo and installing dependencies (just run `yarn` in terminal) run `yarn build-app`
+> [Node.js](https://nodejs.org/) and [yarn](https://classic.yarnpkg.com/en/docs/install/#windows-stable) must be installed.
+
+- Clone this via git / download ZIP
+- Install dependencies (just run `yarn` in terminal) and then run `yarn build-app`
 - If everything is okay, you will find installer in `build-app` folder
 
 ## Features
 
-- Fast proxy setup (speed'll be increased in future releases)
-- It works (I mean it should work)
-- ~~Uses Ace Stream underneath~~ now Soda Player Plus (<https://github.com/zardoy/soda-player-plus>) (but you don't need to install anything manually) UPDATE: I'll migrate to [Stremio](https://www.stremio.com/) since it's faster and much more stable than Soda.
+- It pretty fast and stable
+- Greatest UI / UX on the planet
+- It firstly used Ace Stream with MPC-HC, then I switched to [Soda Player Plus](https://github.com/zardoy/soda-player-plus) and now it uses [Stremio](https://www.stremio.com/).
 - And the last... I don't know any alternatives to it
 
 ## Roadmap
 
-- [ ] Rename project?
+### Soon
+
+- [ ] investigate other frameworks / solutions: Tauri, [Neutralino](https://neutralino.js.org/docs/#/)
 - [ ] Client redesign
+
+### Stale
+
+- [ ] Rename project
 - [ ] A lot of integrations!
 - [ ] Razer and aura sdk integration (light effects) with player integration
 - [ ] Movie scenes parser

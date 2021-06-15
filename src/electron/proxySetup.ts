@@ -4,17 +4,11 @@ import dns from "dns";
 import got, { Response } from "got";
 import { typedIpcMain } from "typed-ipc";
 
-import { settingsStore } from "../react/electron-shared/settings";
 import { debug } from "./";
 import { mainWindow } from "./mainWindow";
+import { settingsStore } from "./settings";
 
 //for parser: "512 GB mb".replace(new RegExp(Object.keys(sizeMap).join("|"), "gi"), match => sizeMap[match.toUpperCase()])
-
-// type LoopHandler<T, K> = (promiseResult: T) => ({ nextPromise: Promise<T>; } | { doneValue: K; });
-
-// const loop = <T, K>(promise: Promise<T>, handler: LoopHandler<T, K>): Promise<K> =>
-//     promise.then(handler).then(result => "nextPromise" in result ? loop(result.nextPromise, handler) : result.doneValue);
-
 
 // todo add support for https://gimmeproxy.com/api/getProxy?protocol=http <-- in avarage there're faster
 const proxySources = [
@@ -36,7 +30,7 @@ const proxySources = [
                             if (ipEntry) {
                                 return {
                                     done: false,
-                                    value: ipEntry.groups!.ip
+                                    value: ipEntry.groups!.ip!
                                 };
                             } else {
                                 return { done: true, value: undefined };
@@ -47,7 +41,7 @@ const proxySources = [
             };
         }
     }
-];
+] as const;
 
 const getProxiesIp = async (): Promise<string[] | Iterable<string> | undefined> => {
     for (let { url, parseProxies, name = url } of proxySources) {
@@ -61,6 +55,7 @@ const getProxiesIp = async (): Promise<string[] | Iterable<string> | undefined> 
             continue;
         }
     }
+    return;
 };
 
 const isOnline = (): Promise<boolean> => new Promise(resolve => dns.lookup("google.com", (err: any) => resolve(!err || err.code !== "ENOTFOUND")));
@@ -105,7 +100,7 @@ const getAliveProxy = async ({ proxies, testingSite, timeout, parallel }: GetAli
         const succeededProxy = checkResults.findIndex(result => result.success);
         if (succeededProxy >= 0) {
             return {
-                proxyIp: currentProxies[succeededProxy]
+                proxyIp: currentProxies[succeededProxy]!
             };
         } else {
             if (currentProxies.length < parallel) {
@@ -132,15 +127,15 @@ type CheckTargetSiteWithProxy = (
 
 const checkTargetSiteWithProxy: CheckTargetSiteWithProxy = async ({ proxyIp, timeout: CHECK_TIMEOUT, testingSite }) => {
     debug(`Checking proxy: ${proxyIp}`);
-    let [host, ...rest] = proxyIp.split(":");
-    let port = +rest[0];
+    let [host, portStr] = proxyIp.split(":");
+    let port = +portStr!;
     if (isNaN(port)) throw TypeError("Port is not a number. Check the source.");
     let cancelSource = axios.CancelToken.source(),
         timeout = setTimeout(() => cancelSource.cancel("proxy_timeout"), CHECK_TIMEOUT);
     try {
         let { data } = await axios.get(testingSite, {
             proxy: {
-                host,
+                host: host!,
                 port
             },
             cancelToken: cancelSource.token
@@ -179,7 +174,7 @@ export const setupProxy = async () => {
     if ("proxyIp" in setupResult) {
         const { proxyIp } = setupResult;
         debug(`Proxy setup success: ${proxyIp}`);
-        settingsStore.set("internalActiveProxy", proxyIp);
+        await settingsStore.set("internal", "activeProxy", proxyIp);
         typedIpcMain.sendToWindow(mainWindow, "proxySetup", {
             success: true
         });
@@ -207,7 +202,7 @@ const setupProxyInternal = async (): GetAliveProxyResult => {
         reportProxySetupStatus("Internet is up!");
     }
 
-    const prevActiveProxy = settingsStore.get("internalActiveProxy") as string;
+    const prevActiveProxy = await settingsStore.get("internal", "activeProxy");
 
     if (prevActiveProxy) {
         // todo-low more clear messages?

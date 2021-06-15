@@ -1,13 +1,12 @@
 {
+    "extends": "@zardoy/tsconfig/node",
     "compilerOptions": {
-        "target": "ESNext",
-        "strict": false,
-        "module": "CommonJS",
-        "esModuleInterop": true,
-        "sourceMap": true,
-        "outDir": "../../dist",
-        "noEmitOnError": true,
-        "rootDir": ".."
+        // "sourceMap": true,
+        "lib": [
+            "ES2020"
+        ],
+        "noEmit": true,
+        "forceConsistentCasingInFileNames": false
     },
     "include": [
         ".",

@@ -1,7 +1,7 @@
 import cheerio from "cheerio";
 import xbytes from "xbytes";
 
-import { TorrentEngineParseResult, TorrentItem } from "../../../react/electron-shared/TorrentTypes";
+import { TorrentEngineParseResult, TorrentItem } from "../../../react/electron-shared/torrentTypes";
 
 const mapUnits = {
     MB: "МБ",

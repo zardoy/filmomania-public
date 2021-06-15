@@ -3,6 +3,6 @@ import unhandled from "electron-unhandled";
 
 unhandled({
     reportButton: () => {
-        void shell.openExternal(`https://github.com/zardoy/filmomania-public/issues`);
+        void shell.openExternal(`${process.env.GITHUB_REPO_URL!}/issues`);
     }
 });

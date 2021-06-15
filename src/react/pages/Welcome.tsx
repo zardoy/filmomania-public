@@ -135,7 +135,7 @@ const SodaPlayerStatus: React.FC<InsatllAceStreamButtonProps> = () => {
 };
 
 const getUrlEndpointBase = () => {
-    let apiEndpoint = process.env.REACT_APP_SEARCH_ENGINE_ENDPOINT || "";
+    let apiEndpoint = import.meta.env.VITE_SEARCH_ENGINE_ENDPOINT || "";
     if (!apiEndpoint.startsWith("http")) apiEndpoint = `https://${apiEndpoint}`;
     return new URL(apiEndpoint).host;
 };
@@ -146,9 +146,9 @@ interface StepProps {
 
 const SearchEngineStep: React.FC<StepProps> = ({ setStep }) => {
     const [searchApiEndpoint] = useState(() =>
-        settingsStore.get("searchEngineApiEndpoint") || process.env.REACT_APP_SEARCH_ENGINE_ENDPOINT || "");
+        settingsStore.get("searchEngineApiEndpoint") || import.meta.env.VITE_SEARCH_ENGINE_ENDPOINT || "");
     const [searchApiKey, setSearchApiKey] = useState(() =>
-        settingsStore.get("searchEngineApiKey") || process.env.REACT_APP_SEARCH_ENGINE_API_KEY || "");
+        settingsStore.get("searchEngineApiKey") || import.meta.env.VITE_SEARCH_ENGINE_API_KEY || "");
 
     const nextStepCallback = useCallback(() => {
         settingsStore.set("searchEngineApiEndpoint", searchApiEndpoint);
