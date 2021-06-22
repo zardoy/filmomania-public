@@ -76,10 +76,11 @@
         ],
         "no-console": "warn",
         // es6
-        "arrow-body-style": [
-            "error",
-            "as-needed"
-        ],
+        // "arrow-body-style": [
+        //     "error",
+        //     "as-needed"
+        // ],
+        "arrow-body-style": "off",
         "arrow-parens": [
             "error",
             "as-needed"
