@@ -32,8 +32,8 @@
         ],
         // should be standard
         "semi": [
-            "error",
-            "always"
+            "off",
+            "never"
         ],
         "no-trailing-spaces": "error",
         "no-alert": "warn",
@@ -51,9 +51,14 @@
         "react/prop-types": "off",
         // I keep emty interfaces sometimes for easier refactoring. todo find better refactoring tools and switch to warn
         "@typescript-eslint/no-empty-interface": "off",
+        // I'm not making a public library so I don't want to waste my time to define types TS can do it for me
+        "@typescript-eslint/explicit-module-boundary-types": "off",
         "@typescript-eslint/no-floating-promises": [
             "error"
         ],
+        // TODO! error on production
+        "@typescript-eslint/no-unused-vars": "off",
+        "@typescript-eslint/no-non-null-assertion": "off",
         "no-script-url": "error",
         "no-multi-spaces": "error",
         // forbid usage of single quotes
@@ -71,10 +76,11 @@
         ],
         "no-console": "warn",
         // es6
-        "arrow-body-style": [
-            "error",
-            "as-needed"
-        ],
+        // "arrow-body-style": [
+        //     "error",
+        //     "as-needed"
+        // ],
+        "arrow-body-style": "off",
         "arrow-parens": [
             "error",
             "as-needed"

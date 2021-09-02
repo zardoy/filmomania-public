@@ -1,16 +1,14 @@
 {
+    "extends": "@zardoy/tsconfig/node",
     "compilerOptions": {
-        "target": "ESNext",
-        "strict": true,
-        "module": "CommonJS",
-        "esModuleInterop": true,
-        "sourceMap": true,
-        "outDir": "../../dist",
-        "noEmitOnError": true,
-        "rootDir": ".."
+        "target": "ES2020",
+        "noEmit": true,
+        "forceConsistentCasingInFileNames": false,
+        "keyofStringsOnly": true
     },
     "include": [
         ".",
-        "../react/electron-shared"
+        "../react/electron-shared",
+        "../lib"
     ]
 }

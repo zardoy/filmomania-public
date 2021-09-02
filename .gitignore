@@ -5,6 +5,8 @@
 # prisma development migrations
 /prisma/migrations
 
+.idea
+
 # dependencies
 /node_modules
 /.pnp
@@ -15,7 +17,9 @@
 
 # production
 /build
+/build-*
 /dist
+/out
 
 .env.local
 
@@ -28,10 +32,5 @@ local-tests
 .env.test.local
 .env.production.local
 
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-debug.log
-
-rutracker-credentials.json
+*.log
+*-out
