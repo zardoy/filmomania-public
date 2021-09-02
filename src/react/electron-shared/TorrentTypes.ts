@@ -1,5 +1,3 @@
-import { LiteralUnion } from "type-fest";
-
 export type TorrentEngineParseResult = {
     hiddenResults: number;
     totalResults: number;
@@ -49,7 +47,7 @@ export interface TorrentItem {
     /**
      * Parsed from resolution
      */
-    quality: LiteralUnion<"480p" | "720p" | "1080p" | "4K" | "???", string>;
+    // quality: LiteralUnion<"480p" | "720p" | "1080p" | "4K" | "???", string>;
     /**
      * Whether is in hdr
      */

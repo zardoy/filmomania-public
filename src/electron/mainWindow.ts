@@ -14,7 +14,9 @@ export const createMainWindow = () => {
     // todo add fullscreenable to electron general settings
 
     // todo manage update on resize and move if is in development
-    const windowState = new ElectronWindowKeeper();
+    const windowState = new ElectronWindowKeeper({
+        maximized: false
+    });
 
     mainWindow = new BrowserWindow({
         width: 700,
@@ -32,9 +34,9 @@ export const createMainWindow = () => {
             preload: path.join(__dirname, "./preload.js"),
             // contextIsolation: false
         },
+        show: false
     });
-    // todo-high
-    if (electronIsDev) mainWindow.minimize();
+    mainWindow.showInactive();
     windowState.manage(mainWindow);
     // mainWindow.setMenu(null);
     void mainWindow.loadURL(electronIsDev ? "http://localhost:3500" : `file://${path.join(__dirname, "../../../build/index.html")}`);

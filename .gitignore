@@ -5,6 +5,8 @@
 # prisma development migrations
 /prisma/migrations
 
+.idea
+
 # dependencies
 /node_modules
 /.pnp

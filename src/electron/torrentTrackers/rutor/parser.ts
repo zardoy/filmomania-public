@@ -54,7 +54,6 @@ export default (searchResultsHtml: string, onlyMovies: boolean): TorrentEnginePa
         const rawSize = elem.find(":nth-last-child(2)").text().trim();
         const xbytesInfo = xbytes.parseBytes(rawSize);
         const sizeInBytes = xbytesInfo.bytes;
-        //@ts-ignore
         const displaySize = `${parseFloat(rawSize).toFixed(1)} ${mapUnits[xbytesInfo["unit"]] ?? xbytesInfo["unit"]}`;
 
         const result = {
@@ -85,7 +84,7 @@ export default (searchResultsHtml: string, onlyMovies: boolean): TorrentEnginePa
     }).get().filter(a => a);
     if (trElems.length && !torrentItems.length) {
         // todo-low translate why not
-        throw new Error("Ошибка парсинга всех результатов из таблицы table.");
+        throw new Error("Ошибка парсинга всех результатов из таблицы table");
     }
     let hiddenResults = actualResultsCount > torrentItems.length ? actualResultsCount - torrentItems.length : 0;
     return {

@@ -1,42 +1,44 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
+import isOnline from "is-online";
 import { useHistory } from "react-router-dom";
+import { useNetworkState } from "react-use";
 import { typedIpcRenderer } from "typed-ipc";
 
-import { appInitialSetupStatusVar, proxySetupStateVar } from "../apolloLocalState";
+import { useProxyState } from "../localState";
+import Notification from "./Notification";
 
 interface ComponentProps {
 }
 
+// notistack
+
 let ElectronEvents: React.FC<ComponentProps> = () => {
     const routerHistory = useHistory();
+
+    const proxyState = useProxyState();
+
+    const navigatorNetworkStatus = useNetworkState();
+
+    const isOffline = useState(false);
+
+    useEffect(() => {
+        isOnline().then(isOnline => isOffline[1](!isOnline));
+    }, [navigatorNetworkStatus.online]);
+
 
     useEffect(() => {
         typedIpcRenderer.addEventListener("openRoute", (_event, { url }) => {
             routerHistory.push(url);
         });
 
-        void (async () => {
-            const data = await typedIpcRenderer.request("appInit");
-            if (data.isFirstLaunch) {
-                appInitialSetupStatusVar({
-                    status: "setupNeeded",
-                    specs: data.specs
-                });
-            } else {
-                appInitialSetupStatusVar({
-                    status: "appReady"
-                });
-            }
-        })();
-
         typedIpcRenderer.addEventListener("proxySetup", (_event, { success, errorMessage = "" }) => {
             if (success) {
-                proxySetupStateVar({
+                useProxyState.setState({
                     state: "success"
                 });
             } else {
-                proxySetupStateVar({
+                useProxyState.setState({
                     state: "errored",
                     errorMessage
                 });
@@ -49,7 +51,20 @@ let ElectronEvents: React.FC<ComponentProps> = () => {
         };
     }, []);
 
-    return null;
+    return <>
+        <Notification
+            open={proxyState.state === "pending"}
+            message="Warming up your proxy companions..."
+            severity="info"
+            icon={null}
+            progress={true}
+        />
+        <Notification
+            open={isOffline[0]}
+            message="No internet connection"
+            severity="error"
+        />
+    </>;
 };
 
 export default ElectronEvents;

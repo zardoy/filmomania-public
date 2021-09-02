@@ -1,17 +1,17 @@
-import React from "react";
-import ReactDom from "react-dom";
-import App from "./App";
-import "./main.css";
+import React from "react"
+import ReactDom from "react-dom"
+import Root from "./pages/Root"
+import { settingsStore } from "./electron-shared/settings"
 
-import { ipcRenderer } from "electron";
+import "tailwindcss/tailwind.css"
 
-import "@fontsource/roboto";
-import "@fontsource/roboto/300.css";
-import "@fontsource/roboto/500.css";
-import "@fontsource/roboto/700.css";
+import "@fontsource/roboto"
+import "@fontsource/roboto/300.css"
+import "@fontsource/roboto/500.css"
+import "@fontsource/roboto/700.css"
 
-if (import.meta.env.MODE === "development") console.clear();
+await settingsStore.init()
 
-console.log(ipcRenderer);
+// if (import.meta.env.MODE === "development") console.clear();
 
-ReactDom.render(<App />, document.getElementById("root"));
+ReactDom.render(<Root />, document.getElementById("root"))

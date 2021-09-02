@@ -3,10 +3,12 @@
     "compilerOptions": {
         "target": "ES2020",
         "noEmit": true,
-        "forceConsistentCasingInFileNames": false
+        "forceConsistentCasingInFileNames": false,
+        "keyofStringsOnly": true
     },
     "include": [
         ".",
-        "../react/electron-shared"
+        "../react/electron-shared",
+        "../lib"
     ]
 }

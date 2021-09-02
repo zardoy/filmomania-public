@@ -1,1 +1,2 @@
-export const ipcRenderer = electron.ipcRenderer;
+export const ipcRenderer = electron.ipcRenderer
+export const ipcMain = undefined

@@ -1,31 +1,27 @@
 import { IpcMainHandler } from "typed-ipc";
 
-import { settingsStore } from "../settings";
-import rutorConfig from "../torrentTrackers/rutor/config";
+import { requestSiteWithProxies } from "@zardoy/proxy-util/filmomania/request";
 
-//@ts-ignore
+import { proxyReady } from "../proxy";
+import rutorConfig from "../torrentTrackers/rutor/config";
+import { settingsStore } from "../../react/electron-shared/settings";
+
 export const requestTorrentsList: IpcMainHandler<"torrentsList"> = async (_event, { searchQuery }) => {
     const torrentEngineConfig = rutorConfig;
 
-    const proxyIp = await settingsStore.get("internal", "activeProxy");
+    const proxies = settingsStore.settings.internal.activeProxies
+    if (!proxyReady || !proxies) throw new Error(`Proxy is not ready yet`);
 
-    if (!proxyIp) {
-        throw new Error("Proxy is not set");
-    }
+    const requestUrl = torrentEngineConfig.getRequestUrl(searchQuery);
+    const axiosResponse = await requestSiteWithProxies(proxies.split(","), encodeURI(requestUrl));
+    const engineResult = await torrentEngineConfig.parseData(axiosResponse);
 
-    try {
-        const engineResult = await torrentEngineConfig.getResults(searchQuery, proxyIp);
-        return {
-            metdata: {
-                engines: torrentEngineConfig.name,
-                // warnings: engineResult.hiddenResults > 0 ? [""] : ""
-                warnings: []
-            },
-            parseResult: engineResult
-        };
-    } catch (err) {
-        return {
-            error: err.message
-        };
-    }
+    return {
+        metdata: {
+            engines: [torrentEngineConfig.name],
+            // warnings: engineResult.hiddenResults > 0 ? [""] : ""
+            warnings: []
+        },
+        parseResult: engineResult
+    };
 };

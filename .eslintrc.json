@@ -32,8 +32,8 @@
         ],
         // should be standard
         "semi": [
-            "error",
-            "always"
+            "off",
+            "never"
         ],
         "no-trailing-spaces": "error",
         "no-alert": "warn",

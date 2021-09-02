@@ -3,20 +3,20 @@ import React from "react";
 import { Button, Grid, Typography } from "@material-ui/core";
 
 export default class ErrorBoundary extends React.Component<{}, { hasError: boolean; }> {
-    state = {
+    override state = {
         hasError: false
     };
 
-    componentDidCatch() {
+    override componentDidCatch() {
         this.setState({
             hasError: true
         });
         // todo #3 report to server
     }
 
-    render() {
+    override render() {
         if (this.state.hasError) {
-            return <Grid container direction="column" justify="space-between" alignItems="center" style={{ height: "100vh" }}>
+            return <Grid container direction="column" justifyContent="space-between" alignItems="center" style={{ height: "100vh" }}>
                 <Grid item>
                     <Typography variant="h3" align="center">App Crashed</Typography>
                 </Grid>

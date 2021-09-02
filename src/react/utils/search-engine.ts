@@ -2,12 +2,12 @@ import _ from "lodash";
 import { Merge, RequireExactlyOne } from "type-fest";
 import { pluck } from "underscore";
 
-import { settingsStore } from "../settingsStore";
+import { settingsStore } from "../electron-shared/settings";
 
 export type FilmsOrError = RequireExactlyOne<{
-    error?: string;
-    films?: ParsedFilmInfo[];
-}, "error" | "films">;
+    error?: string
+    films?: ParsedFilmInfo[]
+}, "error" | "films">
 
 export interface FilmsSearchEngineResponse {
     keyword: string,
@@ -16,7 +16,7 @@ export interface FilmsSearchEngineResponse {
      */
     pagesCount: number,
     films: ParsedFilmInfo[],
-    searchFilmsCountResult: number;
+    searchFilmsCountResult: number
 }
 
 // Show indicators: nameRu or nameEn could include (мини-сериал) or (сериал) at the end or if year is num-num or num-...
@@ -30,7 +30,7 @@ interface RawFilmInfo {
      * Could be "" "Player$"
      */
     nameEn: string,
-    type: "FILM" | "TV_SHOW" | "UNKNOWN";
+    type: "FILM" | "TV_SHOW" | "UNKNOWN"
     // Could be "2002-..." <- до сегодняшная дня
     year?: string,
     description?: string,
@@ -43,18 +43,18 @@ interface RawFilmInfo {
         /**
          * @example "США" "Китай" "Япония" "Россия" "Норвегия"
          */
-        country: string;
+        country: string
     }>,
     genres: Array<{
-        genre: string;
+        genre: string
     }>,
     /**
      * float 0 - 10 or 99% if not released yet
      */
     rating?: string,
     ratingVoteCount: number,
-    posterUrl?: string;
-    posterUrlPreview?: string;
+    posterUrl?: string
+    posterUrlPreview?: string
 }
 
 export type ParsedFilmInfo = Merge<Omit<RawFilmInfo, "year">, {
@@ -63,18 +63,18 @@ export type ParsedFilmInfo = Merge<Omit<RawFilmInfo, "year">, {
      */
     filmLength: number,
     countries: string[],
-    genres: string[];
-    rating: number;
-    released: boolean;
-    cleanName: string;
+    genres: string[]
+    rating: number
+    released: boolean
+    cleanName: string
 } & ({
-    type: "film";
-    year: number;
+    type: "film"
+    year: number
 } | {
-    type: "show";
-    yearFrom: number;
-    yearTo: number | "nowadays";
-})>;
+    type: "show"
+    yearFrom: number
+    yearTo: number | "nowadays"
+})>
 // } & ({
 //     type: "film",
 //     year: number;
@@ -84,140 +84,155 @@ export type ParsedFilmInfo = Merge<Omit<RawFilmInfo, "year">, {
 // })
 
 interface RequestOptions {
-    abortSignal: AbortSignal;
+    abortSignal: AbortSignal
 }
 
-export const SEARCH_QUERY_MIN_LENGTH = 3;
+export const SEARCH_QUERY_MIN_LENGTH = 3
 
 // todo lib
 const numberOrUndefined = (value: string | number | undefined, intOrFloat: "float" | "int" = "float") => {
-    const correctlyTypedValue = value as string;
-    const parsedValue = intOrFloat === "float" ? parseFloat(correctlyTypedValue) : parseInt(correctlyTypedValue);
+    const correctlyTypedValue = value as string
+    const parsedValue = intOrFloat === "float" ? parseFloat(correctlyTypedValue) : parseInt(correctlyTypedValue)
     // ban Infinity
-    return !isNaN(parsedValue) && isFinite(parsedValue) ? parsedValue : undefined;
-};
+    return !isNaN(parsedValue) && isFinite(parsedValue) ? parsedValue : undefined
+}
 
 /**
  * Mutates object.
  */
 const ensureIsNumber = <K extends object>(obj: K, props: (keyof K)[], ifNaN: "throw" | "setUndefined" = "setUndefined") => {
     Object.entries(_.pick(obj, props)).forEach(([propName, value]) => {
-        if (typeof value === "number") return;
-        const parsedValue = numberOrUndefined(value as unknown as string);
+        if (typeof value === "number") return
+        const parsedValue = numberOrUndefined(value as unknown as string)
         if (parsedValue === undefined && ifNaN === "throw") {
-            throw new TypeError(`Property ${propName} is not a number!`);
+            throw new TypeError(`Property ${propName} is not a number!`)
         }
         //@ts-ignore
-        obj[propName] = parsedValue;
-    });
-};
+        obj[propName] = parsedValue
+    })
+}
 
-// make expirable?
-export const searchFilmsCache = new Map<string, FilmsSearchEngineResponse>();
+const expiration = 12 * 60 * 60 * 1000 //12 hours
+
+const cache = new Map<string, { timeStamp: number, value: FilmsSearchEngineResponse }>()
+
+const getCachedQuery = (keyword: string) => {
+    const cached = cache.get(keyword)
+    if (!cached) return undefined
+    if (Date.now() - cached.timeStamp > expiration) return undefined
+    return cached.value
+}
+
+const setCachedQuery = (keyword: string, value: FilmsSearchEngineResponse) => {
+    cache.set(keyword, {
+        timeStamp: Date.now(),
+        value
+    })
+}
+
 
 export const searchByQuery = async (query: string, { abortSignal }: RequestOptions): Promise<FilmsSearchEngineResponse> => {
-    query = query.trim();
-    if (searchFilmsCache.has(query)) {
-        return searchFilmsCache.get(query)!;
-    }
+    query = query.trim()
+    const cachedValue = getCachedQuery(query)
+    if (cachedValue) return cachedValue
 
-    let endpoint = await settingsStore.get("movieSearchEngine", "endpoint");
-    if (!endpoint) throw new TypeError(`Endpoint is not set`);
-    if (!endpoint.startsWith("http")) endpoint = `https://${endpoint}`;
-    const requestURL = new URL(endpoint);
-    requestURL.searchParams.append("keyword", query);
+    let { endpoint, apiKey } = settingsStore.settings.movieSearchEngine
+    if (!endpoint) throw new TypeError(`Endpoint is not set`)
+    if (!endpoint.startsWith("http")) endpoint = `https://${endpoint}`
+    const requestURL = new URL(endpoint)
+    requestURL.searchParams.append("keyword", query)
     // todo-low make request from node in order to increase performace by several ms
     const response = await fetch(requestURL.toString(), {
         signal: abortSignal,
         headers: {
-            "X-API-KEY": (await settingsStore.get("movieSearchEngine", "apiKey"))!
+            "X-API-KEY": apiKey!
         }
-    });
-    type SearchResultType = Merge<FilmsSearchEngineResponse, { films: RawFilmInfo[]; }>;
-    const searchResult: SearchResultType = await response.json();
+    })
+    type SearchResultType = Merge<FilmsSearchEngineResponse, { films: RawFilmInfo[] }>
+    const searchResult: SearchResultType = await response.json()
 
-    const currentYear = new Date().getFullYear();
+    const currentYear = new Date().getFullYear()
     // todo REWRITE TYPES AND OBJ MERGING
     // NORMALIZING DATA
     const parsedFilms = searchResult.films
         .filter(({ nameEn, nameRu, filmId }) => {
             if (!nameEn && !nameRu) {
                 // eslint-disable-next-line no-console
-                console.error(`Skipping film with id ${filmId} as it missing both names (en and ru)`);
-                return false;
+                console.error(`Skipping film with id ${filmId} as it missing both names (en and ru)`)
+                return false
             }
-            const badNamesRegex = /\(видео|короткометражка\)$/;
+            const badTitlesRegex = /\(видео|короткометражка\)$/
             if (
-                nameEn && nameEn.match(badNamesRegex) ||
-                nameRu && nameRu.match(badNamesRegex)
+                nameEn && nameEn.match(badTitlesRegex) ||
+                nameRu && nameRu.match(badTitlesRegex)
             ) {
-                return false;
+                return false
             } else {
-                return true;
+                return true
             }
         })
         .map((film): ParsedFilmInfo => {
             try {
-                if (typeof film.filmId !== "number") throw new TypeError(`filmID ${film.filmId} is not a number`);
-                ensureIsNumber(film, ["ratingVoteCount"]);
+                if (typeof film.filmId !== "number") throw new TypeError(`filmID ${film.filmId} is not a number`)
+                ensureIsNumber(film, ["ratingVoteCount"])
 
                 // todo TS fluent filling
                 const newProps: Partial<ParsedFilmInfo> = {
                     countries: pluck(film.countries, "country"),
                     genres: pluck(film.genres, "genre")
-                };
+                }
                 if (film.filmLength) {
-                    const execResult = /(\d{1,2})\s?:\s?(\d{1,2})/.exec(film.filmLength.trim());
+                    const execResult = /(\d{1,2})\s?:\s?(\d{1,2})/.exec(film.filmLength.trim())
                     if (execResult) {
-                        const [, hours, minutes] = execResult;
-                        newProps.filmLength = numberOrUndefined(+hours! * +minutes!);
+                        const [, hours, minutes] = execResult
+                        newProps.filmLength = numberOrUndefined(+hours! * +minutes!)
                     }
                 }
                 // ignore other indicators for now
-                newProps.type = film.year?.includes("-") ? "show" : "film";
+                newProps.type = film.year?.includes("-") ? "show" : "film"
                 if (newProps.type === "film") {
                     // print warning
-                    ensureIsNumber(film, ["year"]);
-                    newProps.year = film.year as unknown as number;
+                    ensureIsNumber(film, ["year"])
+                    newProps.year = film.year as unknown as number
                 } else if (newProps.type === "show") {
-                    const [, yearFrom, yearTo] = /(.+)-(.+)/.exec(film.year!.trim())!;
-                    newProps.yearFrom = +yearFrom!;
-                    newProps.yearTo = yearTo === "..." ? "nowadays" : +yearTo!;
-                    ensureIsNumber(newProps, ["yearFrom"]);
+                    const [, yearFrom, yearTo] = /(.+)-(.+)/.exec(film.year!.trim())!
+                    newProps.yearFrom = +yearFrom!
+                    newProps.yearTo = yearTo === "..." ? "nowadays" : +yearTo!
+                    ensureIsNumber(newProps, ["yearFrom"])
                 }
 
-                newProps.rating = film.rating && !film.rating.endsWith("%") ? numberOrUndefined(film.rating) : undefined;
+                newProps.rating = film.rating && !film.rating.endsWith("%") ? numberOrUndefined(film.rating) : undefined
                 newProps.released =
                     newProps.type === "show" ? newProps.yearFrom! < currentYear :
-                        newProps.type === "film" ? newProps.year! < currentYear : false;
+                        newProps.type === "film" ? newProps.year! < currentYear : false
                 // in case if it was released this year, it must have rating
                 if (!newProps.released && newProps.rating !== undefined) {
-                    newProps.released = true;
+                    newProps.released = true
                 }
                 if (film.description) {
                     // todo-high
-                    film.description = film.description.replace(/.(?=\(.*\)$)/, "$& ");
+                    film.description = film.description.replace(/.(?=\(.*\)$)/, "$& ")
                 }
 
-                newProps.cleanName = (film.nameRu || film.nameEn).replace(/\(.*\)$/g, "").trim();
+                newProps.cleanName = (film.nameRu || film.nameEn).replace(/\(.*\)$/g, "").trim()
 
                 return {
                     ...film,
                     ...newProps as ParsedFilmInfo
-                };
+                }
             } catch (err) {
                 // eslint-disable-next-line no-console
-                console.error("Skipped film from search results", err);
-                return undefined!;
+                console.error("Skipped film from search results", err)
+                return undefined!
             }
         })
-        .filter(film => film !== undefined && film.released);
+        .filter(film => film !== undefined && film.released)
 
     const result = {
         ...searchResult,
         films: parsedFilms
-    };
-    searchFilmsCache.set(query, result);
+    }
+    setCachedQuery(query, result)
 
-    return result;
-};
+    return result
+}

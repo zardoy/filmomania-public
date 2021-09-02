@@ -4,15 +4,15 @@ import { bindPopover, usePopupState } from "material-ui-popup-state/hooks";
 import { useHistory, useRouteMatch } from "react-router";
 import { useAsync } from "react-use";
 
+import { css } from "@emotion/css";
 import {
     Chip,
     CircularProgress,
     ClickAwayListener,
     Grid,
     List,
-    ListItem,
+    ListItemButton,
     ListItemIcon,
-    makeStyles,
     MenuItem,
     MenuList,
     Paper,
@@ -21,43 +21,8 @@ import {
 } from "@material-ui/core";
 import { GetApp as DownloadIcon, PlayArrow as PlayArrowIcon, Star as StarIcon } from "@material-ui/icons";
 
-import { currentSearchFilmsVar } from "../apolloLocalState";
 import CenterContent from "../components/CenterContent";
-import { FilmsSearchEngineResponse, SEARCH_QUERY_MIN_LENGTH, searchByQuery } from "../utils/search-engine";
-
-const useStyles = makeStyles(theme => ({
-    poster: {
-        width: theme.spacing(7),
-        height: theme.spacing(7),
-    }
-}));
-type State = {
-    state: "loading";
-} | {
-    state: "errored";
-    error: string;
-} | {
-    state: "done";
-    result: FilmsSearchEngineResponse;
-};
-
-const useFilmItemStyles = makeStyles(() => ({
-    posterImage: {
-        width: "100%"
-    },
-    descriptionTitleBlock: {
-        height: "100%",
-    },
-    title: {
-        width: "100%"
-    },
-    ratingChip: ({ ratingColor }: { ratingColor: string; }) => ({
-        backgroundColor: ratingColor,
-        color: "white",
-        fontSize: 23,
-        height: 40
-    })
-}));
+import { SEARCH_QUERY_MIN_LENGTH, searchByQuery } from "../utils/search-engine";
 
 const getRatingColor = (rating: number) =>
     rating === 0 ? "#6c757d" :// gray
@@ -70,29 +35,27 @@ interface FilmItemProps {
     title: string;
     description?: string;
     rating?: number;
-    onClick?: React.ComponentProps<typeof ListItem>["onClick"];
+    onClick?: React.ComponentProps<typeof ListItemButton>["onClick"];
 }
 
 const FilmItem: React.FC<FilmItemProps> = ({ title, description, posterUrl, rating, onClick }) => {
-    const classes = useFilmItemStyles({
-        ratingColor: rating ? getRatingColor(rating) : ""
-    });
-
-    return <ListItem divider button onClick={onClick}>
+    return <ListItemButton divider onClick={onClick}>
         <Grid container wrap="nowrap" spacing={2}>
             {
                 posterUrl && <Grid item xs={2}>
                     <img
-                        className={classes.posterImage}
+                        className={css`
+                            width: 100%;
+                        `}
                         alt="poster"
                         src={posterUrl}
                         draggable="false"
                     />
                 </Grid>
             }
-            <Grid item xs={9} container justify="space-between" wrap="nowrap">
-                <Grid item container direction="column" justify="center" className={classes.descriptionTitleBlock}>
-                    <Typography variant="h3" noWrap className={classes.title}>{title}</Typography>
+            <Grid item xs={9} container justifyContent="space-between" wrap="nowrap">
+                <Grid item container direction="column" justifyContent="center" sx={{ height: "100%" }}>
+                    <Typography variant="h3" noWrap sx={{ width: "100%" }}>{title}</Typography>
                     {
                         description && <Typography color="textSecondary">{description}</Typography>
                     }
@@ -101,7 +64,12 @@ const FilmItem: React.FC<FilmItemProps> = ({ title, description, posterUrl, rati
                     {
                         rating && <Chip
                             classes={{
-                                root: classes.ratingChip
+                                root: css`
+                                    background-color: ${getRatingColor(rating)};
+                                    color: white;
+                                    font-size: 23px;
+                                    height: 40px;
+                                `
                             }}
                             // todo fix star
                             icon={<StarIcon />}
@@ -110,15 +78,14 @@ const FilmItem: React.FC<FilmItemProps> = ({ title, description, posterUrl, rati
                 </Grid>
             </Grid>
         </Grid>
-    </ListItem>;
+    </ListItemButton>;
 };
 
 interface ComponentProps {
 }
 
 let Search: React.FC<ComponentProps> = () => {
-    const classes = useStyles();
-    const history = useHistory();
+    const routerHistory = useHistory();
 
     const moreOptionsPopoverState = usePopupState({ variant: "popover", popupId: "filmMoreOptions" });
 
@@ -134,7 +101,7 @@ let Search: React.FC<ComponentProps> = () => {
             const result = await searchByQuery(query, {
                 abortSignal: abortController.current.signal
             });
-            currentSearchFilmsVar(result.films);
+            // useCurrentSearch.setState(result.films);
             return result;
         } catch (err) {
             console.error(err);
@@ -181,7 +148,7 @@ let Search: React.FC<ComponentProps> = () => {
                         state.value.films.length ?
                             state.value.films.map(({ filmId, nameRu, nameEn, posterUrlPreview, description, rating, ...restInfo }) => {
                                 const openFilmPage = () => {
-                                    history.push(`/film/${filmId}`);
+                                    routerHistory.push(`/film/${filmId}`);
                                 };
                                 const displayYear = restInfo.type === "film" ? restInfo.year :
                                     restInfo.yearTo === "nowadays" ? `From ${restInfo.yearFrom}` : `${restInfo.yearFrom} — ${restInfo.yearTo}`;
@@ -195,7 +162,8 @@ let Search: React.FC<ComponentProps> = () => {
                                 />;
                                 // return <ListItem button key={filmId} onClick={openFilmPage}>
                                 //     {hasPoster && <ListItemAvatar>
-                                //         <img alt="poster" src={posterUrlPreview} className={classes.poster} />
+                                //         <img alt="poster" src={posterUrlPreview} sx={{ width: theme.spacing(7),
+                                // height: theme.spacing(7), }} />
                                 //     </ListItemAvatar>}
                                 //     <ListItemText inset={!hasPoster} primary={nameRu || nameEn} secondary={description} />
                                 //     <ListItemSecondaryAction>

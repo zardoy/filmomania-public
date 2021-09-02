@@ -1,102 +1,61 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useRef, useState } from "react";
 
-import { useFormik } from "formik";
-import _ from "lodash";
 import { useHistory } from "react-router-dom";
+import { useDebounce } from "react-use";
+import useEventListener from "use-typed-event-listener";
 
-import { Backdrop, Button, makeStyles, TextField } from "@material-ui/core";
+import { Button, TextField, useTheme } from "@material-ui/core";
 
 import { SEARCH_QUERY_MIN_LENGTH } from "../utils/search-engine";
-
-const useStyles = makeStyles(theme => ({
-    appTitle: {
-        fontWeight: 900
-    },
-    search: {
-        margin: "0 15px"
-    },
-    searchField: {
-        position: "relative",
-        width: "100%",
-        zIndex: theme.zIndex.drawer + 2
-    },
-    // todo show backdrop only on home page
-    searchBackdrop: {
-        zIndex: theme.zIndex.drawer + 1
-    }
-}));
+import FilmsSearchResult from "./FilmsSearchResult";
 
 interface ComponentProps {
 }
 
 let SearchBox: React.FC<ComponentProps> = () => {
-    const classes = useStyles();
-
     const history = useHistory();
+    const theme = useTheme();
+    const inputRef = useRef<HTMLInputElement>(null!);
+    const [query, setQuery] = useState("");
 
-    const triggerLoadResults = useMemo(() =>
-        _.debounce(
-            async (searchQuery: string) => {
-                if (searchQuery.length < SEARCH_QUERY_MIN_LENGTH) return;
-                history.push(`/search/${searchQuery}`);
-                // todo review debounce
-            }, 200), [/* history */]);
+    useEventListener(window, "keyup", ({ code, target }) => {
+        // eslint-disable-next-line no-extra-parens
+        if ((target as Element).tagName === "input") return;
 
-    const { values, setFieldValue, handleSubmit } = useFormik({
-        initialValues: {
-            search: ""
-        },
-        onSubmit({ search }) {
-            void triggerLoadResults(search);
+        const inputEl = inputRef.current;
+
+        if (code === "Slash") {
+            inputEl.focus();
         }
     });
 
-    const fieldChangeHandler = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const query = e.target.value;
-        // todo-moderate why promise?
-        void setFieldValue("search", query);
-        // todo rework debounce
-        // TODO-high rename to debounced or move on
-        // await triggerLoadResults(query);
-    }, [setFieldValue]);
+    const loadSearchResults = useDebounce(() => {
+        if (query.length < SEARCH_QUERY_MIN_LENGTH) return;
 
-    const [inputFocused, setInputFocused] = useState(false);
+        console.log("Trigger", query);
+        // history.push(`/search/${searchQuery}`);
+    }, 500, [query]);
 
-    // todo why is it closing sometimes and add no options
-    return <form className={classes.search} onSubmit={handleSubmit}>
-        <Backdrop className={classes.searchBackdrop} open={inputFocused/*  && values.search.length < SEARCH_QUERY_MIN_LENGTH */} />
-        {/* todo highlight suggestions */}
-        {/* <Autocomplete
-            handleHomeEndKeys
-            freeSolo
-            filterOptions={options => options}
-            options={!state.loading && state.suggestions ? state.suggestions : []}
-            loading={state.loading}
-            renderOption={film =>
-                <>
-                    {film.posterUrlPreview &&
-                        <ListItemAvatar>
-                            <Avatar alt="" src={film.posterUrlPreview} variant="square" />
-                        </ListItemAvatar>
-                    }
-                    {film.nameRu || film.nameEn}
-                </>
-            }
-            renderInput={params => }
-        /> */}
+    return <form
+        className="mx-5"
+    >
         <TextField
-            className={classes.searchField}
+            inputRef={inputRef}
+            sx={{
+                position: "relative",
+                width: "100%",
+                zIndex: theme.zIndex.drawer + 2
+            }}
             size="small"
             variant="outlined"
-            label="Search film..."
-            value={values.search}
-            onFocus={() => setInputFocused(true)}
-            onBlur={() => setInputFocused(false)}
-            onChange={fieldChangeHandler}
+            label="Search films"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
         />
         {
             import.meta.env.MODE !== "production" && <Button onClick={() => history.push("/search/gthdjve")}>Test router</Button>
         }
+        <FilmsSearchResult />
         {/* toggle between search engine and raw search */}
         {/* TODO end button for filters */}
     </form>;
