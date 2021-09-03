@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Box, LinearProgress, LinearProgressProps, Typography } from "@material-ui/core";
+import { Box, LinearProgress, LinearProgressProps, Typography } from "@mui/material";
 
 type LinearProgressWithLabelProps = LinearProgressProps & { label: string; };
 

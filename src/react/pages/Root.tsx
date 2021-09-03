@@ -3,8 +3,8 @@ import React, { useMemo, useState } from "react";
 import { HashRouter, Link as RouterLink, Route, Switch } from "react-router-dom";
 
 import { Global } from "@emotion/react";
-import { Button, createTheme, CssBaseline, ThemeProvider, Typography, useMediaQuery } from "@material-ui/core";
-import { blue, lightBlue } from "@material-ui/core/colors";
+import { Button, createTheme, CssBaseline, ThemeProvider, Typography, useMediaQuery } from "@mui/material";
+import { blue, lightBlue } from "@mui/material/colors";
 
 import CenterContent from "../components/CenterContent";
 import ElectronEvents from "../components/ElectronEvents";

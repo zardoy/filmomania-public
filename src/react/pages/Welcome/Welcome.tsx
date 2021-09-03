@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import clsx from "clsx";
 
 import { css } from "@emotion/css";
-import { Grow, Step, StepButton, StepLabel, Stepper, Typography } from "@material-ui/core";
+import { Grow, Step, StepButton, StepLabel, Stepper, Typography } from "@mui/material";
 
 import { settingsStore } from "../../electron-shared/settings";
 import ModernStepper from "../../mui-extras/ModernStepper";

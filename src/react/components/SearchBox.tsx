@@ -4,7 +4,7 @@ import { useHistory } from "react-router-dom";
 import { useDebounce } from "react-use";
 import useEventListener from "use-typed-event-listener";
 
-import { Button, TextField, useTheme } from "@material-ui/core";
+import { Button, TextField, useTheme } from "@mui/material";
 
 import { SEARCH_QUERY_MIN_LENGTH } from "../utils/search-engine";
 import FilmsSearchResult from "./FilmsSearchResult";

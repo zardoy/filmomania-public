@@ -2,8 +2,8 @@ import React, { useCallback } from "react";
 
 import { useHistory } from "react-router";
 
-import { Button, Grid } from "@material-ui/core";
-import { ArrowBackIos } from "@material-ui/icons";
+import { Button, Grid } from "@mui/material";
+import { ArrowBackIos } from "@mui/icons-material";
 
 interface ComponentProps {
 }

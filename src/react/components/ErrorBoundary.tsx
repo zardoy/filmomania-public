@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Button, Grid, Typography } from "@material-ui/core";
+import { Button, Grid, Typography } from "@mui/material";
 
 export default class ErrorBoundary extends React.Component<{}, { hasError: boolean; }> {
     override state = {

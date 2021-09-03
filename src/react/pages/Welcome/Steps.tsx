@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 import normalizeUrl from "normalize-url";
 
-import { Button, FormControl, FormLabel, RadioGroup, TextField, Typography } from "@material-ui/core";
+import { Button, FormControl, FormLabel, RadioGroup, TextField, Typography } from "@mui/material";
 import { useSimpleFormik } from "@zardoy/simple-formik";
 
 import { settingsStore } from "../../electron-shared/settings";

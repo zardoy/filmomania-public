@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { Chip, Typography, useMediaQuery } from "@material-ui/core";
+import { Chip, Typography, useMediaQuery } from "@mui/material";
 
 interface ComponentProps {
     ChipProps?: React.ComponentProps<typeof Chip>;

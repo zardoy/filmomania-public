@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { Step, StepButton, Stepper } from "@material-ui/core";
+import { Step, StepButton, Stepper } from "@mui/material";
 
 // in case of stable release, add render() function
 

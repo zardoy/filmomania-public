@@ -18,8 +18,8 @@ import {
     Paper,
     Popper,
     Typography
-} from "@material-ui/core";
-import { GetApp as DownloadIcon, PlayArrow as PlayArrowIcon, Star as StarIcon } from "@material-ui/icons";
+} from "@mui/material";
+import { GetApp as DownloadIcon, PlayArrow as PlayArrowIcon, Star as StarIcon } from "@mui/icons-material";
 
 import CenterContent from "../components/CenterContent";
 import { SEARCH_QUERY_MIN_LENGTH, searchByQuery } from "../utils/search-engine";

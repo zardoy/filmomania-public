@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Alert, CircularProgress, Snackbar } from "@material-ui/core";
+import { Alert, CircularProgress, Snackbar } from "@mui/material";
 
 interface ComponentProps {
     open: boolean;

@@ -2,7 +2,7 @@ import React from "react";
 
 import { Link as RouterLink, useLocation } from "react-router-dom";
 
-import { Button, Typography } from "@material-ui/core";
+import { Button, Typography } from "@mui/material";
 
 import CenterContent from "../components/CenterContent";
 
