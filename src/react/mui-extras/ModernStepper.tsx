@@ -29,12 +29,13 @@ let ModernStepper: React.FC<ComponentProps> = ({ steps, completedComponent }) =>
         setActiveStep(getIncompleteStepIndex())
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
     const StepComponent = steps[activeStep]?.component!
 
-    return <Stepper alternativeLabel {...{ activeStep }}>
+    return <><Stepper alternativeLabel {...{ activeStep }}>
         {
             steps.map(({ title, isComplete }, index) => {
-                return <Step completed={isComplete}>
+                return <Step completed={isComplete} key={title}>
                     <StepButton onClick={() => setActiveStep(index)}>
                         {title}
                     </StepButton>
@@ -45,6 +46,7 @@ let ModernStepper: React.FC<ComponentProps> = ({ steps, completedComponent }) =>
     {
         activeStep === -1 ? completedComponent : <StepComponent {...{ onStepCompleted }} />
     }
+    </>
 }
 
 export default ModernStepper

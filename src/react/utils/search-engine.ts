@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { Merge, RequireExactlyOne } from "type-fest";
+import { Except, Merge, RequireExactlyOne } from "type-fest";
 import { pluck } from "underscore";
 
 import { settingsStore } from "../electron-shared/settings";
@@ -55,6 +55,44 @@ interface RawFilmInfo {
     ratingVoteCount: number,
     posterUrl?: string
     posterUrlPreview?: string
+}
+
+interface RawFilmInfoNewEndpoint {
+    kinopoiskId: number,
+    /**
+     * Could be ""
+     */
+    nameRu: string,
+    /**
+     * Could be "" "Player$"
+     */
+    nameOriginal: string,
+    type: "FILM" | "TV_SHOW" | "TV_SERIES" | "MINI_SERIES" | "UNKNOWN"
+    // Could be "2002-..." <- до сегодняшная дня
+    year?: number,
+    // description?: string,
+    /**
+     * if it's "" - not released yet
+     * @example 2:20
+     */
+    // filmLength?: string,
+    countries: Array<{
+        /**
+         * @example "США" "Китай" "Япония" "Россия" "Норвегия"
+         */
+        country: string
+    }>,
+    genres: Array<{
+        genre: string
+    }>,
+    ratingKinopoisk?: number,
+    /**
+     * float 0 - 10 or 99% if not released yet
+     */
+     rating?: string,
+     ratingVoteCount: number,
+     posterUrl?: string
+     posterUrlPreview?: string
 }
 
 export type ParsedFilmInfo = Merge<Omit<RawFilmInfo, "year">, {
@@ -148,8 +186,7 @@ export const searchByQuery = async (query: string, { abortSignal }: RequestOptio
             "X-API-KEY": apiKey!
         }
     })
-    type SearchResultType = Merge<FilmsSearchEngineResponse, { films: RawFilmInfo[] }>
-    const searchResult: SearchResultType = await response.json()
+    const searchResult: { films: RawFilmInfo[] } & Except<FilmsSearchEngineResponse, "films"> = await response.json()
 
     const currentYear = new Date().getFullYear()
     // todo REWRITE TYPES AND OBJ MERGING
@@ -171,7 +208,7 @@ export const searchByQuery = async (query: string, { abortSignal }: RequestOptio
                 return true
             }
         })
-        .map((film): ParsedFilmInfo => {
+        .map((film: RawFilmInfo): ParsedFilmInfo => {
             try {
                 if (typeof film.filmId !== "number") throw new TypeError(`filmID ${film.filmId} is not a number`)
                 ensureIsNumber(film, ["ratingVoteCount"])
@@ -228,7 +265,7 @@ export const searchByQuery = async (query: string, { abortSignal }: RequestOptio
         })
         .filter(film => film !== undefined && film.released)
 
-    const result = {
+    const result: FilmsSearchEngineResponse = {
         ...searchResult,
         films: parsedFilms
     }

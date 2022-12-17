@@ -16,12 +16,13 @@ export const bindIPC = () => {
     typedIpcMain.bindAllEventListeners({
         retryProxySetup: setupProxy,
         // todo explain why async
-        playTorrent: async (_e, { magnet, player }) => {
-            if (player === "custom") {
-                await shell.openExternal(magnet)
-            } else {
-                await playWithSodaPlayer(magnet)
-            }
+        playTorrent: async (_e, { magnet }) => {
+            await shell.openExternal(magnet)
+            // if (player === "custom") {
+            //     await shell.openExternal(magnet)
+            // } else {
+            //     await playWithSodaPlayer(magnet)
+            // }
         },
         downloadAndOpenTorrentFile: async (_e, { torrentFileUrl }) => {
             const tempDir = tmpdir()

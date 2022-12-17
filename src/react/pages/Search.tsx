@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import { proxy } from "valtio"
 
 import { bindPopover, usePopupState } from "material-ui-popup-state/hooks";
-import { useHistory, useRouteMatch } from "react-router";
+import { useHistory, useLocation, useParams } from "react-router-dom";
 import { useAsync } from "react-use";
 
 import { css } from "@emotion/css";
@@ -22,7 +23,7 @@ import {
 import { GetApp as DownloadIcon, PlayArrow as PlayArrowIcon, Star as StarIcon } from "@mui/icons-material";
 
 import CenterContent from "../components/CenterContent";
-import { SEARCH_QUERY_MIN_LENGTH, searchByQuery } from "../utils/search-engine";
+import { SEARCH_QUERY_MIN_LENGTH, searchByQuery, FilmsSearchEngineResponse } from "../utils/search-engine";
 
 const getRatingColor = (rating: number) =>
     rating === 0 ? "#6c757d" :// gray
@@ -34,11 +35,12 @@ interface FilmItemProps {
     posterUrl?: string;
     title: string;
     description?: string;
+    year?: string;
     rating?: number;
     onClick?: React.ComponentProps<typeof ListItemButton>["onClick"];
 }
 
-const FilmItem: React.FC<FilmItemProps> = ({ title, description, posterUrl, rating, onClick }) => {
+const FilmItem: React.FC<FilmItemProps> = ({ title, description, posterUrl, year, rating, onClick }) => {
     return <ListItemButton divider onClick={onClick}>
         <Grid container wrap="nowrap" spacing={2}>
             {
@@ -57,7 +59,7 @@ const FilmItem: React.FC<FilmItemProps> = ({ title, description, posterUrl, rati
                 <Grid item container direction="column" justifyContent="center" sx={{ height: "100%" }}>
                     <Typography variant="h3" noWrap sx={{ width: "100%" }}>{title}</Typography>
                     {
-                        description && <Typography color="textSecondary">{description}</Typography>
+                        description && <Typography color="textSecondary"><b>{year}</b> {description}</Typography>
                     }
                 </Grid>
                 <Grid item>
@@ -81,41 +83,42 @@ const FilmItem: React.FC<FilmItemProps> = ({ title, description, posterUrl, rati
     </ListItemButton>;
 };
 
-interface ComponentProps {
-}
+export const filmsSearchResult = proxy({value: undefined as undefined | FilmsSearchEngineResponse["films"]})
 
-let Search: React.FC<ComponentProps> = () => {
+let Search: React.FC = () => {
     const routerHistory = useHistory();
 
     const moreOptionsPopoverState = usePopupState({ variant: "popover", popupId: "filmMoreOptions" });
 
-    const { params: routeParams } = useRouteMatch<{ query: string; }>();
+    const {search} = useLocation();
+    const query = decodeURIComponent(search.slice("?q=".length))
 
     const abortController = useRef(new AbortController());
 
     const state = useAsync(async () => {
         abortController.current = new AbortController();
-        const { query } = routeParams;
         if (query.length < SEARCH_QUERY_MIN_LENGTH) return null;
         try {
             const result = await searchByQuery(query, {
                 abortSignal: abortController.current.signal
             });
-            // useCurrentSearch.setState(result.films);
+            filmsSearchResult.value = result.films
             return result;
         } catch (err) {
             console.error(err);
             throw err;
         }
-    }, [routeParams]);
+    }, [query]);
 
-    useEffect(() => () => abortController.current.abort(), [routeParams]);
+    useEffect(() => () => abortController.current.abort(), [query]);
 
     const [dropdownFilmId, setDropdownFilmId] = useState(null as number | null);
 
     // const dropdownFilmAction = useCallback((action: "play" | "download") => {
 
     // }, []);
+
+    if (state.value === null) return null
 
     return <>
         <Popper
@@ -155,7 +158,8 @@ let Search: React.FC<ComponentProps> = () => {
                                 return <FilmItem
                                     key={filmId}
                                     title={nameRu || nameEn}
-                                    description={`${displayYear} ${description}`}
+                                    description={description}
+                                    year={displayYear.toString()}
                                     posterUrl={posterUrlPreview}
                                     rating={rating}
                                     onClick={openFilmPage}
@@ -172,7 +176,7 @@ let Search: React.FC<ComponentProps> = () => {
                                 //         </IconButton>
                                 //     </ListItemSecondaryAction>
                                 // </ListItem>;
-                            }) : <CenterContent><Typography>No results for {routeParams.query}</Typography></CenterContent>
+                            }) : <CenterContent><Typography>No results for {query}</Typography></CenterContent>
                     }
                 </List> :
                 <CenterContent>

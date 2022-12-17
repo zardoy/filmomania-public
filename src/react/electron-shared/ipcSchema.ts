@@ -7,7 +7,7 @@ declare module "typed-ipc" {
         retryProxySetup: null
 
         playTorrent: {
-            player: SettingType<"player", "defaultPlayer">
+            // player: SettingType<"player", "defaultPlayer">
             magnet: string
         }
 

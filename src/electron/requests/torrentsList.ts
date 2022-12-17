@@ -10,7 +10,7 @@ export const requestTorrentsList: IpcMainHandler<"torrentsList"> = async (_event
     const torrentEngineConfig = rutorConfig;
 
     const proxies = settingsStore.settings.internal.activeProxies
-    if (!proxyReady || !proxies) throw new Error(`Proxy is not ready yet`);
+    if (/* !proxyReady ||  */!proxies) throw new Error(`Proxy is not ready yet`);
 
     const requestUrl = torrentEngineConfig.getRequestUrl(searchQuery);
     const axiosResponse = await requestSiteWithProxies(proxies.split(","), encodeURI(requestUrl));

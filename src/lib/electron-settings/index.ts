@@ -114,7 +114,7 @@ export type SettingTypeGeneral<
 export const makeSchema = <T extends SettingsSchema>(settingsSchema: T) => settingsSchema
 
 // todo-high refactor types
-export class SettingsStore<S extends SettingsSchema> {
+export class SettingsStore<S extends SettingsSchema> extends EventTarget {
     static throwInitError = () => {
         throw new Error(`Call init on store first`)
     }
@@ -139,7 +139,9 @@ export class SettingsStore<S extends SettingsSchema> {
     // todo why can use async
     constructor(
         public settingsSchema: S
-    ) { }
+    ) {
+        super();
+    }
 
     /** **Must** be called in both process. Must be initialized in main process before creating window with renderer. */
     async init() {
@@ -147,24 +149,24 @@ export class SettingsStore<S extends SettingsSchema> {
         type SetSettingFn = (group: string, setting: string, value: any) => void
         /** Updates setting on **current** side */
         const updateStoreSetting: SetSettingFn = (g, s, v) => {
-            //@ts-ignore
-            this.settings[g][s] = v
-            //@ts-ignore
-            this.userValues[g][s] = v
+            (this.settings[g] ??= {})[s] = v
+            ;(this.userValues[g] ??= {})[s] = v
             this.settingsStore!.setState(oldState => {
                 const { ...settingsState } = oldState
-                /** @ts-ignore */
-                if (!settingsState[group]) settingsState[group as any] = {}
-                //@ts-ignore
-                settingsState[group]![setting] = value
+                // eslint-disable-next-line no-extra-parens
+                ;((settingsState[g as keyof S] ??= {} as any) as any)[s] = v;
             })
+            this.dispatchEvent(new Event("update"))
         }
         if (ipcMain) {
             const fs = (await import("fs")).default
             const path = (await import("path")).default
-            const { app } = await import("electron")
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const {app} = require("electron")
             let attemp = 0
             const initInner = async () => {
+                const filePath = path.join(app.getPath("userData"), "settings.json")
+                console.log("filePath", filePath)
                 try {
                     attemp++
                     const ElectronStore = (await import("electron-store")).default
@@ -209,8 +211,7 @@ export class SettingsStore<S extends SettingsSchema> {
                         name: "settings"
                     })
 
-                    //@ts-ignore
-                    this.userValues = store.store
+                    this.userValues = store.store as any
 
                     ipcMain.handle(SettingsStore.ipcMainHandlerNames.syncSettings, () => this.userValues)
 
@@ -221,14 +222,12 @@ export class SettingsStore<S extends SettingsSchema> {
                     ipcMain.handle(SettingsStore.ipcMainHandlerNames.setSetting, (_e, { group, setting, value }) =>
                         setSettingMain(group, setting, value))
 
-                    //@ts-ignore
-                    this.set = (...gsv: GSV) => {
+                    this.set = ((...gsv: GSV) => {
                         ipcMain.emit(SettingsStore.ipcRendererEventNames.updateSetting, ...gsv)
                         setSettingMain(...gsv)
-                    }
+                    }) as any
                 } catch (err: any) {
                     if (attemp >= 2) throw err
-                    const filePath = path.join(app.getPath("userData"), "settings.json")
                     // is it okay?
                     // todo-moderate use internals of ajv !!!
                     // eslint-disable-next-line prefer-destructuring
@@ -252,23 +251,21 @@ export class SettingsStore<S extends SettingsSchema> {
             }
             await initInner()
         } else {
-            //@ts-ignore
             this.set = ((group, setting, value) => {
                 void ipcRenderer.invoke(SettingsStore.ipcMainHandlerNames.setSetting, { group, setting, value })
                 updateStoreSetting(group, setting, value)
-            }) as SetSettingFn
+            }) as any
             ipcRenderer.on(SettingsStore.ipcRendererEventNames.updateSetting, (_e, ...args: GSV) => updateStoreSetting(...args))
 
             this.userValues = await ipcRenderer.invoke(SettingsStore.ipcMainHandlerNames.syncSettings)
         }
-        //@ts-ignore
         this.defaultValues = _.mapValues(this.settingsSchema, fields => {
             const obj = _.mapValues(fields, field => "defaultValue" in field ? field.defaultValue : undefined)
             for (let [key, value] of Object.entries(obj)) {
                 if (value === undefined) delete obj[key]
             }
             return obj
-        })
+        }) as any
         this.settings = _.defaultsDeep({}, this.userValues, this.defaultValues)
         this.settingsStore = createStore(() => this.settings as any)
     }

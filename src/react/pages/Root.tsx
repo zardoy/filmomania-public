@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react";
 
 import { HashRouter, Link as RouterLink, Route, Switch } from "react-router-dom";
 
-import { Global } from "@emotion/react";
 import { Button, createTheme, CssBaseline, ThemeProvider, Typography, useMediaQuery } from "@mui/material";
 import { blue, lightBlue } from "@mui/material/colors";
 
@@ -11,19 +10,21 @@ import ElectronEvents from "../components/ElectronEvents";
 import ErrorBoundary from "../components/ErrorBoundary";
 import Overlay from "../components/Overlay";
 import WithBackButton from "../components/WithBackButton";
-import { settingsStore } from "../electron-shared/settings";
+import { useSettings } from "../electron-shared/settings";
 import { pageURLS } from "../electron-shared/URLS";
 import HomePage from "./Home";
 import FilmPage from "./Movie";
-import Search from "./Search";
 import WelcomePage from "./Welcome/Welcome";
+import { Global } from "@emotion/react";
 
 interface ComponentProps {
 }
 
 let App: React.FC<ComponentProps> = () => {
+    const settings = useSettings()
+
     const [showWelcomePage] = useState(() => {
-        const { apiKey, endpoint } = settingsStore.settings.movieSearchEngine
+        const { apiKey, endpoint } = settings.movieSearchEngine
         return !apiKey || !endpoint
     })
 
@@ -59,11 +60,6 @@ let App: React.FC<ComponentProps> = () => {
                                 <Route path="/" exact>
                                     <HomePage />
                                 </Route>
-                                <Route path={pageURLS.SEARCH}>
-                                    <WithBackButton>
-                                        <Search />
-                                    </WithBackButton>
-                                </Route>
                                 <Route path={pageURLS.FILM}>
                                     <WithBackButton>
                                         <FilmPage />
@@ -76,7 +72,6 @@ let App: React.FC<ComponentProps> = () => {
                                         <Button component={RouterLink} to="/">GO HOME</Button>
                                     </CenterContent>
                                 </Route>
-                                {/* <Redirect from="/" /> */}
                             </Switch>
                     }
                 </HashRouter>

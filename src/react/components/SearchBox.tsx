@@ -4,10 +4,9 @@ import { useHistory } from "react-router-dom";
 import { useDebounce } from "react-use";
 import useEventListener from "use-typed-event-listener";
 
-import { Button, TextField, useTheme } from "@mui/material";
+import { TextField, useTheme } from "@mui/material";
 
-import { SEARCH_QUERY_MIN_LENGTH } from "../utils/search-engine";
-import FilmsSearchResult from "./FilmsSearchResult";
+import Search from "../pages/Search";
 
 interface ComponentProps {
 }
@@ -29,37 +28,31 @@ let SearchBox: React.FC<ComponentProps> = () => {
         }
     });
 
-    const loadSearchResults = useDebounce(() => {
-        if (query.length < SEARCH_QUERY_MIN_LENGTH) return;
-
-        console.log("Trigger", query);
-        // history.push(`/search/${searchQuery}`);
+    useDebounce(() => {
+        history.push({search: `?q=${query}`});
     }, 500, [query]);
 
-    return <form
-        className="mx-5"
-    >
-        <TextField
-            inputRef={inputRef}
-            sx={{
-                position: "relative",
-                width: "100%",
-                zIndex: theme.zIndex.drawer + 2
-            }}
-            size="small"
-            variant="outlined"
-            label="Search films"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-        />
-        {
-            import.meta.env.MODE !== "production" && <Button onClick={() => history.push("/search/gthdjve")}>Test router</Button>
-        }
-        <FilmsSearchResult />
-        {/* toggle between search engine and raw search */}
-        {/* TODO end button for filters */}
-    </form>;
+    return <>
+        <form
+            className="mx-5"
+            onSubmit={() => history.push({search: `?q=${query}`})}
+        >
+            <TextField
+                inputRef={inputRef}
+                sx={{
+                    position: "relative",
+                    width: "100%",
+                    zIndex: theme.zIndex.drawer + 2
+                }}
+                size="small"
+                variant="outlined"
+                label="Search films"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+            />
+        </form>
+        <Search />
+    </>;
 };
 
 export default SearchBox;
-

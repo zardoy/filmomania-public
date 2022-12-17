@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { makeSchema, menuField, SettingsStore, SettingTypeGeneral } from "../../lib/electron-settings";
 
 const settingsSchema = makeSchema({
@@ -39,3 +40,12 @@ export type SettingType<
     > = SettingTypeGeneral<typeof settingsSchema, G, SS>
 
 export const settingsStore = new SettingsStore(settingsSchema)
+
+export const useSettings = () => {
+    const [settings, setSettings] = useState(settingsStore.settings)
+
+    settingsStore.addEventListener("update", () => {
+        setSettings(settingsStore.settings)
+    })
+    return settings
+}

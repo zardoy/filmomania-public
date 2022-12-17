@@ -7,6 +7,8 @@ export const useCurrentSearch = createStore(() => ({
 // export const currentSearchFilmsVar = makeVar<ParsedFilmInfo[]>([]);
 
 type BasicState = {
+    state: "waitingAction";
+} | {
     state: "pending";
 } | {
     state: "errored";
@@ -16,5 +18,5 @@ type BasicState = {
 };
 
 export const useProxyState = createStore<BasicState>(() => ({
-    state: "pending"
+    state: "waitingAction"
 }));

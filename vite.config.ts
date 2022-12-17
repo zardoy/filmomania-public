@@ -1,28 +1,17 @@
-import { builtinModules } from "module";
-import path from "path";
-import { defineConfig } from "vite";
+import { defineConfig } from 'vite'
+import { viteExternalsPlugin } from 'vite-plugin-externals'
+
+console.log(process.env)
 
 export default defineConfig({
-    root: "src/react",
-    resolve: {
-        alias: [{
-            find: "electron",
-            replacement: path.join(__dirname, "src/react/electron.ts"),
-        }]
-    },
-    build: {
-        rollupOptions: {
-            external: builtinModules
-        }
-    },
-    optimizeDeps: {
-        exclude: builtinModules,
-        esbuildOptions: {
-
-        }
-    },
+    root: './src/react',
+    plugins: [
+        viteExternalsPlugin({
+            electron: 'electron',
+        }),
+    ],
     server: {
         port: 3500,
-        open: false
-    }
-});
+        open: false,
+    },
+})

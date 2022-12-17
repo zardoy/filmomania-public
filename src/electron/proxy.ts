@@ -8,8 +8,11 @@ export const setupProxy = () => {
         proxyReady = false;
         const prevProxies = settingsStore.settings.internal.activeProxies || "";
         // show loading toast. show attemps (group numbers)
+        console.log("getAliveProxies")
+        console.time("getAliveProxies")
         const aliveProxies = await getAliveProxies(prevProxies.split(","), {});
-        settingsStore.set("internal", "activeProxies", aliveProxies.join(","));
+        console.timeEnd("getAliveProxies")
+        settingsStore.set("internal", "activeProxies", aliveProxies.map(({ip}) => ip).join(","));
         proxyReady = true;
     })();
 };

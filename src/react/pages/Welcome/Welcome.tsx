@@ -1,19 +1,33 @@
-import React, { useState } from "react";
+import React, { useEffect, } from "react";
 
 import clsx from "clsx";
 
 import { css } from "@emotion/css";
-import { Grow, Step, StepButton, StepLabel, Stepper, Typography } from "@mui/material";
+import { Grow, Typography } from "@mui/material";
 
-import { settingsStore } from "../../electron-shared/settings";
+import { useSettings } from "../../electron-shared/settings";
 import ModernStepper from "../../mui-extras/ModernStepper";
 import { PlayerStep, SearchEngineStep } from "./Steps";
 
-interface ComponentProps {
+const useWelcomeCompleteSteps = () => {
+    const settings = useSettings()
+
+    return {
+        movieSearch: !!settings.movieSearchEngine.endpoint &&
+        !!settings.movieSearchEngine.apiKey,
+        player: true,
+    }
 }
 
 const WeclomePage: React.FC = () => {
-    const [activeStep, setActiveStep] = useState(0)
+    const welcomeCompleteSteps = useWelcomeCompleteSteps()
+
+    useEffect(() => {
+        document.documentElement.classList.add("dark")
+        return () => {
+            document.documentElement.classList.remove("dark")
+        }
+    }, []);
 
     return <Grow in>
         <div
@@ -29,36 +43,23 @@ const WeclomePage: React.FC = () => {
                     height: 500px;
                 `)}
             >
-                <Stepper alternativeLabel activeStep={activeStep}>
-                    <Step>
-                        <StepButton onClick={() => setActiveStep(0)}>Search Engine</StepButton>
-                    </Step>
-                    <Step>
-                        <StepLabel>Player</StepLabel>
-                    </Step>
-                    <Step>
-                        <StepLabel>Proxy</StepLabel>
-                    </Step>
-                </Stepper>
                 <ModernStepper
                     steps={[
                         {
                             title: "Search engine",
-                            isComplete:
-                                !settingsStore.settings.movieSearchEngine.endpoint ||
-                                !settingsStore.settings.movieSearchEngine.apiKey,
+                            isComplete:welcomeCompleteSteps.movieSearch,
                             component: SearchEngineStep
                         },
                         {
                             title: "Player",
-                            isComplete: true,
+                            isComplete: welcomeCompleteSteps.player,
                             component: PlayerStep
                         },
-                        {
-                            title: "Proxy",
-                            isComplete: false,
-                            component: PlayerStep
-                        },
+                        // {
+                        //     title: "Proxy",
+                        //     isComplete: false,
+                        //     component: ProxyStep
+                        // },
                     ]}
                     completedComponent={<p>Setup finished</p>}
                 />
