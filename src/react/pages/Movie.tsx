@@ -83,7 +83,9 @@ const FilmPage: React.FC<ComponentProps> = () => {
             }
             <List>{
                 state.value.results.length ?
-                    _.sortBy(state.value.results, o => o.sizeInBytes).reverse().map(({ title, magnet, torrentID, seeders, displaySize, pageURL, torrentURL }) => {
+                    _.sortBy(state.value.results, o => {
+                        return settingsStore.settings.ui.trackerSorting === "bySize" ? o.sizeInBytes : o.seeders;
+                    }).reverse().map(({ title, magnet, torrentID, seeders, displaySize, pageURL, torrentURL }) => {
                         const playTorrent = async () => {
                             typedIpcRenderer.send("playTorrent", {
                                 // player: await settingsStore.get("player", "defaultPlayer"),
@@ -97,7 +99,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
                         return <ListItem key={torrentID} divider button onClick={playTorrent} onContextMenu={contextM}>
                             <div className="flex flex-nowrap justify-between">
                                 <Typography>{title}</Typography>
-                                <div style={{ float: "right", display: "flex" }}>
+                                <div style={{ display: "flex" }}>
                                     <Typography style={{ color: seeders === 0 ? "red" : seeders < 8 ? "yellow" : "limegreen" }}>{seeders}</Typography>
                                     <Typography style={{ marginLeft: 15 }}>{displaySize}</Typography>
                                 </div>

@@ -2,8 +2,6 @@ import React, { useState } from "react";
 
 import { Step, StepButton, Stepper } from "@mui/material";
 
-// in case of stable release, add render() function
-
 export type StepComponent = React.FC<{ onStepCompleted: () => void }>
 
 type ComponentProps = {
@@ -14,10 +12,11 @@ type ComponentProps = {
         isComplete: boolean
         component: StepComponent
     }[]
-    completedComponent: JSX.Element
+    completedComponent?: JSX.Element
+    onSetupFinish?: () => any
 }
 
-let ModernStepper: React.FC<ComponentProps> = ({ steps, completedComponent }) => {
+const ModernStepper: React.FC<ComponentProps> = ({ steps, completedComponent, onSetupFinish }) => {
     const [completedSteps, setCompletedSteps] = React.useState(new Set<number>())
 
     const getIncompleteStepIndex = () => steps.findIndex((step, index) => !completedSteps.has(index) && step.isComplete === false)
@@ -26,7 +25,9 @@ let ModernStepper: React.FC<ComponentProps> = ({ steps, completedComponent }) =>
 
     const onStepCompleted = () => {
         setCompletedSteps(steps => steps.add(activeStep))
-        setActiveStep(getIncompleteStepIndex())
+        const newStepIndex = getIncompleteStepIndex();
+        setActiveStep(newStepIndex)
+        if (newStepIndex === -1) onSetupFinish?.()
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
@@ -44,7 +45,7 @@ let ModernStepper: React.FC<ComponentProps> = ({ steps, completedComponent }) =>
         }
     </Stepper>
     {
-        activeStep === -1 ? completedComponent : <StepComponent {...{ onStepCompleted }} />
+        activeStep !== -1 ? <StepComponent {...{ onStepCompleted }} /> : completedComponent ? completedComponent : null
     }
     </>
 }

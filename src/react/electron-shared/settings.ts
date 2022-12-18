@@ -38,6 +38,12 @@ const settingsSchema = makeSchema({
         activeProxies: {
             type: "input",
         }
+    },
+    ui: {
+        trackerSorting: menuField({
+            bySize:true,
+            bySeeds: true
+        }, "bySize")
     }
 })
 

@@ -29,7 +29,7 @@ export interface TorrentItem {
      */
     magnet: string;
     /**
-     * # of seeders. Main sort param
+     * num of seeders
      */
     seeders: number;
 

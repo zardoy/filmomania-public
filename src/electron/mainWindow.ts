@@ -15,7 +15,9 @@ export const createMainWindow = () => {
 
     // todo manage update on resize and move if is in development
     const windowState = new ElectronWindowKeeper({
-        maximized: false
+        maximized: {
+            default: true
+        }
     });
 
     mainWindow = new BrowserWindow({

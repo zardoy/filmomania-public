@@ -67,7 +67,7 @@ let App: React.FC<ComponentProps> = () => {
                                 </Route>
                                 <Route path="*">
                                     <CenterContent>
-                                        <Typography variant="h3" arial->404</Typography>
+                                        <Typography variant="h3">404</Typography>
 
                                         <Button component={RouterLink} to="/">GO HOME</Button>
                                     </CenterContent>

@@ -90,6 +90,7 @@
         // "no-confusing-arrow": "error",
         "prefer-const": "off",
         "prefer-destructuring": "error",
-        "prefer-numeric-literals": "error"
+        "prefer-numeric-literals": "error",
+        "@typescript-eslint/no-explicit-any": "off"
     }
 }
