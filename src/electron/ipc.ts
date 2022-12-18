@@ -17,7 +17,6 @@ export const bindIPC = () => {
         retryProxySetup: setupProxy,
         // todo explain why async
         playTorrent: async (_e, { magnet }) => {
-            await shell.openExternal(magnet)
             // if (player === "custom") {
             //     await shell.openExternal(magnet)
             // } else {

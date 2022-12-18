@@ -166,7 +166,7 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
             let attemp = 0
             const initInner = async () => {
                 const filePath = path.join(app.getPath("userData"), "settings.json")
-                console.log("filePath", filePath)
+                console.log("settings file path", filePath)
                 try {
                     attemp++
                     const ElectronStore = (await import("electron-store")).default

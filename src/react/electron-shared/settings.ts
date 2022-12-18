@@ -6,6 +6,9 @@ const settingsSchema = makeSchema({
         endpoint: {
             type: "input"
         },
+        // filmItemEndpoint: {
+        //     type: 'input',
+        // },
         apiKey: {
             type: "input"
         }
@@ -13,8 +16,16 @@ const settingsSchema = makeSchema({
     player: {
         defaultPlayer: menuField({
             stremio: true,
-            custom: true
+            custom: true,
+            native: true
         }, "stremio"),
+        // when player is custom
+        stremioServerUrl: {
+            type: "input",defaultValue: "127.0.0.1:11470"
+        },
+        stremioExec: {
+            type: "input",
+        },
         customPlayerExecutable: {
             type: "input",
             dependsOn: {
@@ -22,9 +33,6 @@ const settingsSchema = makeSchema({
                 value: "custom"
             }
         },
-        playerArgs: {
-            type: "input",
-        }
     },
     internal: {
         activeProxies: {

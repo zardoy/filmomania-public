@@ -55,6 +55,7 @@
         "material-ui-popup-state": "^1.9.3",
         "modify-json-file": "^1.1.0",
         "normalize-url": "^7.0.1",
+        "parse-torrent": "^10.0.1",
         "react": "^17.0.2",
         "react-dom": "^17.0.2",
         "react-router": "^5.2.1",
@@ -76,6 +77,7 @@
         "@types/ffmpeg-static": "^3.0.0",
         "@types/lodash": "^4.14.172",
         "@types/node": "^16.7.10",
+        "@types/parse-torrent": "^5.8.4",
         "@types/react": "^17.0.19",
         "@types/react-dom": "^17.0.9",
         "@types/react-router-dom": "^5.1.8",
@@ -94,7 +96,7 @@
         "ts-node": "^10.2.1",
         "tsc-watch": "^4.5.0",
         "type-fest": "^2.1.0",
-        "typescript": "^4.4.2",
+        "typescript": "^4.9.4",
         "vite": "^2.5.3"
     },
     "scripts": {
@@ -103,7 +105,7 @@
         "build-main": "tsc -p ./src/electron/tsconfig.build.json && electron-esbuild build",
         "build-renderer": "craco-electron build",
         "analyze-renderer": "source-map-explorer 'build/static/js/*.js'",
-        "run-local-test": "cd local-tests && ts-node --transpile-only index.ts",
+        "lint": "eslint src/**",
         "build-app": "yarn build-main && yarn build-renderer && yarn electron-pack",
         "electron-pack": "electron-builder --win"
     },
