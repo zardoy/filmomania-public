@@ -30,19 +30,6 @@ declare module "typed-ipc" {
     }
 
     interface IpcRendererEvents {
-        updateSodaPlayerInstallationState: {
-            stage: "downloading",
-            progress: number//0-1
-            downloadedBytes: number
-        } | {
-            stage: "installing"
-        } | {
-            stage: "patching"
-        } | {
-            stage: "done"
-            patched: boolean
-        }
-
         openRoute: {
             url: string
         }

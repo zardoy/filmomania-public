@@ -7,7 +7,6 @@ import { typedIpcMain } from "typed-ipc";
 import { setupProxy } from "./proxy";
 import playTorrent from "./requests/playTorrent";
 import { requestTorrentsList } from "./requests/torrentsList";
-import { playWithSodaPlayer } from "./sodaPlayer";
 
 export const bindIPC = () => {
     typedIpcMain.handleAllRequests({
