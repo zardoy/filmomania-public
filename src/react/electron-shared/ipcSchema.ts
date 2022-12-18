@@ -1,17 +1,13 @@
-// import { SettingType } from "./settings";
-import { SettingType } from "./settings";
 import { TorrentEngineParseResult } from "./TorrentTypes";
 
 declare module "typed-ipc" {
     interface IpcMainEvents {
-        retryProxySetup: null
-
         playTorrent: {
-            // player: SettingType<"player", "defaultPlayer">
             magnet: string
+            nativeOpen?: boolean
         }
 
-        downloadAndOpenTorrentFile: {
+        downloadTorrentFile: {
             torrentFileUrl: string
         }
     }
@@ -30,6 +26,7 @@ declare module "typed-ipc" {
                 parseResult: TorrentEngineParseResult
             }
         }
+        setupProxy: {}
     }
 
     interface IpcRendererEvents {

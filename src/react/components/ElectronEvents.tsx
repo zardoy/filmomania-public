@@ -28,11 +28,12 @@ let ElectronEvents: React.FC<ComponentProps> = () => {
         isOnline().then(isOnline => isOffline[1](!isOnline));
     }, [navigatorNetworkStatus.online]);
 
-    const setupProxy = () => {
+    const setupProxy = async () => {
         useProxyState.setState({
             state: "pending"
         });
-        typedIpcRenderer.send("retryProxySetup")
+        await typedIpcRenderer.request("setupProxy")
+        useProxyState.setState({state: "success"})
     }
 
     // proxy state
@@ -69,6 +70,7 @@ let ElectronEvents: React.FC<ComponentProps> = () => {
         });
 
         settingsStore.addEventListener("update", () => {
+            console.log("settings update")
             if (settingsStore.settings.internal.activeProxies) {
                 useProxyState.setState({
                     state: "success"

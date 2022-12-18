@@ -59,7 +59,7 @@ export const ProxyStep: StepComponent = () => {
     return <div className="flex justify-center">
         <FormControl>
             <Typography variant="h3">Proxy setup</Typography>
-            <Button size="large" onClick={() => typedIpcRenderer.send("retryProxySetup")}>DO SETUP</Button>
+            {/* <Button size="large" onClick={() => typedIpcRenderer.send("")}>DO SETUP</Button> */}
         </FormControl>
     </div>
 }

@@ -39,7 +39,7 @@ export const createMainWindow = () => {
     });
     mainWindow.showInactive();
     windowState.manage(mainWindow);
-    // mainWindow.setMenu(null);
+    mainWindow.setMenu(null);
     void mainWindow.loadURL(electronIsDev ? "http://localhost:3500" : `file://${path.join(__dirname, "../../../build/index.html")}`);
 
     mainWindow.on("closed", () => mainWindow = null);
