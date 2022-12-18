@@ -16,7 +16,7 @@ export const startStremioServer = () => {
 }
 
 export const ensureStremioServerIsStarted = async (ip: string) => {
-    const isLocal = ip.match(/((https?:\/\/)?localhost)|127.0.0.1/)
+    const isLocal = ip.match(/((https?:\/\/)?localhost|127.0.0.1)/)
     const started = await new Promise<boolean>(resolve => {
         const req = request(ip, () => {
             resolve(true)

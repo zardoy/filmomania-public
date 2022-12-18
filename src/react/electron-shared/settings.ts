@@ -21,7 +21,7 @@ const settingsSchema = makeSchema({
         }, "stremio"),
         // when player is custom
         stremioServerUrl: {
-            type: "input",defaultValue: "127.0.0.1:11470"
+            type: "input",defaultValue: "http://127.0.0.1:11470"
         },
         stremioExec: {
             type: "input",
