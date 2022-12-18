@@ -6,7 +6,7 @@ import useEventListener from "use-typed-event-listener";
 
 import { TextField, useTheme } from "@mui/material";
 
-import Search from "../pages/Search";
+import SearchResults from "../pages/SearchResults";
 
 interface ComponentProps {
 }
@@ -28,14 +28,21 @@ let SearchBox: React.FC<ComponentProps> = () => {
         }
     });
 
-    useDebounce(() => {
+    const doSearch = () => {
         history.push({search: `?q=${query}`});
+    }
+
+    useDebounce(() => {
+        doSearch()
     }, 500, [query]);
 
     return <>
         <form
             className="mx-5"
-            onSubmit={() => history.push({search: `?q=${query}`})}
+            onSubmit={e => {
+                doSearch()
+                e.preventDefault()
+            }}
         >
             <TextField
                 inputRef={inputRef}
@@ -51,7 +58,7 @@ let SearchBox: React.FC<ComponentProps> = () => {
                 onChange={e => setQuery(e.target.value)}
             />
         </form>
-        <Search />
+        <SearchResults />
     </>;
 };
 

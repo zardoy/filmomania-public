@@ -8,7 +8,7 @@ import { useAsync } from "react-use";
 import { typedIpcRenderer } from "typed-ipc";
 import CenterContent from "../components/CenterContent";
 import { settingsStore } from "../electron-shared/settings";
-import { filmsSearchResult } from "./Search";
+import { filmsSearchResult } from "./SearchResults";
 
 interface ComponentProps {
 }

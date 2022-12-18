@@ -85,7 +85,7 @@ const FilmItem: React.FC<FilmItemProps> = ({ title, description, posterUrl, year
 
 export const filmsSearchResult = proxy({value: undefined as undefined | FilmsSearchEngineResponse["films"]})
 
-let Search: React.FC = () => {
+let SearchResults: React.FC = () => {
     const routerHistory = useHistory();
 
     const moreOptionsPopoverState = usePopupState({ variant: "popover", popupId: "filmMoreOptions" });
@@ -189,4 +189,4 @@ let Search: React.FC = () => {
     </>;
 };
 
-export default Search;
+export default SearchResults;

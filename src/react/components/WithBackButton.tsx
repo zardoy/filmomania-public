@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 
-import { useHistory } from "react-router";
+import { useHistory } from "react-router-dom";
 
 import { Button, Grid } from "@mui/material";
 import { ArrowBackIos } from "@mui/icons-material";
