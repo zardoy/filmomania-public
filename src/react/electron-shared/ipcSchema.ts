@@ -27,6 +27,7 @@ declare module "typed-ipc" {
             }
         }
         setupProxy: {}
+        test: {}
     }
 
     interface IpcRendererEvents {

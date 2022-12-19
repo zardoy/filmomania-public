@@ -3,6 +3,7 @@ import React from "react";
 import { Typography } from "@mui/material";
 
 import SearchBox from "../components/SearchBox";
+import { typedIpcRenderer } from "typed-ipc";
 
 interface ComponentProps {
 }

@@ -8,6 +8,7 @@
             "name": "Attach Chrome (Electron Renderer)",
             "type": "chrome",
             "request": "attach",
+            "restart": true,
             "port": 8315,
             "webRoot": "${workspaceFolder}"
         },

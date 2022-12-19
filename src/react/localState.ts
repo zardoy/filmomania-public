@@ -1,9 +1,5 @@
 import createStore from "zustand";
 
-export const useCurrentSearch = createStore(() => ({
-    query: "",
-}));
-
 // export const currentSearchFilmsVar = makeVar<ParsedFilmInfo[]>([]);
 
 type BasicState = {
@@ -17,6 +13,6 @@ type BasicState = {
     state: "success";
 };
 
-export const useProxyState = createStore<BasicState>(() => ({
-    state: "waitingAction"
-}));
+// export const useProxyState = createStore<BasicState>(() => ({
+//     state: "waitingAction"
+// }));

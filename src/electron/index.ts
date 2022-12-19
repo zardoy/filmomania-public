@@ -5,22 +5,26 @@ import { app } from "electron";
 import electronDebug from "electron-debug";
 
 import { bindIPC } from "./ipc";
-import { createMainWindow } from "./mainWindow";
+import { createMainWindow, mainWindow } from "./mainWindow";
 import { settingsStore } from "../react/electron-shared/settings";
+import electronIsDev from "electron-is-dev";
 
-// electronDebug({
-//     showDevTools: true
-// });
+electronDebug({
+    showDevTools: false
+});
 
 export const debug = console.log;
 
-app.commandLine.appendSwitch("remote-debugging-port", "8315")
+if(electronIsDev) {
+    app.commandLine.appendSwitch("remote-debugging-port", "8315")
+}
 
 const loadApp = async () => {
     app.setName("FilmoMania Beta");
     bindIPC();
     await settingsStore.init();
     createMainWindow();
+    settingsStore.windowIpcMain = mainWindow!
 };
 
 app.on("ready", loadApp);

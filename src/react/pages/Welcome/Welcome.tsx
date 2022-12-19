@@ -19,7 +19,7 @@ const useWelcomeCompleteSteps = () => {
     }
 }
 
-const WeclomePage: React.FC = () => {
+const WeclomePage: React.FC<{onSetupFinish?: () => any}> = ({onSetupFinish}) => {
     const welcomeCompleteSteps = useWelcomeCompleteSteps()
 
     useEffect(() => {
@@ -44,6 +44,7 @@ const WeclomePage: React.FC = () => {
                 `)}
             >
                 <ModernStepper
+                    onSetupFinish={onSetupFinish}
                     steps={[
                         {
                             title: "Search engine",

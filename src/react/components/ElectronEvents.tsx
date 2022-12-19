@@ -5,10 +5,9 @@ import { useHistory } from "react-router-dom";
 import { useNetworkState } from "react-use";
 import { typedIpcRenderer } from "typed-ipc";
 
-import { useProxyState } from "../localState";
 import Notification from "./Notification";
 import { Button } from "@mui/material";
-import { settingsStore } from "../electron-shared/settings";
+import { settingsStore, useSettings } from "../electron-shared/settings";
 
 interface ComponentProps {
 }
@@ -17,8 +16,8 @@ interface ComponentProps {
 
 let ElectronEvents: React.FC<ComponentProps> = () => {
     const routerHistory = useHistory();
-
-    const proxyState = useProxyState();
+    const settings = useSettings()
+    const [isSettingProxy, setIsSettingProxy] = useState(false)
 
     const navigatorNetworkStatus = useNetworkState();
 
@@ -29,24 +28,21 @@ let ElectronEvents: React.FC<ComponentProps> = () => {
     }, [navigatorNetworkStatus.online]);
 
     const setupProxy = async () => {
-        useProxyState.setState({
-            state: "pending"
-        });
+        setIsSettingProxy(true)
         await typedIpcRenderer.request("setupProxy")
-        useProxyState.setState({state: "success"})
+        setIsSettingProxy(false)
     }
+
+    // useEffect(() => {
+    //     console.log("change proxies")
+    // }, [settings.internal.activeProxies])
 
     // proxy state
     useEffect(() => {
-        if (settingsStore.settings.internal.activeProxies === undefined) {
+        if (settings.internal.activeProxies === undefined) {
             if (import.meta.env.DEV) {
-                useProxyState.setState({state: "waitingAction"})
-            } else {
-                useProxyState.setState({state: "pending"})
-                setupProxy()
+                void setupProxy()
             }
-        } else {
-            useProxyState.setState({state: "success"})
         }
     }, []);
 
@@ -56,28 +52,6 @@ let ElectronEvents: React.FC<ComponentProps> = () => {
             routerHistory.push(url);
         });
 
-        typedIpcRenderer.addEventListener("proxySetup", (_event, { success, errorMessage = "" }) => {
-            if (success) {
-                useProxyState.setState({
-                    state: "success"
-                });
-            } else {
-                useProxyState.setState({
-                    state: "errored",
-                    errorMessage
-                });
-            }
-        });
-
-        settingsStore.addEventListener("update", () => {
-            console.log("settings update")
-            if (settingsStore.settings.internal.activeProxies) {
-                useProxyState.setState({
-                    state: "success"
-                })
-            }
-        })
-
         return () => {
             typedIpcRenderer.removeAllListeners("openRoute");
             typedIpcRenderer.removeAllListeners("proxySetup");
@@ -86,14 +60,14 @@ let ElectronEvents: React.FC<ComponentProps> = () => {
 
     return <>
         <Notification
-            open={proxyState.state === "pending"}
+            open={isSettingProxy}
             message="Warming up your proxy companions..."
             severity="info"
             icon={null}
             progress={true}
         />
         <Notification
-            open={proxyState.state === "waitingAction"}
+            open={settings.internal.activeProxies === undefined && !isSettingProxy}
             message="Proxy needs setup"
             severity="info"
             icon={<Button onClick={setupProxy}>Setup</Button>}

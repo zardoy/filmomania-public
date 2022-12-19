@@ -3,6 +3,7 @@ import { shell } from "electron";
 import { tmpdir } from "os";
 import { join } from "path";
 import { typedIpcMain } from "typed-ipc";
+import { settingsStore } from "../react/electron-shared/settings";
 
 import { setupProxy } from "./proxy";
 import playTorrent from "./requests/playTorrent";
@@ -11,7 +12,10 @@ import { requestTorrentsList } from "./requests/torrentsList";
 export const bindIPC = () => {
     typedIpcMain.handleAllRequests({
         torrentsList: requestTorrentsList,
-        setupProxy
+        setupProxy,
+        test: () => {
+            settingsStore.set("dev", "counter", (settingsStore.settings.dev.counter || 0)+1)
+        }
     })
 
     typedIpcMain.bindAllEventListeners({

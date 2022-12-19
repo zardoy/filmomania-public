@@ -168,6 +168,9 @@ const setCachedQuery = (keyword: string, value: FilmsSearchEngineResponse) => {
     })
 }
 
+const getCleanName = (film: Pick<RawFilmInfo, "nameRu" | "nameEn">) => {
+    return (film.nameRu || film.nameEn).replace(/\(.*\)$/g, "").trim()
+}
 
 export const searchByQuery = async (query: string, { abortSignal }: RequestOptions): Promise<FilmsSearchEngineResponse> => {
     query = query.trim()
@@ -251,7 +254,7 @@ export const searchByQuery = async (query: string, { abortSignal }: RequestOptio
                     film.description = film.description.replace(/.(?=\(.*\)$)/, "$& ")
                 }
 
-                newProps.cleanName = (film.nameRu || film.nameEn).replace(/\(.*\)$/g, "").trim()
+                newProps.cleanName = getCleanName(film)
 
                 return {
                     ...film,
@@ -272,4 +275,35 @@ export const searchByQuery = async (query: string, { abortSignal }: RequestOptio
     setCachedQuery(query, result)
 
     return result
+}
+
+interface FilmEntryInterestedDataResponse {
+    imdbId: string,
+    nameRu: string,
+    nameOriginal: string,
+    coverUrl: string | null,
+    logoUrl: string | null,
+    isTicketsAvailable: boolean,
+    serial: boolean,
+    slogan?: string,
+}
+
+export const getFilmData = async (entryId: number, abortSignal: AbortSignal) => {
+    const cached = sessionStorage.getItem(`film:${entryId}`)
+    if (cached) return JSON.parse(cached) as never
+    let { entryIdEndpoint = import.meta.env.VITE_SEARCH_ENGINE_ENTRY_ENDPOINT, apiKey } = settingsStore.settings.movieSearchEngine
+    if (!entryIdEndpoint) throw new TypeError(`EntryIdEndpoint is not set`)
+    if (!entryIdEndpoint.startsWith("http")) entryIdEndpoint = `https://${entryIdEndpoint}`
+    const requestURL = new URL(`${entryIdEndpoint.replace(/\/$/, "")}/${entryId}`)
+    const response = await fetch(requestURL.toString(), {
+        signal: abortSignal,
+        headers: {
+            "X-API-KEY": apiKey!
+        }
+    })
+    const data: FilmEntryInterestedDataResponse = await response.json()
+    if ("error" in data) throw new Error(`Server Returned Error: ${data.error}`)
+    const resolvedData = {...data, year: ("yearFrom" in data ? data.yearFrom : data["year"]) as string, cleanName: getCleanName({nameRu: data.nameRu, nameEn: data.nameOriginal})}
+    sessionStorage.setItem(`film:${entryId}`, JSON.stringify(resolvedData))
+    return resolvedData
 }

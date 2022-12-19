@@ -11,7 +11,11 @@ const settingsSchema = makeSchema({
         // },
         apiKey: {
             type: "input"
-        }
+        },
+        entryIdEndpoint: {
+            // default set where it is used
+            type: "input",
+        },
     },
     player: {
         defaultPlayer: menuField({
@@ -43,7 +47,18 @@ const settingsSchema = makeSchema({
         trackerSorting: menuField({
             bySize:true,
             bySeeds: true
-        }, "bySize")
+        }, "bySize"),
+        cssOverrides: {
+            type: "input",
+        }
+    },
+    dev: {
+        counter: {
+            type: "custom",
+            schema: {
+                type: "number"
+            }
+        }
     }
 })
 

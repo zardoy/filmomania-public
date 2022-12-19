@@ -24,7 +24,10 @@ export const SearchEngineStep: StepComponent = ({ onStepCompleted }) => {
         allRequired: true
     })
 
-    const [endpoint] = useState(() => new URL(normalizeUrl(values.endpoint)).toString())
+    const [endpoint] = useState(() => {
+        if (!values.endpoint) throw new Error("VITE_SEARCH_ENGINE_ENDPOINT must be set in env to valid provider")
+        return new URL(normalizeUrl(values.endpoint)).toString();
+    })
 
     return <form {...handleForm}>
         <div className="pt-2" />

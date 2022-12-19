@@ -30,7 +30,7 @@ export const createMainWindow = () => {
         // todo change it
         backgroundColor: "#000",
         darkTheme: true,
-        alwaysOnTop: electronIsDev && (!!+process.env.WINDOW_ALWAYS_ON_TOP! ?? false),
+        // alwaysOnTop: electronIsDev && (!!+process.env.WINDOW_ALWAYS_ON_TOP! ?? false),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -48,8 +48,11 @@ export const createMainWindow = () => {
         mainWindow.webContents.openDevTools({mode: "detach"})
         windowStateDevtools.manage(devTools)
     }
-    mainWindow.webContents.openDevTools()
-    mainWindow.showInactive();
+    if (electronIsDev) {
+        mainWindow.showInactive();
+        mainWindow.blur()
+    }
+    else mainWindow.show()
     windowState.manage(mainWindow);
     mainWindow.setMenu(null);
     void mainWindow.loadURL(electronIsDev ? "http://localhost:3500" : `file://${path.join(__dirname, "../../../build/index.html")}`);

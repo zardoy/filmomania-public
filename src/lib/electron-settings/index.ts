@@ -46,10 +46,13 @@ type SettingSchemaFieldTypes = {
     type: "button",
     text: string
     onClick?: () => unknown
+} | {
+    type: "custom",
+    schema: JSONSchema
 }
 
 type CommonSettingProps = {
-    /** @default settingLabel is displayed as label. Used if need to save backward compatibility but change setting label */
+    /** @default undefined settingLabel is displayed as label. Used if need to save backward compatibility but change setting label */
     displayLabel?: string
     /** By default the setting is always visible and can be edited */
     dependsOn?: {
@@ -78,7 +81,8 @@ type SettingsSchemaToValues<S extends SettingsSchema> = {
         [SS in keyof S[G]]:
         S[G][SS] extends { type: "menu" } ? keyof S[G][SS]["values"] :
         S[G][SS] extends { defaultValue: infer U } ? U :
-        S[G][SS]["type"] extends "input" ? string | undefined : never
+        S[G][SS]["type"] extends "input" ? string | undefined :
+        S[G][SS]["type"] extends "custom" ? any : never
     }
 }
 
@@ -94,7 +98,7 @@ type SettingsSchemaToDefaultValues<S extends SettingsSchema> = {
 export const menuField = <K extends Record<string, SettingLabel | true>, T extends keyof K>(valuesToLabelMap: K, defaultValue: T, additionalProperties: CommonSettingProps & { getMenuItemLabel?: (label: keyof K) => string } = {}) => ({
     type: "menu" as const,
     values: valuesToLabelMap,
-    defaultValue: defaultValue,
+    defaultValue,
     ...additionalProperties
 })
 
@@ -119,22 +123,25 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
         throw new Error(`Call init on store first`)
     }
 
+    public windowIpcMain!: Electron.BrowserWindow
+
     private static ipcMainHandlerNames = {
         syncSettings: "electron-settings--sync-settings",
         setSetting: "electron-settings--set-setting"
     }
 
     private static ipcRendererEventNames = {
-        updateSetting: "electron-settings--update-user-setting"
+        updateSetting: "electron-settings--update-user-setting",
+        updateAllSetting: "electron-settings--update-all-settings"
     }
 
     // todo: auto generate getters
     // public settings
     public settings!: ReadonlyDeep<SettingsSchemaToValues<typeof this["settingsSchema"]>>
     public defaultValues!: ReadonlyDeep<SettingsSchemaToDefaultValues<typeof this["settingsSchema"]>>
-    public userValues!: ReadonlyDeep<SettingsSchemaToValues<typeof this["settingsSchema"]>>
+    // public userValues!: ReadonlyDeep<SettingsSchemaToValues<typeof this["settingsSchema"]>>
 
-    private settingsStore!: UseStore<SettingsSchemaToValues<typeof this["settingsSchema"]>>
+    // public useStore: UseStore<SettingsSchemaToValues<typeof this["settingsSchema"]>> | undefined
 
     // todo why can use async
     constructor(
@@ -145,17 +152,27 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
 
     /** **Must** be called in both process. Must be initialized in main process before creating window with renderer. */
     async init() {
+        this.defaultValues = _.mapValues(this.settingsSchema, fields => {
+            const obj = _.mapValues(fields, field => "defaultValue" in field ? field.defaultValue : undefined)
+            for (let [key, value] of Object.entries(obj)) {
+                if (value === undefined) delete obj[key]
+            }
+            return obj
+        }) as any
+
         type GSV = [group: string, setting: string, value: any]
         type SetSettingFn = (group: string, setting: string, value: any) => void
         /** Updates setting on **current** side */
         const updateStoreSetting: SetSettingFn = (g, s, v) => {
             (this.settings[g] ??= {})[s] = v
-            ;(this.userValues[g] ??= {})[s] = v
-            this.settingsStore!.setState(oldState => {
-                const { ...settingsState } = oldState
-                // eslint-disable-next-line no-extra-parens
-                ;((settingsState[g as keyof S] ??= {} as any) as any)[s] = v;
-            })
+            // ;(this.userValues[g] ??= {})[s] = v
+            // if (this.useStore) {
+            //     this.useStore!.setState(oldState => {
+            //         const { ...settingsState } = oldState
+            //         // eslint-disable-next-line no-extra-parens
+            //         ;((settingsState[g as keyof S] ??= {} as any) as any)[s] = v;
+            //     })
+            // }
             this.dispatchEvent(new Event("update"))
         }
         if (ipcMain) {
@@ -164,6 +181,7 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
             // eslint-disable-next-line @typescript-eslint/no-var-requires
             const {app} = require("electron")
             let attemp = 0
+            let innerChange = false
             const initInner = async () => {
                 const filePath = path.join(app.getPath("userData"), "settings.json")
                 console.log("settings file path", filePath)
@@ -177,13 +195,10 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
                                 additionalProperties: false,
                                 properties: _.mapValues(
                                     filterValues(settingProps, (_key, value) => !isStringOneOf(value.type, ["label", "button"])),
-                                    (setting: Extract<SettingField, { defaultValue?: any }>): JSONSchema => {
+                                    (setting: Extract<SettingField, { defaultValue?: any, schema?: any }>): JSONSchema => {
                                         const schemaItem = ((): JSONSchema => {
                                             switch (setting.type) {
                                                 case "input":
-                                                    return {
-                                                        type: "string"
-                                                    }
                                                 case "menu":
                                                     return {
                                                         type: "string"
@@ -200,6 +215,10 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
                                                     return {
                                                         type: "boolean"
                                                     }
+                                                case "custom":
+                                                    return {
+                                                        ...setting.schema
+                                                    }
                                             }
                                         })()
                                         // schemaItem.default = setting.defaultValue;
@@ -208,22 +227,33 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
                                 )
                             }]
                         })),
-                        name: "settings"
+                        name: "settings",
+                        watch: true
+                    })
+                    store.onDidAnyChange(newSettings => {
+                        if (innerChange) {
+                            innerChange = false
+                            return
+                        }
+                        console.log("external change update")
+                        this.windowIpcMain!.webContents.send(SettingsStore.ipcRendererEventNames.updateAllSetting, newSettings)
                     })
 
-                    this.userValues = store.store as any
+                    // this.userValues = store.store as any
+                    this.settings = _.defaultsDeep({}, store.store, this.defaultValues)
 
-                    ipcMain.handle(SettingsStore.ipcMainHandlerNames.syncSettings, () => this.userValues)
+                    ipcMain.handle(SettingsStore.ipcMainHandlerNames.syncSettings, () => this.settings)
 
                     const setSettingMain: SetSettingFn = (group, setting, value) => {
                         updateStoreSetting(group, setting, value)
+                        innerChange = true
                         store.set(`${group}.${setting}`, value)
                     }
                     ipcMain.handle(SettingsStore.ipcMainHandlerNames.setSetting, (_e, { group, setting, value }) =>
                         setSettingMain(group, setting, value))
 
                     this.set = ((...gsv: GSV) => {
-                        ipcMain.emit(SettingsStore.ipcRendererEventNames.updateSetting, ...gsv)
+                        this.windowIpcMain.webContents.send(SettingsStore.ipcRendererEventNames.updateSetting, ...gsv)
                         setSettingMain(...gsv)
                     }) as any
                 } catch (err: any) {
@@ -255,19 +285,18 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
                 void ipcRenderer.invoke(SettingsStore.ipcMainHandlerNames.setSetting, { group, setting, value })
                 updateStoreSetting(group, setting, value)
             }) as any
-            ipcRenderer.on(SettingsStore.ipcRendererEventNames.updateSetting, (_e, ...args: GSV) => updateStoreSetting(...args))
+            ipcRenderer.on(SettingsStore.ipcRendererEventNames.updateSetting, (_e, ...args: GSV) => {
+                console.log("capture setting update")
+                return updateStoreSetting(...args);
+            })
 
-            this.userValues = await ipcRenderer.invoke(SettingsStore.ipcMainHandlerNames.syncSettings)
+            this.settings = await ipcRenderer.invoke(SettingsStore.ipcMainHandlerNames.syncSettings)
+            ipcRenderer.on(SettingsStore.ipcRendererEventNames.updateAllSetting, (_e, newSettings) => {
+                this.settings = newSettings
+                this.dispatchEvent(new Event("update"))
+            })
+            // this.useStore = createStore(() => this.settings as any)
         }
-        this.defaultValues = _.mapValues(this.settingsSchema, fields => {
-            const obj = _.mapValues(fields, field => "defaultValue" in field ? field.defaultValue : undefined)
-            for (let [key, value] of Object.entries(obj)) {
-                if (value === undefined) delete obj[key]
-            }
-            return obj
-        }) as any
-        this.settings = _.defaultsDeep({}, this.userValues, this.defaultValues)
-        this.settingsStore = createStore(() => this.settings as any)
     }
 
     // getUserValue<
@@ -308,9 +337,10 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
         V extends S[G][SS] extends { type: "menu" } ? keyof S[G][SS]["values"] :
         // annoying ts
         S[G][SS] extends { defaultValue: infer U } ? U :
-        S[G][SS]["type"] extends "input" ? string | undefined : void = S[G][SS] extends { type: "menu" } ? keyof S[G][SS]["values"] :
+        S[G][SS]["type"] extends "input" ? string | undefined : S[G][SS]["type"] extends "custom" ? any : void = S[G][SS] extends { type: "menu" } ? keyof S[G][SS]["values"] :
         S[G][SS] extends { defaultValue: infer U } ? U :
-        S[G][SS]["type"] extends "input" ? string | undefined : void
+        S[G][SS]["type"] extends "input" ? string | undefined :
+        S[G][SS]["type"] extends "custom" ? any : void
     >(group: G, setting: SS, newValue: V) {
         SettingsStore.throwInitError()
     }

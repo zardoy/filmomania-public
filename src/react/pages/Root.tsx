@@ -15,7 +15,7 @@ import { pageURLS } from "../electron-shared/URLS";
 import HomePage from "./Home";
 import FilmPage from "./Movie";
 import WelcomePage from "./Welcome/Welcome";
-import { Global } from "@emotion/react";
+import { css, Global } from "@emotion/react";
 
 interface ComponentProps {
 }
@@ -23,7 +23,7 @@ interface ComponentProps {
 let App: React.FC<ComponentProps> = () => {
     const settings = useSettings()
 
-    const [showWelcomePage] = useState(() => {
+    const [showWelcomePage, setShowWelcomePage] = useState(() => {
         const { apiKey, endpoint } = settings.movieSearchEngine
         return !apiKey || !endpoint
     })
@@ -48,6 +48,9 @@ let App: React.FC<ComponentProps> = () => {
                 outline: "none"
             }
         }} />
+        <Global styles={css`
+            ${settings.ui.cssOverrides ?? ""}
+        `} />
         <CssBaseline />
         <div className="select-none">
             <ErrorBoundary>
@@ -55,7 +58,9 @@ let App: React.FC<ComponentProps> = () => {
                     <ElectronEvents />
                     <Overlay />
                     {
-                        showWelcomePage ? <WelcomePage /> :
+                        showWelcomePage ? <WelcomePage onSetupFinish={() => {
+                            setShowWelcomePage(false)
+                        }} /> :
                             <Switch>
                                 <Route path="/" exact>
                                     <HomePage />
