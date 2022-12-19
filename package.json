@@ -100,7 +100,7 @@
         "vite": "^4.0.2"
     },
     "scripts": {
-        "start-main": "electron-esbuild",
+        "start-main": "electron-esbuild --debug",
         "start-renderer": "vite",
         "build-main": "tsc -p ./src/electron/tsconfig.build.json && electron-esbuild build",
         "build-renderer": "craco-electron build",

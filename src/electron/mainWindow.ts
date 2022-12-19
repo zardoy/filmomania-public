@@ -1,4 +1,4 @@
-import { BrowserWindow } from "electron";
+import { app, BrowserWindow } from "electron";
 import electronIsDev from "electron-is-dev";
 import ElectronWindowKeeper from "electron-window-keeper";
 import path from "path";
@@ -37,6 +37,18 @@ export const createMainWindow = () => {
         },
         show: false
     });
+    if (electronIsDev) {
+        const windowStateDevtools = new ElectronWindowKeeper({
+            fileName: "devtools-window-state"
+        })
+        const devTools = new BrowserWindow({
+            ...windowStateDevtools.restoredFullState
+        })
+        mainWindow.webContents.setDevToolsWebContents(devTools.webContents)
+        mainWindow.webContents.openDevTools({mode: "detach"})
+        windowStateDevtools.manage(devTools)
+    }
+    mainWindow.webContents.openDevTools()
     mainWindow.showInactive();
     windowState.manage(mainWindow);
     mainWindow.setMenu(null);

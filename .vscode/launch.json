@@ -1,0 +1,35 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach Chrome (Electron Renderer)",
+            "type": "chrome",
+            "request": "attach",
+            "port": 8315,
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "Attach Node (Electron Main)",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "restart": true,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/node_modules/.electron-esbuild/*.js"
+            ]
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Main + Renderer Process",
+            "configurations": [
+                "Attach Node (Electron Main)",
+                "Attach Chrome (Electron Renderer)"
+            ]
+        }
+    ]
+}
