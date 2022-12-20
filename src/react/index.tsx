@@ -1,7 +1,10 @@
-import React from "react"
+import React, { Suspense } from "react"
 import ReactDom from "react-dom"
 import Root from "./pages/Root"
 import { settingsStore } from "./electron-shared/settings"
+import i18next from "i18next"
+import Backend, {HttpBackendOptions} from "i18next-http-backend";
+import { initReactI18next } from "react-i18next"
 
 import "tailwindcss/tailwind.css"
 
@@ -12,6 +15,30 @@ import "@fontsource/roboto/700.css"
 
 await settingsStore.init()
 
+void i18next
+    .use(Backend)
+    .use(initReactI18next)
+    .init({
+        lng: navigator.language.split("-")[0]!,
+        // lng: "ru",
+        // preload: ["ru", "en"],
+        fallbackLng: "en",
+        debug: import.meta.env.DEV,
+        interpolation: {
+            escapeValue: false
+        },
+        // defaultNS: "app",
+        lowerCaseLng: true,
+
+        backend: {
+            loadPath: "./locales/{{lng}}.json",
+        } satisfies HttpBackendOptions,
+    })
+
+
 // if (import.meta.env.MODE === "development") console.clear();
 
-ReactDom.render(<Root />, document.getElementById("root"))
+// TODO! display loader!
+ReactDom.render(<Suspense fallback={null}>
+    <Root />
+</Suspense>, document.getElementById("root"))

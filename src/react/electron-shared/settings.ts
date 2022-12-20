@@ -2,6 +2,12 @@ import { useState } from "react";
 import { makeSchema, menuField, SettingsStore, SettingTypeGeneral } from "../../lib/electron-settings";
 
 const settingsSchema = makeSchema({
+    core: {
+        autoUpdate: menuField({
+            disable: true,
+            enable: true
+        }, "enable")
+    },
     movieSearchEngine: {
         endpoint: {
             type: "input"

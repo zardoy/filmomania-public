@@ -24,6 +24,7 @@ import { GetApp as DownloadIcon, PlayArrow as PlayArrowIcon, Star as StarIcon } 
 
 import CenterContent from "../components/CenterContent";
 import { SEARCH_QUERY_MIN_LENGTH, searchByQuery, FilmsSearchEngineResponse } from "../utils/search-engine";
+import { useTranslation } from "react-i18next";
 
 const getRatingColor = (rating: number) =>
     rating === 0 ? "#6c757d" :// gray
@@ -86,6 +87,7 @@ const FilmItem: React.FC<FilmItemProps> = ({ title, description, posterUrl, year
 export const filmsSearchResult = proxy({value: undefined as undefined | FilmsSearchEngineResponse["films"]})
 
 let SearchResults: React.FC = () => {
+    const {t} = useTranslation()
     const routerHistory = useHistory();
 
     const moreOptionsPopoverState = usePopupState({ variant: "popover", popupId: "filmMoreOptions" });
@@ -164,19 +166,7 @@ let SearchResults: React.FC = () => {
                                     rating={rating}
                                     onClick={openFilmPage}
                                 />;
-                                // return <ListItem button key={filmId} onClick={openFilmPage}>
-                                //     {hasPoster && <ListItemAvatar>
-                                //         <img alt="poster" src={posterUrlPreview} sx={{ width: theme.spacing(7),
-                                // height: theme.spacing(7), }} />
-                                //     </ListItemAvatar>}
-                                //     <ListItemText inset={!hasPoster} primary={nameRu || nameEn} secondary={description} />
-                                //     <ListItemSecondaryAction>
-                                //         <IconButton edge="end" {...bindTrigger(moreOptionsPopoverState)}>
-                                //             <MoreHorizIcon />
-                                //         </IconButton>
-                                //     </ListItemSecondaryAction>
-                                // </ListItem>;
-                            }) : <CenterContent><Typography>No results for {query}</Typography></CenterContent>
+                            }) : <CenterContent><Typography>{t("No results for")} {query}</Typography></CenterContent>
                     }
                 </List> :
                 <CenterContent>

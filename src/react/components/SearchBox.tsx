@@ -3,6 +3,7 @@ import React, { useRef, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { useDebounce } from "react-use";
 import useEventListener from "use-typed-event-listener";
+import { useTranslation } from "react-i18next"
 
 import { TextField, useTheme } from "@mui/material";
 
@@ -12,6 +13,8 @@ interface ComponentProps {
 }
 
 let SearchBox: React.FC<ComponentProps> = () => {
+    const {t} = useTranslation()
+
     const history = useHistory();
     const theme = useTheme();
     const inputRef = useRef<HTMLInputElement>(null!);
@@ -53,7 +56,7 @@ let SearchBox: React.FC<ComponentProps> = () => {
                 }}
                 size="small"
                 variant="outlined"
-                label="Search films"
+                label={t("Search films")}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
             />

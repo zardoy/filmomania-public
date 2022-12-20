@@ -5,6 +5,7 @@ import _ from "lodash";
 import { bindMenu, } from "material-ui-popup-state/hooks";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, } from "react-router-dom";
 import { useAsync } from "react-use";
 import { typedIpcRenderer } from "typed-ipc";
@@ -18,6 +19,8 @@ interface ComponentProps {
 
 let abortController = new AbortController()
 const FilmPage: React.FC<ComponentProps> = () => {
+    const {t} = useTranslation()
+
     const { filmId: selectedFilmId } = useParams<{ filmId: string; }>();
     const [filmData, setFilmData] = useState(null as Awaited<ReturnType<typeof getFilmData>> | null)
 
@@ -35,7 +38,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
             });
             return result.parseResult;
         } catch (err: any) {
-            throw new Error(`${err.message}\nTry to CTRL+R to find another proxy`);
+            throw new Error(t("tracket-get-result-fail").replace("{0}", err.message));
         }
     }, []);
 
@@ -74,7 +77,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
                                 <ListItemIcon>
                                     <OpenInNew />
                                 </ListItemIcon>
-                                <Typography variant="inherit">Open torrent page</Typography>
+                                <Typography variant="inherit">{t("open-torrent-page")}</Typography>
                             </MenuItem>
                             <MenuItem onClick={() => {
                                 void shell.openExternal(contextmenuTorrent!.magnet);
@@ -83,7 +86,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
                                 <ListItemIcon>
                                     <LinkIcon />
                                 </ListItemIcon>
-                                <Typography variant="inherit">Open magnet with native app</Typography>
+                                <Typography variant="inherit">{t("open-magnet-with-native-app")}</Typography>
                             </MenuItem>
                             <MenuItem onClick={() => {
                                 typedIpcRenderer.send("downloadTorrentFile", {
@@ -94,16 +97,16 @@ const FilmPage: React.FC<ComponentProps> = () => {
                                 <ListItemIcon>
                                     <FolderOpen />
                                 </ListItemIcon>
-                                <Typography variant="inherit">Open .torrent file</Typography>
+                                <Typography variant="inherit">{t("open-torrent-file")}</Typography>
                             </MenuItem>
                         </MenuList>
                     </ClickAwayListener>
                 </Paper>
             </Menu>
-            <Typography variant="h4">Results from rutor.info: {state.value.totalResults}</Typography>
+            <Typography variant="h4">{t("results-from-rutor-info")} {state.value.totalResults}</Typography>
             {
                 state.value.hiddenResults > 0 &&
-                <Alert severity="warning">We have hidden results: {state.value.hiddenResults}</Alert>
+                <Alert severity="warning">{t("we-have-hidden-results")} {state.value.hiddenResults}</Alert>
             }
             <div className='fixed inset-0 -z-10 bg-no-repeat bg-cover bg-black' style={{opacity: 0.85}} />
             <div className='fixed inset-0 -z-20 bg-no-repeat bg-cover overridable-cover' style={{ backgroundImage: filmData.imdbId ?`url("https://images.metahub.space/background/big/${filmData.imdbId}/img")` : `url("${filmData.coverUrl}")` }} />
@@ -133,7 +136,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
                             </div>
                         </ListItem>;
                     })
-                    : <Typography>No results on rutor.info!</Typography>
+                    : <Typography>{t("tracker-no-results")}</Typography>
             }</List>
         </Grid>;
     return null;
