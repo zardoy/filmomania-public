@@ -110,7 +110,7 @@ export type SettingTypeGeneral<
     S extends SettingsSchema,
     G extends keyof S,
     SS extends keyof S[G]
-    > =
+> =
     S[G][SS] extends { type: "menu" } ? keyof S[G][SS]["values"] :
     S[G][SS] extends { defaultValue: infer U } ? U :
     S[G][SS]["type"] extends "input" ? string | undefined : never
@@ -119,6 +119,9 @@ export const makeSchema = <T extends SettingsSchema>(settingsSchema: T) => setti
 
 // todo-high refactor types
 export class SettingsStore<S extends SettingsSchema> extends EventTarget {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    static filePath = ipcMain ? require("path").join(require("electron").app.getPath("userData"), "settings.json") as string : undefined!
+
     static throwInitError = () => {
         throw new Error(`Call init on store first`)
     }
@@ -178,55 +181,23 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
         if (ipcMain) {
             const fs = (await import("fs")).default
             const path = (await import("path")).default
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const {app} = require("electron")
             let attemp = 0
             let innerChange = false
             const initInner = async () => {
-                const filePath = path.join(app.getPath("userData"), "settings.json")
-                console.log("settings file path", filePath)
+                try {
+                    if (!fs.existsSync(SettingsStore.filePath)) {
+                        fs.writeFileSync(SettingsStore.filePath, JSON.stringify({
+                            "$schema": path.join(__dirname, "settingsSchema.json"),
+                        }, undefined, 4), "utf8")
+                    }
+                    // eslint-disable-next-line no-empty
+                } catch { }
+                console.log("settings file path", SettingsStore.filePath)
                 try {
                     attemp++
                     const ElectronStore = (await import("electron-store")).default
                     const store = new ElectronStore({
-                        schema: Object.fromEntries(Object.entries(this.settingsSchema).map(([groupName, settingProps]: [any, Record<string, SettingField>]): [string, JSONSchema] => {
-                            return [groupName, {
-                                type: "object",
-                                additionalProperties: false,
-                                properties: _.mapValues(
-                                    filterValues(settingProps, (_key, value) => !isStringOneOf(value.type, ["label", "button"])),
-                                    (setting: Extract<SettingField, { defaultValue?: any, schema?: any }>): JSONSchema => {
-                                        const schemaItem = ((): JSONSchema => {
-                                            switch (setting.type) {
-                                                case "input":
-                                                case "menu":
-                                                    return {
-                                                        type: "string"
-                                                    }
-                                                case "slider":
-                                                    // eslint-disable-next-line no-case-declarations
-                                                    const { min: minimum = 0, max: maximum = 100 } = setting
-                                                    return {
-                                                        type: "number",
-                                                        minimum,
-                                                        maximum
-                                                    }
-                                                case "toggle":
-                                                    return {
-                                                        type: "boolean"
-                                                    }
-                                                case "custom":
-                                                    return {
-                                                        ...setting.schema
-                                                    }
-                                            }
-                                        })()
-                                        // schemaItem.default = setting.defaultValue;
-                                        return schemaItem
-                                    }
-                                )
-                            }]
-                        })),
+                        schema: getRootPropertiesJsonSchema(this.settingsSchema),
                         name: "settings",
                         watch: true
                     })
@@ -238,6 +209,7 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
                         console.log("external change update")
                         this.windowIpcMain!.webContents.send(SettingsStore.ipcRendererEventNames.updateAllSetting, newSettings)
                     })
+
 
                     // this.userValues = store.store as any
                     this.settings = _.defaultsDeep({}, store.store, this.defaultValues)
@@ -275,7 +247,7 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
                     // Either fix the error manually or click the button below.
                     console.error(message)
 
-                    await fs.promises.unlink(filePath)
+                    await fs.promises.unlink(SettingsStore.filePath)
                     return await initInner()
                 }
             }
@@ -344,4 +316,51 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
     >(group: G, setting: SS, newValue: V) {
         SettingsStore.throwInitError()
     }
+}
+
+export function getRootPropertiesJsonSchema(settingsSchema: any) {
+    return Object.fromEntries(Object.entries(settingsSchema).map(([groupName, settingProps]: [any, Record<string, SettingField>]): [string, JSONSchema] => {
+        return [groupName, {
+            type: "object",
+            additionalProperties: false,
+            properties: _.mapValues(
+                filterValues(settingProps, (_key, value) => !isStringOneOf(value.type, ["label", "button"])),
+                (setting: Extract<SettingField, { defaultValue?: any; schema?: any; }>): JSONSchema => {
+                    const schemaItem = ((): JSONSchema => {
+                        switch (setting.type) {
+                            case "input":
+                                return {
+                                    type: "string",
+                                };
+                            case "menu":
+                                return {
+                                    type: "string",
+                                    enum: Object.keys(setting.values),
+                                    default: setting.defaultValue
+                                };
+                            case "slider":
+                                // eslint-disable-next-line no-case-declarations
+                                const { min: minimum = 0, max: maximum = 100 } = setting;
+                                return {
+                                    type: "number",
+                                    minimum,
+                                    maximum
+                                };
+                            case "toggle":
+                                return {
+                                    type: "boolean",
+                                    default: setting.defaultValue
+                                };
+                            case "custom":
+                                return {
+                                    ...setting.schema
+                                };
+                        }
+                    })();
+                    // schemaItem.default = setting.defaultValue;
+                    return schemaItem;
+                }
+            )
+        }];
+    }));
 }

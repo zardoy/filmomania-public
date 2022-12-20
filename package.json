@@ -106,7 +106,7 @@
     "scripts": {
         "start-main": "electron-esbuild --debug",
         "start-renderer": "vite",
-        "build-main": "tsc -p ./src/electron && node build-electron.mjs",
+        "build-main": "tsc -p ./src/electron && node build-electron.mjs && ts-node buildSettingsSchema.ts",
         "build-renderer": "tsc -p ./src/react && vite build",
         "analyze-renderer": "source-map-explorer 'build/static/js/*.js'",
         "lint": "eslint src/**",

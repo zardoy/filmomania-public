@@ -14,17 +14,20 @@ import {
     List,
     ListItemButton,
     ListItemIcon,
+    Menu,
     MenuItem,
     MenuList,
     Paper,
     Popper,
     Typography
 } from "@mui/material";
-import { GetApp as DownloadIcon, PlayArrow as PlayArrowIcon, Star as StarIcon } from "@mui/icons-material";
+import { GetApp as DownloadIcon, OpenInNew, PlayArrow as PlayArrowIcon, Star as StarIcon } from "@mui/icons-material";
 
 import CenterContent from "../components/CenterContent";
-import { SEARCH_QUERY_MIN_LENGTH, searchByQuery, FilmsSearchEngineResponse } from "../utils/search-engine";
+import { SEARCH_QUERY_MIN_LENGTH, searchByQuery, FilmsSearchEngineResponse, ParsedFilmInfo } from "../utils/search-engine";
 import { useTranslation } from "react-i18next";
+import ContextMenu from "../components/ContextMenu";
+import { shell } from "electron";
 
 const getRatingColor = (rating: number) =>
     rating === 0 ? "#6c757d" :// gray
@@ -33,27 +36,28 @@ const getRatingColor = (rating: number) =>
                 "#4caf50"; // green
 
 interface FilmItemProps {
-    posterUrl?: string;
+    data: Pick<ParsedFilmInfo, "posterUrl" | "description" | "rating" | "filmLengthRaw">
     title: string;
-    description?: string;
     year?: string;
-    rating?: number;
     onClick?: React.ComponentProps<typeof ListItemButton>["onClick"];
+    onContextMenu?: React.ComponentProps<typeof ListItemButton>["onContextMenu"];
 }
 
-const FilmItem: React.FC<FilmItemProps> = ({ title, description, posterUrl, year, rating, onClick }) => {
-    return <ListItemButton divider onClick={onClick}>
+const FilmItem: React.FC<FilmItemProps> = ({ title, year, data, onClick, onContextMenu }) => {
+    const { description, filmLengthRaw, rating, posterUrl, } = data
+    return <ListItemButton divider onClick={onClick} onContextMenu={onContextMenu}>
         <Grid container wrap="nowrap" spacing={2}>
             {
                 posterUrl && <Grid item xs={2}>
-                    <img
-                        className={css`
-                            width: 100%;
-                        `}
-                        alt="poster"
-                        src={posterUrl}
-                        draggable="false"
-                    />
+                    <div className='relative'>
+                        <img
+                            className='w-full'
+                            alt="poster"
+                            src={posterUrl}
+                            draggable="false"
+                        />
+                        <div className='absolute right-0 -my-5 bg-black bg-opacity-60 px-1'>{filmLengthRaw}</div>
+                    </div>
                 </Grid>
             }
             <Grid item xs={9} container justifyContent="space-between" wrap="nowrap">
@@ -84,15 +88,17 @@ const FilmItem: React.FC<FilmItemProps> = ({ title, description, posterUrl, year
     </ListItemButton>;
 };
 
-export const filmsSearchResult = proxy({value: undefined as undefined | FilmsSearchEngineResponse["films"]})
+export const filmsSearchResult = proxy({ value: undefined as undefined | FilmsSearchEngineResponse["films"] })
+
+let previousScrollY = null as null | number
 
 let SearchResults: React.FC = () => {
-    const {t} = useTranslation()
+    const { t } = useTranslation()
     const routerHistory = useHistory();
 
-    const moreOptionsPopoverState = usePopupState({ variant: "popover", popupId: "filmMoreOptions" });
+    const contextmenuPopoverState = usePopupState({ variant: "popover", popupId: "filmMoreOptions" });
 
-    const {search} = useLocation();
+    const { search } = useLocation();
     const query = decodeURIComponent(search.slice("?q=".length))
 
     const abortController = useRef(new AbortController());
@@ -116,55 +122,52 @@ let SearchResults: React.FC = () => {
 
     const [dropdownFilmId, setDropdownFilmId] = useState(null as number | null);
 
-    // const dropdownFilmAction = useCallback((action: "play" | "download") => {
-
-    // }, []);
-
     if (state.value === null) return null
 
     return <>
-        <Popper
-            {...bindPopover(moreOptionsPopoverState)}
+        <Menu
+            {...bindPopover(contextmenuPopoverState)}
         >
-            <Paper>
-                <ClickAwayListener onClickAway={moreOptionsPopoverState.close}>
-                    <MenuList>
-                        <MenuItem>
-                            <ListItemIcon>
-                                <PlayArrowIcon />
-                            </ListItemIcon>
-                            <Typography variant="inherit">Play Now</Typography>
-                        </MenuItem>
-                        <MenuItem>
-                            <ListItemIcon>
-                                <DownloadIcon />
-                            </ListItemIcon>
-                            <Typography variant="inherit">Download</Typography>
-                        </MenuItem>
-                    </MenuList>
-                </ClickAwayListener>
-            </Paper>
-        </Popper>
+            <ContextMenu
+                items={[
+                    {
+                        label: "Open at film page",
+                        action() {
+                            void shell.openExternal(`https://www.kinopoisk.ru/film/${dropdownFilmId!}/`)
+                        },
+                        icon: <OpenInNew />
+
+                    }
+                ]}
+                onClose={contextmenuPopoverState.close}
+            />
+        </Menu>
         {
             state.value ?
                 // TODO LIST PROPS
                 <List>
                     {
                         state.value.films.length ?
-                            state.value.films.map(({ filmId, nameRu, nameEn, posterUrlPreview, description, rating, ...restInfo }) => {
+                            state.value.films.map(({ filmId, nameRu, nameEn, posterUrlPreview, ...restInfo }) => {
                                 const openFilmPage = () => {
                                     routerHistory.push(`/film/${filmId}`);
+                                    window.scrollTo(0, 0)
                                 };
                                 const displayYear = restInfo.type === "film" ? restInfo.year :
                                     restInfo.yearTo === "nowadays" ? `From ${restInfo.yearFrom}` : `${restInfo.yearFrom} — ${restInfo.yearTo}`;
                                 return <FilmItem
                                     key={filmId}
                                     title={nameRu || nameEn}
-                                    description={description}
+                                    data={{
+                                        posterUrl: posterUrlPreview,
+                                        ...restInfo
+                                    }}
                                     year={displayYear.toString()}
-                                    posterUrl={posterUrlPreview}
-                                    rating={rating}
                                     onClick={openFilmPage}
+                                    onContextMenu={e => {
+                                        setDropdownFilmId(filmId)
+                                        contextmenuPopoverState.open(e)
+                                    }}
                                 />;
                             }) : <CenterContent><Typography>{t("No results for")} {query}</Typography></CenterContent>
                     }

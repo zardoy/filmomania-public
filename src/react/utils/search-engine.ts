@@ -89,17 +89,18 @@ interface RawFilmInfoNewEndpoint {
     /**
      * float 0 - 10 or 99% if not released yet
      */
-     rating?: string,
-     ratingVoteCount: number,
-     posterUrl?: string
-     posterUrlPreview?: string
+    rating?: string,
+    ratingVoteCount: number,
+    posterUrl?: string
+    posterUrlPreview?: string
 }
 
 export type ParsedFilmInfo = Merge<Omit<RawFilmInfo, "year">, {
     /**
      * Number of minutes
      */
-    filmLength: number,
+    // filmLength: number,
+    filmLengthRaw: string,
     countries: string[],
     genres: string[]
     rating: number
@@ -225,8 +226,9 @@ export const searchByQuery = async (query: string, { abortSignal }: RequestOptio
                     const execResult = /(\d{1,2})\s?:\s?(\d{1,2})/.exec(film.filmLength.trim())
                     if (execResult) {
                         const [, hours, minutes] = execResult
-                        newProps.filmLength = numberOrUndefined(+hours! * +minutes!)
+                        // newProps.filmLength = numberOrUndefined(+hours! * +minutes!)
                     }
+                    newProps.filmLengthRaw = film.filmLength
                 }
                 // ignore other indicators for now
                 newProps.type = film.year?.includes("-") ? "show" : "film"
@@ -303,7 +305,7 @@ export const getFilmData = async (entryId: number, abortSignal: AbortSignal) => 
     })
     const data: FilmEntryInterestedDataResponse = await response.json()
     if ("error" in data) throw new Error(`Server Returned Error: ${data.error}`)
-    const resolvedData = {...data, year: ("yearFrom" in data ? data.yearFrom : data["year"]) as string, cleanName: getCleanName({nameRu: data.nameRu, nameEn: data.nameOriginal})}
+    const resolvedData = { ...data, year: ("yearFrom" in data ? data.yearFrom : data["year"]) as string, cleanName: getCleanName({ nameRu: data.nameRu, nameEn: data.nameOriginal }) }
     sessionStorage.setItem(`film:${entryId}`, JSON.stringify(resolvedData))
     return resolvedData
 }

@@ -3,7 +3,7 @@ import ReactDom from "react-dom"
 import Root from "./pages/Root"
 import { settingsStore } from "./electron-shared/settings"
 import i18next from "i18next"
-import Backend, {HttpBackendOptions} from "i18next-http-backend";
+import Backend, { HttpBackendOptions } from "i18next-http-backend";
 import { initReactI18next } from "react-i18next"
 
 import "tailwindcss/tailwind.css"
@@ -14,6 +14,15 @@ import "@fontsource/roboto/500.css"
 import "@fontsource/roboto/700.css"
 
 await settingsStore.init()
+
+if (import.meta.env.DEV) {
+    const url = localStorage.getItem("dev:lastSavedUrl")
+    if (url) location.href = url
+    //@ts-ignore
+    window.seturl = () => {
+        localStorage.setItem("dev:lastSavedUrl", location.href)
+    }
+}
 
 void i18next
     .use(Backend)

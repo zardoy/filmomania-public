@@ -4,12 +4,17 @@ declare module "typed-ipc" {
     interface IpcMainEvents {
         playTorrent: {
             magnet: string
+            data: PlayerInputData
             nativeOpen?: boolean
         }
 
         downloadTorrentFile: {
             torrentFileUrl: string
         }
+
+        openSettingsFile: {}
+        stremioServerStatus: {}
+        startStremioServer: {}
     }
 
     interface IpcMainRequests {
@@ -28,6 +33,12 @@ declare module "typed-ipc" {
         }
         setupProxy: {}
         test: {}
+        getStremioStreamingLink: {
+            variables: {
+                magnet: string,
+            }
+            response: string
+        }
     }
 
     interface IpcRendererEvents {
@@ -45,5 +56,14 @@ declare module "typed-ipc" {
             success: boolean
             errorMessage?: string
         }
+        stremioServerStatus: {
+            up: boolean,
+        }
     }
+}
+
+export interface PlayerInputData {
+    playbackName: string,
+    /** In seconds */
+    startTime?: number
 }

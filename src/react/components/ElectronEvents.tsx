@@ -7,17 +7,26 @@ import { typedIpcRenderer } from "typed-ipc";
 
 import Notification from "./Notification";
 import { Button } from "@mui/material";
-import { settingsStore, useSettings } from "../electron-shared/settings";
+import { useSettings } from "../electron-shared/settings";
+import { proxy, useSnapshot } from "valtio";
 
 interface ComponentProps {
+}
+
+export const isSettingProxy = proxy({ value: false, })
+export const setupAppProxy = async () => {
+    isSettingProxy.value = true
+    await typedIpcRenderer.request("setupProxy")
+    isSettingProxy.value = false
 }
 
 // notistack
 
 let ElectronEvents: React.FC<ComponentProps> = () => {
+    const { value: isSettingProxySnap } = useSnapshot(isSettingProxy)
+
     const routerHistory = useHistory();
     const settings = useSettings()
-    const [isSettingProxy, setIsSettingProxy] = useState(false)
 
     const navigatorNetworkStatus = useNetworkState();
 
@@ -27,22 +36,10 @@ let ElectronEvents: React.FC<ComponentProps> = () => {
         isOnline().then(isOnline => isOffline[1](!isOnline));
     }, [navigatorNetworkStatus.online]);
 
-    const setupProxy = async () => {
-        setIsSettingProxy(true)
-        await typedIpcRenderer.request("setupProxy")
-        setIsSettingProxy(false)
-    }
-
-    // useEffect(() => {
-    //     console.log("change proxies")
-    // }, [settings.internal.activeProxies])
-
     // proxy state
     useEffect(() => {
-        if (settings.internal.activeProxies === undefined) {
-            if (import.meta.env.DEV) {
-                void setupProxy()
-            }
+        if (settings.internal.activeProxies === undefined && !import.meta.env.DEV) {
+            void setupAppProxy()
         }
     }, []);
 
@@ -60,18 +57,17 @@ let ElectronEvents: React.FC<ComponentProps> = () => {
 
     return <>
         <Notification
-            open={isSettingProxy}
+            open={isSettingProxySnap}
             message="Warming up your proxy companions..."
             severity="info"
             icon={null}
             progress={true}
         />
         <Notification
-            open={settings.internal.activeProxies === undefined && !isSettingProxy}
+            open={settings.internal.activeProxies === undefined && !isSettingProxySnap}
             message="Proxy needs setup"
             severity="info"
-            icon={<Button onClick={setupProxy}>Setup</Button>}
-            progress={true}
+            icon={<Button onClick={setupAppProxy}>Setup</Button>}
         />
         <Notification
             open={isOffline[0]}

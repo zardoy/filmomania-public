@@ -3,19 +3,24 @@ import { shell } from "electron";
 import { tmpdir } from "os";
 import { join } from "path";
 import { typedIpcMain } from "typed-ipc";
+import { SettingsStore } from "../lib/electron-settings";
 import { settingsStore } from "../react/electron-shared/settings";
 
 import { setupProxy } from "./proxy";
 import playTorrent from "./requests/playTorrent";
 import { requestTorrentsList } from "./requests/torrentsList";
+import { checkStremioServerIsStarted, getStremioStremaingUrlFromTorrent, startStremioServer } from "./stremio";
 
 export const bindIPC = () => {
     typedIpcMain.handleAllRequests({
         torrentsList: requestTorrentsList,
         setupProxy,
         test: () => {
-            settingsStore.set("dev", "counter", (settingsStore.settings.dev.counter || 0)+1)
-        }
+            settingsStore.set("dev", "counter", (settingsStore.settings.dev.counter || 0) + 1)
+        },
+        getStremioStreamingLink(_, { magnet }) {
+            return getStremioStremaingUrlFromTorrent(magnet)
+        },
     })
 
     typedIpcMain.bindAllEventListeners({
@@ -28,6 +33,15 @@ export const bindIPC = () => {
                 filename: "temp.torrent"
             })
             shell.showItemInFolder(join(tempDir, "temp.torrent"))
+        },
+        async openSettingsFile() {
+            await shell.openExternal(SettingsStore.filePath)
+        },
+        async stremioServerStatus() {
+            await checkStremioServerIsStarted()
+        },
+        startStremioServer() {
+            startStremioServer()
         }
     })
 }

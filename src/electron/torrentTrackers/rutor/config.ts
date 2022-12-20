@@ -19,4 +19,4 @@ export default {
     async parseData({ data }) {
         return parseHtml(data, true);
     }
-} as TrackerConfigType;
+} satisfies TrackerConfigType;

@@ -12,16 +12,13 @@ const settingsSchema = makeSchema({
         endpoint: {
             type: "input"
         },
-        // filmItemEndpoint: {
-        //     type: 'input',
-        // },
-        apiKey: {
-            type: "input"
-        },
         entryIdEndpoint: {
             // default set where it is used
             type: "input",
         },
+        apiKey: {
+            type: "input"
+        }
     },
     player: {
         defaultPlayer: menuField({
@@ -31,7 +28,7 @@ const settingsSchema = makeSchema({
         }, "stremio"),
         // when player is custom
         stremioServerUrl: {
-            type: "input",defaultValue: "http://127.0.0.1:11470"
+            type: "input", defaultValue: "http://127.0.0.1:11470"
         },
         stremioExec: {
             type: "input",
@@ -43,6 +40,26 @@ const settingsSchema = makeSchema({
                 value: "custom"
             }
         },
+        customPlayerType: menuField({
+            mpv: true,
+            other: true,
+        }, "other"),
+        fullscreen: {
+            type: "toggle",
+            defaultValue: true
+        },
+        // TODO presets in welcome
+        remoteControlServer: {
+            type: "toggle",
+            defaultValue: false,
+        }
+    },
+    builtinStremioServer: {
+        // todo enable by deafult and add auto startup feature
+        enabled: {
+            type: "toggle",
+            defaultValue: false
+        }
     },
     internal: {
         activeProxies: {
@@ -51,7 +68,7 @@ const settingsSchema = makeSchema({
     },
     ui: {
         trackerSorting: menuField({
-            bySize:true,
+            bySize: true,
             bySeeds: true
         }, "bySize"),
         cssOverrides: {
@@ -72,7 +89,7 @@ const settingsSchema = makeSchema({
 export type SettingType<
     G extends keyof typeof settingsSchema,
     SS extends keyof typeof settingsSchema[G]
-    > = SettingTypeGeneral<typeof settingsSchema, G, SS>
+> = SettingTypeGeneral<typeof settingsSchema, G, SS>
 
 export const settingsStore = new SettingsStore(settingsSchema)
 

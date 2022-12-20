@@ -1,6 +1,6 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import { useDebounce } from "react-use";
 import useEventListener from "use-typed-event-listener";
 import { useTranslation } from "react-i18next"
@@ -13,8 +13,9 @@ interface ComponentProps {
 }
 
 let SearchBox: React.FC<ComponentProps> = () => {
-    const {t} = useTranslation()
+    const { t } = useTranslation()
 
+    const { search } = useLocation()
     const history = useHistory();
     const theme = useTheme();
     const inputRef = useRef<HTMLInputElement>(null!);
@@ -32,12 +33,16 @@ let SearchBox: React.FC<ComponentProps> = () => {
     });
 
     const doSearch = () => {
-        history.push({search: `?q=${query}`});
+        history.push({ search: `?q=${query}` });
     }
 
     useDebounce(() => {
         doSearch()
     }, 500, [query]);
+
+    useEffect(() => {
+        setQuery(decodeURIComponent(search.slice("?q=".length)))
+    }, [search])
 
     return <>
         <form
@@ -54,6 +59,7 @@ let SearchBox: React.FC<ComponentProps> = () => {
                     width: "100%",
                     zIndex: theme.zIndex.drawer + 2
                 }}
+                autoFocus
                 size="small"
                 variant="outlined"
                 label={t("Search films")}

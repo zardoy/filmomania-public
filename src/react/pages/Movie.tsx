@@ -1,4 +1,4 @@
-import { FolderOpen, Link as LinkIcon, OpenInBrowser as OpenInBrowserIcon, OpenInNew } from "@mui/icons-material";
+import { Download as DownloadIcon, FolderOpen, Link as LinkIcon, OpenInBrowser as OpenInBrowserIcon, OpenInNew } from "@mui/icons-material";
 import { CircularProgress, Typography, Grid, Paper, ClickAwayListener, MenuList, ListItemIcon, Alert, List, ListItem, MenuItem, Menu, } from "@mui/material";
 import { shell } from "electron";
 import _ from "lodash";
@@ -10,6 +10,7 @@ import { useParams, } from "react-router-dom";
 import { useAsync } from "react-use";
 import { typedIpcRenderer } from "typed-ipc";
 import CenterContent from "../components/CenterContent";
+import ContextMenu from "../components/ContextMenu";
 import { settingsStore } from "../electron-shared/settings";
 import { TorrentItem } from "../electron-shared/TorrentTypes";
 import { getFilmData } from "../utils/search-engine";
@@ -19,7 +20,7 @@ interface ComponentProps {
 
 let abortController = new AbortController()
 const FilmPage: React.FC<ComponentProps> = () => {
-    const {t} = useTranslation()
+    const { t } = useTranslation()
 
     const { filmId: selectedFilmId } = useParams<{ filmId: string; }>();
     const [filmData, setFilmData] = useState(null as Awaited<ReturnType<typeof getFilmData>> | null)
@@ -49,7 +50,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
     }, []);
 
 
-    const contextmenuState = usePopupState({ variant: "popover", popupId: "torrentIdMoreOptions" });
+    const contextmenuState = usePopupState({ variant: "popover", popupId: "torrentMoreOptions" });
 
     const [contextmenuTorrent, setContextmenuTorrent] = useState<TorrentItem | null>(null);
 
@@ -65,51 +66,51 @@ const FilmPage: React.FC<ComponentProps> = () => {
         <Grid container direction="column">
             <Menu
                 {...bindMenu(contextmenuState)}
-                // anchorEl={null}
             >
-                <Paper>
-                    <ClickAwayListener onClickAway={contextmenuState.close}>
-                        <MenuList>
-                            <MenuItem onClick={() => {
+                <ContextMenu
+                    items={[
+                        {
+                            label: t("open-torrent-page"),
+                            action() {
                                 void shell.openExternal(contextmenuTorrent!.pageURL);
-                                contextmenuState.close()
-                            }}>
-                                <ListItemIcon>
-                                    <OpenInNew />
-                                </ListItemIcon>
-                                <Typography variant="inherit">{t("open-torrent-page")}</Typography>
-                            </MenuItem>
-                            <MenuItem onClick={() => {
+                            },
+                            icon: <OpenInNew />
+                        },
+                        {
+                            label: t("open-magnet-with-native-app"),
+                            action() {
                                 void shell.openExternal(contextmenuTorrent!.magnet);
-                                contextmenuState.close()
-                            }}>
-                                <ListItemIcon>
-                                    <LinkIcon />
-                                </ListItemIcon>
-                                <Typography variant="inherit">{t("open-magnet-with-native-app")}</Typography>
-                            </MenuItem>
-                            <MenuItem onClick={() => {
+                            },
+                            icon: <LinkIcon />
+                        },
+                        {
+                            label: t("open-torrent-file"),
+                            action() {
                                 typedIpcRenderer.send("downloadTorrentFile", {
                                     torrentFileUrl: contextmenuTorrent!.torrentURL
                                 });
-                                contextmenuState.close()
-                            }}>
-                                <ListItemIcon>
-                                    <FolderOpen />
-                                </ListItemIcon>
-                                <Typography variant="inherit">{t("open-torrent-file")}</Typography>
-                            </MenuItem>
-                        </MenuList>
-                    </ClickAwayListener>
-                </Paper>
+                            },
+                            icon: <FolderOpen />
+                        },
+                        {
+                            label: t("Download via browser"),
+                            async action() {
+                                const stremioStreamingLink = await typedIpcRenderer.request("getStremioStreamingLink", { magnet: contextmenuTorrent!.magnet })
+                                void shell.openExternal(stremioStreamingLink);
+                            },
+                            icon: <DownloadIcon />
+                        },
+                    ]}
+                    onClose={contextmenuState.close}
+                />
             </Menu>
             <Typography variant="h4">{t("results-from-rutor-info")} {state.value.totalResults}</Typography>
             {
                 state.value.hiddenResults > 0 &&
                 <Alert severity="warning">{t("we-have-hidden-results")} {state.value.hiddenResults}</Alert>
             }
-            <div className='fixed inset-0 -z-10 bg-no-repeat bg-cover bg-black' style={{opacity: 0.85}} />
-            <div className='fixed inset-0 -z-20 bg-no-repeat bg-cover overridable-cover' style={{ backgroundImage: filmData.imdbId ?`url("https://images.metahub.space/background/big/${filmData.imdbId}/img")` : `url("${filmData.coverUrl}")` }} />
+            <div className='fixed inset-0 -z-10 bg-no-repeat bg-cover bg-black' style={{ opacity: 0.85 }} />
+            <div className='fixed inset-0 -z-20 bg-no-repeat bg-cover overridable-cover' style={{ backgroundImage: filmData.imdbId ? `url("https://images.metahub.space/background/big/${filmData.imdbId}/img")` : `url("${filmData.coverUrl}")` }} />
             <List>{
                 state.value.results.length ?
                     _.sortBy(state.value.results, o => {
@@ -119,14 +120,17 @@ const FilmPage: React.FC<ComponentProps> = () => {
                         const playTorrent = async () => {
                             typedIpcRenderer.send("playTorrent", {
                                 // player: await settingsStore.get("player", "defaultPlayer"),
-                                magnet
+                                magnet,
+                                data: {
+                                    playbackName: title,
+                                },
                             });
                         };
-                        const contextM = (event: React.MouseEvent<HTMLElement>) => {
+                        const contextMenu = (event: React.MouseEvent<HTMLElement>) => {
                             setContextmenuTorrent(item);
                             contextmenuState.open(event);
                         };
-                        return <ListItem key={torrentID} divider button onClick={playTorrent} onContextMenu={contextM}>
+                        return <ListItem key={torrentID} divider button onClick={playTorrent} onContextMenu={contextMenu}>
                             <div className="flex flex-nowrap justify-between w-full">
                                 <Typography>{title}</Typography>
                                 <div className='flex'>
