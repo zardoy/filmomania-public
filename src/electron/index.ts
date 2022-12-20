@@ -15,7 +15,7 @@ electronDebug({
 
 export const debug = console.log;
 
-if(electronIsDev) {
+if (electronIsDev) {
     app.commandLine.appendSwitch("remote-debugging-port", "8315")
 }
 

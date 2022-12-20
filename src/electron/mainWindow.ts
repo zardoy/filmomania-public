@@ -1,7 +1,7 @@
-import { app, BrowserWindow } from "electron";
+import { BrowserWindow } from "electron";
 import electronIsDev from "electron-is-dev";
 import ElectronWindowKeeper from "electron-window-keeper";
-import path from "path";
+import { getFileFromPublic } from "@zardoy/electron-esbuild/build/client"
 
 export let mainWindow: BrowserWindow | null;
 
@@ -15,7 +15,7 @@ export const createMainWindow = () => {
 
     // todo manage update on resize and move if is in development
     const windowState = new ElectronWindowKeeper({
-        maximized: {
+        maximized: electronIsDev ? false : {
             default: true
         }
     });
@@ -38,24 +38,29 @@ export const createMainWindow = () => {
         show: false
     });
     if (electronIsDev) {
+        // otherwise devtools getting focused
         const windowStateDevtools = new ElectronWindowKeeper({
             fileName: "devtools-window-state"
         })
         const devTools = new BrowserWindow({
-            ...windowStateDevtools.restoredFullState
+            ...windowStateDevtools.restoredFullState,
+            show: false,
         })
+
         mainWindow.webContents.setDevToolsWebContents(devTools.webContents)
-        mainWindow.webContents.openDevTools({mode: "detach"})
+        mainWindow.webContents.openDevTools({ mode: "detach", activate: false })
         windowStateDevtools.manage(devTools)
+        devTools.showInactive()
+    } else {
+        mainWindow.show()
     }
+    windowState.manage(mainWindow);
     if (electronIsDev) {
         mainWindow.showInactive();
-        mainWindow.blur()
     }
-    else mainWindow.show()
-    windowState.manage(mainWindow);
+
     mainWindow.setMenu(null);
-    void mainWindow.loadURL(electronIsDev ? "http://localhost:3500" : `file://${path.join(__dirname, "../../../build/index.html")}`);
+    void mainWindow.loadURL(electronIsDev ? "http://localhost:3500" : getFileFromPublic("index.html"));
 
     mainWindow.on("closed", () => mainWindow = null);
 };

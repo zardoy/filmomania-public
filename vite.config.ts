@@ -9,6 +9,10 @@ export default defineVitConfig({
             electron: 'electron',
         }),
     ],
+    build: {
+        target: 'chrome108',
+        outDir: '../../dist'
+    },
     server: {
         port: 3500,
         open: false,
