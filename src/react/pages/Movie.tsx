@@ -1,5 +1,5 @@
-import { Download as DownloadIcon, FolderOpen, Link as LinkIcon, OpenInBrowser as OpenInBrowserIcon, OpenInNew } from "@mui/icons-material";
-import { CircularProgress, Typography, Grid, Paper, ClickAwayListener, MenuList, ListItemIcon, Alert, List, ListItem, MenuItem, Menu, } from "@mui/material";
+import { Download as DownloadIcon, FolderOpen, Link as LinkIcon, OpenInBrowser as OpenInNew } from "@mui/icons-material";
+import { CircularProgress, Typography, Grid, Alert, ListItem, Menu, Dialog, DialogTitle, ListItemButton, } from "@mui/material";
 import { shell } from "electron";
 import _ from "lodash";
 import { bindMenu, } from "material-ui-popup-state/hooks";
@@ -14,8 +14,45 @@ import ContextMenu from "../components/ContextMenu";
 import { settingsStore } from "../electron-shared/settings";
 import { TorrentItem } from "../electron-shared/TorrentTypes";
 import { getFilmData } from "../utils/search-engine";
+import ButtonsList from "../components/ButtonsList";
+import { proxy, useSnapshot } from "valtio";
+import { TorrentStatsResponse } from "../../electron/requests/torrentInfo";
+import { typedIpcRequest } from "../utils/ipc";
+import filesize from "filesize"
+import { showModalLoader } from "./Root";
 
 interface ComponentProps {
+}
+
+const ignoreFilesExtensions = [".srt"]
+
+const torrentSelectFilesData = proxy({ value: null as (TorrentStatsResponse & { playCallback(index) }) | null })
+
+const TorrentSelectFileDialog = () => {
+    const data = useSnapshot(torrentSelectFilesData)
+
+    const { t } = useTranslation()
+
+    if (!data.value) return null
+
+    return <Dialog open={true} onClose={() => torrentSelectFilesData.value = null} container={() => document.querySelector("#root")}>
+        <DialogTitle>{t("Select file to play")}</DialogTitle>
+        <div>
+            <ButtonsList>
+                {
+                    data.value.files.map((file, i) => {
+                        return <ListItemButton key={file.path}
+                            // tech limitation?
+                            onClick={() => torrentSelectFilesData.value!.playCallback(file["index"])} className="block">
+                            <div className='flex justify-between w-full'><span><span className='text-muted'>{i}.</span> {file.name}</span><span className='text-gray-400 pl-3'>{filesize(file.length)}</span></div>
+                            <small style={{ fontSize: "0.74em" }} className="text-muted">{file.path.slice(0, -file.name.length)}</small>
+                        </ListItemButton>
+                    })
+                }
+                <div></div>
+            </ButtonsList>
+        </div>
+    </Dialog>
 }
 
 let abortController = new AbortController()
@@ -47,8 +84,11 @@ const FilmPage: React.FC<ComponentProps> = () => {
         return () => {
             abortController.abort()
         }
-    }, []);
 
+        return () => {
+            showModalLoader.value = false
+        }
+    }, []);
 
     const contextmenuState = usePopupState({ variant: "popover", popupId: "torrentMoreOptions" });
 
@@ -104,6 +144,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
                     onClose={contextmenuState.close}
                 />
             </Menu>
+            <TorrentSelectFileDialog />
             <Typography variant="h4">{t("results-from-rutor-info")} {state.value.totalResults}</Typography>
             {
                 state.value.hiddenResults > 0 &&
@@ -111,26 +152,45 @@ const FilmPage: React.FC<ComponentProps> = () => {
             }
             <div className='fixed inset-0 -z-10 bg-no-repeat bg-cover bg-black' style={{ opacity: 0.85 }} />
             <div className='fixed inset-0 -z-20 bg-no-repeat bg-cover overridable-cover' style={{ backgroundImage: filmData.imdbId ? `url("https://images.metahub.space/background/big/${filmData.imdbId}/img")` : `url("${filmData.coverUrl}")` }} />
-            <List>{
+            <ButtonsList>{
                 state.value.results.length ?
                     _.sortBy(state.value.results, o => {
                         return settingsStore.settings.ui.trackerSorting === "bySize" ? o.sizeInBytes : o.seeders;
                     }).reverse().map(item => {
                         const { title, magnet, torrentID, seeders, displaySize, pageURL, torrentURL } = item
-                        const playTorrent = async () => {
+                        const playTorrent = (playIndex = 0) => {
                             typedIpcRenderer.send("playTorrent", {
-                                // player: await settingsStore.get("player", "defaultPlayer"),
+                                playIndex,
                                 magnet,
                                 data: {
                                     playbackName: title,
                                 },
                             });
                         };
+                        const handleTorrentClick = async () => {
+                            showModalLoader.value = true
+                            const alwaysDisplaySelector = true
+                            const data = await typedIpcRequest.getTorrentInfo({ magnet })
+                            showModalLoader.value = false
+                            if (!data) throw new Error("No torrent data (most probably it doesn't exist)")
+                            // printing for advanced use cases or debugging
+                            console.log("torrentInfo", data)
+                            // if (files.length === 0) todo display err
+                            data.files = data.files.map((file, index) => ({ ...file, index })).filter(file => ignoreFilesExtensions.every(ext => !file.name.endsWith(ext)))
+                            if (!alwaysDisplaySelector && data.files.length === 1) {
+                                playTorrent()
+                            } else {
+                                torrentSelectFilesData.value = {
+                                    ...data,
+                                    playCallback: playTorrent,
+                                }
+                            }
+                        }
                         const contextMenu = (event: React.MouseEvent<HTMLElement>) => {
                             setContextmenuTorrent(item);
                             contextmenuState.open(event);
                         };
-                        return <ListItem key={torrentID} divider button onClick={playTorrent} onContextMenu={contextMenu}>
+                        return <ListItem key={torrentID} divider button onClick={() => handleTorrentClick()} onContextMenu={contextMenu}>
                             <div className="flex flex-nowrap justify-between w-full">
                                 <Typography>{title}</Typography>
                                 <div className='flex'>
@@ -141,7 +201,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
                         </ListItem>;
                     })
                     : <Typography>{t("tracker-no-results")}</Typography>
-            }</List>
+            }</ButtonsList>
         </Grid>;
     return null;
 };

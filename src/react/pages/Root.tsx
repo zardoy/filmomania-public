@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 
 import { HashRouter, Link as RouterLink, Route, Switch } from "react-router-dom";
 
-import { Button, createTheme, CssBaseline, ThemeProvider, Typography, useMediaQuery } from "@mui/material";
+import { Button, CircularProgress, createTheme, CssBaseline, ThemeProvider, Typography, useMediaQuery } from "@mui/material";
 import { blue, lightBlue } from "@mui/material/colors";
 
 import CenterContent from "../components/CenterContent";
@@ -16,12 +16,16 @@ import HomePage from "./Home";
 import FilmPage from "./Movie";
 import WelcomePage from "./Welcome/Welcome";
 import { css, Global } from "@emotion/react";
+import { proxy, useSnapshot } from "valtio";
 
 interface ComponentProps {
 }
 
+export const showModalLoader = proxy({ value: false, })
+
 let App: React.FC<ComponentProps> = () => {
     const settings = useSettings()
+    const { value: showLoader } = useSnapshot(showModalLoader)
 
     const [showWelcomePage, setShowWelcomePage] = useState(() => {
         const { apiKey, endpoint } = settings.movieSearchEngine
@@ -48,6 +52,9 @@ let App: React.FC<ComponentProps> = () => {
                 outline: "none"
             }
         }} />
+        {showLoader && <div className='fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center'>
+            <CircularProgress />
+        </div>}
         <Global styles={css`
             ${settings.ui.cssOverrides ?? ""}
         `} />

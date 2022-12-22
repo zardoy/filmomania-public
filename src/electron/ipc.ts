@@ -8,8 +8,9 @@ import { settingsStore } from "../react/electron-shared/settings";
 
 import { setupProxy } from "./proxy";
 import playTorrent from "./requests/playTorrent";
+import torrentInfo from "./requests/torrentInfo";
 import { requestTorrentsList } from "./requests/torrentsList";
-import { checkStremioServerIsStarted, getStremioStremaingUrlFromTorrent, startStremioServer } from "./stremio";
+import { makeStremioServerRequest, getStremioStremaingUrlFromTorrent, startStremioServer } from "./stremio";
 
 export const bindIPC = () => {
     typedIpcMain.handleAllRequests({
@@ -21,6 +22,7 @@ export const bindIPC = () => {
         getStremioStreamingLink(_, { magnet }) {
             return getStremioStremaingUrlFromTorrent(magnet)
         },
+        getTorrentInfo: torrentInfo
     })
 
     typedIpcMain.bindAllEventListeners({
@@ -38,10 +40,10 @@ export const bindIPC = () => {
             await shell.openExternal(SettingsStore.filePath)
         },
         async stremioServerStatus() {
-            await checkStremioServerIsStarted()
+            await makeStremioServerRequest()
         },
-        startStremioServer() {
-            startStremioServer()
+        async startStremioServer() {
+            await startStremioServer()
         }
     })
 }

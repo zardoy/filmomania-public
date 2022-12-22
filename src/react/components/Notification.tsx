@@ -8,9 +8,11 @@ interface ComponentProps {
     message: string;
     icon?: null | JSX.Element;
     progress?: boolean | number;
+    onClose?: () => any
+    autoHide?: boolean
 }
 
-let Notification: React.FC<ComponentProps> = ({ open, severity, icon, progress, message }) => {
+let Notification: React.FC<ComponentProps> = ({ open, severity, icon, progress, message, onClose, autoHide }) => {
     const showProgress = typeof progress === "number" || progress === true;
 
     return <Snackbar
@@ -19,6 +21,8 @@ let Notification: React.FC<ComponentProps> = ({ open, severity, icon, progress, 
             vertical: "bottom",
             horizontal: "right"
         }}
+        onClose={onClose}
+        autoHideDuration={autoHide ? 3000 : null}
     >
         <Alert severity={severity} icon={icon === null ? <></> : icon} classes={{
             message: "flex items-center text-base"

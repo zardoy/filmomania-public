@@ -2,7 +2,7 @@ import { IpcMainHandler } from "typed-ipc";
 
 import { requestSiteWithProxies } from "@zardoy/proxy-util/filmomania/request";
 
-import { proxyReady } from "../proxy";
+import { proxyReady, setupProxy } from "../proxy";
 import rutorConfig from "../torrentTrackers/rutor/config";
 import { settingsStore } from "../../react/electron-shared/settings";
 
@@ -13,7 +13,19 @@ export const requestTorrentsList: IpcMainHandler<"torrentsList"> = async (_event
     if (/* !proxyReady ||  */!proxies) throw new Error(`Proxy is not ready yet`);
 
     const requestUrl = torrentEngineConfig.getRequestUrl(searchQuery);
-    const axiosResponse = await requestSiteWithProxies(proxies.split(","), encodeURI(requestUrl));
+    const fetchData = async (retry: number) => {
+        try {
+            return await requestSiteWithProxies(proxies.split(","), encodeURI(requestUrl))
+        } catch (err: any) {
+            // todo compare code
+            if (retry < 1 && err.message.includes("ETIMEDOUT")) {
+                await setupProxy()
+                return await fetchData(retry + 1)
+            }
+            throw err
+        }
+    }
+    const axiosResponse = await fetchData(0);
     const engineResult = await torrentEngineConfig.parseData(axiosResponse);
 
     return {

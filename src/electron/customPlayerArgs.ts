@@ -6,6 +6,7 @@ export const getCustomPlayerArgs = ({ playbackName, startTime }: PlayerInputData
     if (customPlayerType === "mpv") {
         return [
             `--force-media-title="${playbackName}"`,
+            // `--input-ipc-server=`,
             // todo try to autodetect
             // "--audio-spdif=ac3,dts,eac3",
             ...startTime ? [`--start="+0:0:${startTime}"`] : [],

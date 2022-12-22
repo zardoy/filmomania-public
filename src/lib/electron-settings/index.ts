@@ -53,14 +53,15 @@ type SettingSchemaFieldTypes = {
 
 type CommonSettingProps = {
     /** @default undefined settingLabel is displayed as label. Used if need to save backward compatibility but change setting label */
-    displayLabel?: string
+    // displayLabel?: string
+    descrioption?: string
     /** By default the setting is always visible and can be edited */
-    dependsOn?: {
-        /** Property name of the same group */
-        property: string
-        /** Only if property == value, the setting is visible and can be edited */
-        value: string | boolean | number
-    }
+    // dependsOn?: {
+    //     /** Property name of the same group */
+    //     property: string
+    //     /** Only if property == value, the setting is visible and can be edited */
+    //     value: string | boolean | number
+    // }
     // not supported yet
     // disabled: boolean | (() => boolean)
     // hint: string;
@@ -206,8 +207,9 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
                             innerChange = false
                             return
                         }
+                        this.settings = _.defaultsDeep({}, store.store, this.defaultValues)
                         console.log("external change update")
-                        this.windowIpcMain!.webContents.send(SettingsStore.ipcRendererEventNames.updateAllSetting, newSettings)
+                        this.windowIpcMain!.webContents.send(SettingsStore.ipcRendererEventNames.updateAllSetting, this.settings)
                     })
 
 
@@ -357,6 +359,7 @@ export function getRootPropertiesJsonSchema(settingsSchema: any) {
                                 };
                         }
                     })();
+                    schemaItem.description = setting.descrioption;
                     // schemaItem.default = setting.defaultValue;
                     return schemaItem;
                 }

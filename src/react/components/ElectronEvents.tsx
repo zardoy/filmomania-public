@@ -20,6 +20,22 @@ export const setupAppProxy = async () => {
     isSettingProxy.value = false
 }
 
+const notificationsStack = proxy({ value: [] as string[] })
+
+window.onunhandledrejection = ({ reason }) => {
+    notificationsStack.value.push(reason.message?.replace(/^Error invoking remote method /, ""))
+}
+
+const NotificationStack = () => {
+    const { value: stack } = useSnapshot(notificationsStack,)
+
+    return <>
+        {stack.map((message, i) => <Notification key={i} open={true} severity='error' message={message} autoHide onClose={() => {
+            notificationsStack.value.splice(i, 1)
+        }} />)}
+    </>
+}
+
 // notistack
 
 let ElectronEvents: React.FC<ComponentProps> = () => {
@@ -74,6 +90,7 @@ let ElectronEvents: React.FC<ComponentProps> = () => {
             message="No internet connection"
             severity="error"
         />
+        <NotificationStack />
     </>;
 };
 

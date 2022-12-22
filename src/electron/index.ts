@@ -1,7 +1,7 @@
 import "./handleErrors";
 
 // todo-high electron-reloader
-import { app, } from "electron";
+import { app, screen } from "electron";
 import electronDebug from "electron-debug";
 
 import { bindIPC } from "./ipc";
@@ -10,9 +10,9 @@ import { settingsStore } from "../react/electron-shared/settings";
 import electronIsDev from "electron-is-dev";
 import { registerProtocol } from "./protocol";
 
-electronDebug({
-    showDevTools: false
-});
+// electronDebug({
+//     showDevTools: false
+// });
 
 export const debug = console.log;
 

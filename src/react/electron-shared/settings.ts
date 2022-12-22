@@ -41,9 +41,10 @@ const settingsSchema = makeSchema({
             }
         },
         customPlayerType: menuField({
+            auto: true,
             mpv: true,
             other: true,
-        }, "other"),
+        }, "auto"),
         fullscreen: {
             type: "toggle",
             defaultValue: true
@@ -59,6 +60,11 @@ const settingsSchema = makeSchema({
         enabled: {
             type: "toggle",
             defaultValue: false
+        },
+        overrideRootPath: {
+            type: "input",
+            descrioption: "When builtin server is used, override path to where server-settings.json and cache is stored (relative to userData dir), you should override cache size & location & other settings in that file. Default (when empty): %APPDATA%\\stremio\\stremio-server",
+            defaultValue: ""
         }
     },
     internal: {

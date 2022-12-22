@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next"
 import { TextField, useTheme } from "@mui/material";
 
 import SearchResults from "../pages/SearchResults";
+import { focusNextElemOnPage, useKeyPress } from "../utils/react";
 
 interface ComponentProps {
 }
@@ -23,7 +24,12 @@ let SearchBox: React.FC<ComponentProps> = () => {
 
     useEventListener(window, "keyup", ({ code, target }) => {
         // eslint-disable-next-line no-extra-parens
-        if ((target as Element).tagName === "input") return;
+        if ((target as Element).tagName.toLowerCase() === "input") {
+            if (code === "ArrowDown") {
+                focusNextElemOnPage()
+            }
+            return;
+        }
 
         const inputEl = inputRef.current;
 

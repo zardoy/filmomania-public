@@ -1,10 +1,12 @@
 import { TorrentEngineParseResult } from "./TorrentTypes";
+import type { TorrentStatsResponse } from "../../electron/requests/torrentInfo"
 
 declare module "typed-ipc" {
     interface IpcMainEvents {
         playTorrent: {
             magnet: string
             data: PlayerInputData
+            playIndex?: number
             nativeOpen?: boolean
         }
 
@@ -38,6 +40,13 @@ declare module "typed-ipc" {
                 magnet: string,
             }
             response: string
+        }
+        getTorrentInfo: {
+            variables: {
+                magnet: string
+                index?: number
+            }
+            response: TorrentStatsResponse
         }
     }
 

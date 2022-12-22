@@ -14,25 +14,43 @@ I know, design is bad. I'll use [arwes](https://playground.arwes.dev/core) in fu
 
 ## Build EXE
 
-> [Node.js](https://nodejs.org/) and [yarn](https://classic.yarnpkg.com/en/docs/install/#windows-stable) must be installed.
+> [Node.js](https://nodejs.org/) and pnpm (`npm i -g pnpm`) must be installed.
 
 - Clone this via git / download ZIP
-- Install dependencies (just run `yarn` in terminal) and then run `yarn build-app`
+- Install dependencies (just run `pnpm i` in terminal) and then run `pnpm build-app`
 - If everything is okay, you will find installer in `build-app` folder
 
 ## Features
 
-- It pretty fast and stable
-- Greatest UI / UX on the planet
-- It firstly used Ace Stream with MPC-HC, then I switched to [Soda Player Plus](https://github.com/zardoy/soda-player-plus) and now it uses [Stremio](https://www.stremio.com/).
-- And the last... I don't know any alternatives to it
+- Its pretty fast and stable
+- Good & modern UI / UX
+- Probably no alternatives for now
+- And even more good surprises inside!
 
-## Roadmap
+### Builtin Stremio Defaults
+
+```jsonc
+{
+    "appPath": "%APPDATA%\\stremio\\stremio-server", // this can be changed in main app settings
+    "cacheRoot": "%APPDATA%\\stremio\\stremio-server", // this derived from previous
+    "cacheSize": 2147483648, // 2GB
+    "btMaxConnections": 55,
+    "btHandshakeTimeout": 20000,
+    "btRequestTimeout": 4000,
+    "btDownloadSpeedSoftLimit": 2621440,
+    "btDownloadSpeedHardLimit": 3670016,
+    "btMinPeersForStable": 5,
+    "remoteHttps": "",
+    "localAddonEnabled": false,
+    "serverVersion": "4.18.0"
+}
+```
+
+## TODO
 
 ### Soon
 
 - [ ] investigate other frameworks / solutions: Tauri, [Neutralino](https://neutralino.js.org/docs/#/)
-- [ ] Client redesign
 
 ### Stale
 

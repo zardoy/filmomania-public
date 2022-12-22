@@ -22,6 +22,7 @@
 /out
 
 .env.local
+/test*.mjs
 
 # misc
 local-tests

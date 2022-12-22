@@ -28,6 +28,7 @@ import { SEARCH_QUERY_MIN_LENGTH, searchByQuery, FilmsSearchEngineResponse, Pars
 import { useTranslation } from "react-i18next";
 import ContextMenu from "../components/ContextMenu";
 import { shell } from "electron";
+import ButtonsList from "../components/ButtonsList";
 
 const getRatingColor = (rating: number) =>
     rating === 0 ? "#6c757d" :// gray
@@ -35,17 +36,15 @@ const getRatingColor = (rating: number) =>
             rating < 7 ? "#ff9800" : // yellow
                 "#4caf50"; // green
 
-interface FilmItemProps {
+interface FilmItemProps extends React.ComponentProps<typeof ListItemButton> {
     data: Pick<ParsedFilmInfo, "posterUrl" | "description" | "rating" | "filmLengthRaw">
     title: string;
     year?: string;
-    onClick?: React.ComponentProps<typeof ListItemButton>["onClick"];
-    onContextMenu?: React.ComponentProps<typeof ListItemButton>["onContextMenu"];
 }
 
-const FilmItem: React.FC<FilmItemProps> = ({ title, year, data, onClick, onContextMenu }) => {
+const FilmItem: React.FC<FilmItemProps> = ({ title, year, data, ...rootProps }) => {
     const { description, filmLengthRaw, rating, posterUrl, } = data
-    return <ListItemButton divider onClick={onClick} onContextMenu={onContextMenu}>
+    return <ListItemButton divider {...rootProps}>
         <Grid container wrap="nowrap" spacing={2}>
             {
                 posterUrl && <Grid item xs={2}>
@@ -145,7 +144,7 @@ let SearchResults: React.FC = () => {
         {
             state.value ?
                 // TODO LIST PROPS
-                <List>
+                <ButtonsList>
                     {
                         state.value.films.length ?
                             state.value.films.map(({ filmId, nameRu, nameEn, posterUrlPreview, ...restInfo }) => {
@@ -171,7 +170,7 @@ let SearchResults: React.FC = () => {
                                 />;
                             }) : <CenterContent><Typography>{t("No results for")} {query}</Typography></CenterContent>
                     }
-                </List> :
+                </ButtonsList> :
                 <CenterContent>
                     {
                         state.loading ? <CircularProgress /> :

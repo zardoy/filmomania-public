@@ -6,6 +6,6 @@
     "open-torrent-file": "Open .torrent file",
     "open-magnet-with-native-app": "Open magnet with native app",
     "open-torrent-page": "Open torrent page",
-    "tracket-get-result-fail": "{0}\\nTry to CTRL+R to find another proxy",
+    "tracket-get-result-fail": "{0}\\nFailed to fetch tracker results. Most probably proxy or site failure",
     "No results for": "No results for"
 }
