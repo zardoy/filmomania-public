@@ -24,27 +24,23 @@ const settingsSchema = makeSchema({
         defaultPlayer: menuField({
             stremio: true,
             custom: true,
+            mpv: true,
             native: true
-        }, "stremio"),
-        // when player is custom
+        }, "mpv"),
         stremioServerUrl: {
             type: "input", defaultValue: "http://127.0.0.1:11470"
         },
         stremioExec: {
             type: "input",
         },
-        customPlayerExecutable: {
+        // when player is custom or mpv
+        playerExecutable: {
             type: "input",
             dependsOn: {
                 property: "defaultPlayer",
                 value: "custom"
             }
         },
-        customPlayerType: menuField({
-            auto: true,
-            mpv: true,
-            other: true,
-        }, "auto"),
         fullscreen: {
             type: "toggle",
             defaultValue: true
@@ -59,7 +55,7 @@ const settingsSchema = makeSchema({
         // todo enable by deafult and add auto startup feature
         enabled: {
             type: "toggle",
-            defaultValue: false
+            defaultValue: true
         },
         overrideRootPath: {
             type: "input",
@@ -87,6 +83,18 @@ const settingsSchema = makeSchema({
             schema: {
                 type: "number"
             }
+        }
+    },
+    providers: {
+        rutorInfoSearchQuery: {
+            type: "input",
+            defaultValue: "${ruEnName} ${year}",
+            descrioption: "Default value can be changed over time. Other available placeholders: ${enRuName} which prefers original name first"
+        },
+        rutorInfoRequestUrl: {
+            type: "input",
+            defaultValue: "http://rutor.info/search/0/${category_number_fake}/100/2/${searchQuery}",
+            descrioption: "Default value can be changed over time."
         }
     }
 })

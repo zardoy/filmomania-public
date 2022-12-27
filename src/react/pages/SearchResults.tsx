@@ -21,7 +21,7 @@ import {
     Popper,
     Typography
 } from "@mui/material";
-import { GetApp as DownloadIcon, OpenInNew, PlayArrow as PlayArrowIcon, Star as StarIcon } from "@mui/icons-material";
+import { GetApp as DownloadIcon, OpenInNew, PlayArrow as PlayArrowIcon, Search as SearchIcon, Star as StarIcon } from "@mui/icons-material";
 
 import CenterContent from "../components/CenterContent";
 import { SEARCH_QUERY_MIN_LENGTH, searchByQuery, FilmsSearchEngineResponse, ParsedFilmInfo } from "../utils/search-engine";
@@ -130,11 +130,20 @@ let SearchResults: React.FC = () => {
             <ContextMenu
                 items={[
                     {
-                        label: "Open at film page",
+                        label: "Open film page",
                         action() {
                             void shell.openExternal(`https://www.kinopoisk.ru/film/${dropdownFilmId!}/`)
                         },
                         icon: <OpenInNew />
+
+                    },
+                    {
+                        label: "Search with original name",
+                        action() {
+                            routerHistory.push(`/film/${dropdownFilmId}?altSearch=1`);
+                            window.scrollTo(0, 0)
+                        },
+                        icon: <SearchIcon />
 
                     }
                 ]}

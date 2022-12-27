@@ -9,6 +9,9 @@ import { createMainWindow, mainWindow } from "./mainWindow";
 import { settingsStore } from "../react/electron-shared/settings";
 import electronIsDev from "electron-is-dev";
 import { registerProtocol } from "./protocol";
+import { SettingsStore } from "../lib/electron-settings";
+import killPort from "kill-port"
+import { initHooksFile } from "./hooksFile";
 
 // electronDebug({
 //     showDevTools: false
@@ -17,6 +20,7 @@ import { registerProtocol } from "./protocol";
 export const debug = console.log;
 
 if (electronIsDev) {
+    console.clear()
     app.commandLine.appendSwitch("remote-debugging-port", "8315")
 }
 
@@ -25,10 +29,18 @@ if (electronIsDev) {
 const loadApp = async () => {
     app.setName("FilmoMania Beta");
     bindIPC();
-    // await new Promise(resolve => {
-    //     setTimeout(resolve, 1000)
-    // })
+    initHooksFile()
+    if (electronIsDev) {
+        SettingsStore.settingsDevBaseName = "filmomania"
+        // await new Promise(resolve => {
+        //     setTimeout(resolve, 1000)
+        // })
+    }
     await settingsStore.init();
+    if (electronIsDev) {
+        // todo resolve root issue instead of that workaround
+        if (settingsStore.settings.builtinStremioServer.enabled && settingsStore.settings.player.stremioServerUrl === "http://127.0.0.1:11470") await killPort(11470)
+    }
     createMainWindow();
     settingsStore.windowIpcMain = mainWindow!
 };

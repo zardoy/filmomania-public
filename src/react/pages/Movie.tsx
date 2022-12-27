@@ -1,12 +1,12 @@
 import { Download as DownloadIcon, FolderOpen, Link as LinkIcon, OpenInBrowser as OpenInNew } from "@mui/icons-material";
-import { CircularProgress, Typography, Grid, Alert, ListItem, Menu, Dialog, DialogTitle, ListItemButton, } from "@mui/material";
+import { CircularProgress, Typography, Grid, Alert, ListItem, Menu, Dialog, DialogTitle, ListItemButton, Fade, } from "@mui/material";
 import { shell } from "electron";
 import _ from "lodash";
 import { bindMenu, } from "material-ui-popup-state/hooks";
 import { usePopupState } from "material-ui-popup-state/hooks";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams, } from "react-router-dom";
+import { useLocation, useParams, } from "react-router-dom";
 import { useAsync } from "react-use";
 import { typedIpcRenderer } from "typed-ipc";
 import CenterContent from "../components/CenterContent";
@@ -26,7 +26,17 @@ interface ComponentProps {
 
 const ignoreFilesExtensions = [".srt"]
 
-const torrentSelectFilesData = proxy({ value: null as (TorrentStatsResponse & { playCallback(index) }) | null })
+const torrentSelectFilesData = proxy({ value: null as (TorrentStatsResponse & { playCallback(index, name) }) | null })
+
+// eslint-disable-next-line react/display-name
+const FadeTransition = React.forwardRef((
+    props: {
+        children: React.ReactElement<any, any>;
+    } & Record<string, any>,
+    ref: React.Ref<unknown>,
+) => {
+    return <Fade ref={ref} {...props} />;
+});
 
 const TorrentSelectFileDialog = () => {
     const data = useSnapshot(torrentSelectFilesData)
@@ -35,7 +45,15 @@ const TorrentSelectFileDialog = () => {
 
     if (!data.value) return null
 
-    return <Dialog open={true} onClose={() => torrentSelectFilesData.value = null} container={() => document.querySelector("#root")}>
+    return <Dialog
+        maxWidth="lg"
+        open={true}
+        classes={{
+            paper: "mui-dialog",
+        }}
+        onClose={() => torrentSelectFilesData.value = null}
+        container={() => document.querySelector("#root")}
+        TransitionComponent={FadeTransition}>
         <DialogTitle>{t("Select file to play")}</DialogTitle>
         <div>
             <ButtonsList>
@@ -43,8 +61,13 @@ const TorrentSelectFileDialog = () => {
                     data.value.files.map((file, i) => {
                         return <ListItemButton key={file.path}
                             // tech limitation?
-                            onClick={() => torrentSelectFilesData.value!.playCallback(file["index"])} className="block">
-                            <div className='flex justify-between w-full'><span><span className='text-muted'>{i}.</span> {file.name}</span><span className='text-gray-400 pl-3'>{filesize(file.length)}</span></div>
+                            onClick={() => torrentSelectFilesData.value!.playCallback(file["index"], file.path)} className="block">
+                            <div className='flex justify-between w-full'>
+                                <span>
+                                    <span className='text-gray-600'>{i + 1}.</span> {file.name}
+                                </span>
+                                <span className='text-gray-400 pl-3'>{filesize(file.length)}</span>
+                            </div>
                             <small style={{ fontSize: "0.74em" }} className="text-muted">{file.path.slice(0, -file.name.length)}</small>
                         </ListItemButton>
                     })
@@ -57,6 +80,8 @@ const TorrentSelectFileDialog = () => {
 
 let abortController = new AbortController()
 const FilmPage: React.FC<ComponentProps> = () => {
+    const { search } = useLocation()
+
     const { t } = useTranslation()
 
     const { filmId: selectedFilmId } = useParams<{ filmId: string; }>();
@@ -70,9 +95,10 @@ const FilmPage: React.FC<ComponentProps> = () => {
         const data = await getFilmData(+selectedFilmId, abortController.signal)
         setFilmData(data)
         try {
-            const { cleanName, year } = data
-            const result = await typedIpcRenderer.request("torrentsList", {
-                searchQuery: `${cleanName} ${year}`
+            const { cleanName, year, nameOriginal } = data
+            const mainQuery = settingsStore.settings.providers.rutorInfoSearchQuery.replaceAll("${ruEnName}", cleanName).replaceAll("${enRuName}", nameOriginal || cleanName).replaceAll("${year}", year)
+            const result = await typedIpcRequest.torrentsList({
+                searchQuery: search.includes("altSearch=1") ? `${nameOriginal} ${year}` : mainQuery
             });
             return result.parseResult;
         } catch (err: any) {
@@ -135,7 +161,7 @@ const FilmPage: React.FC<ComponentProps> = () => {
                         {
                             label: t("Download via browser"),
                             async action() {
-                                const stremioStreamingLink = await typedIpcRenderer.request("getStremioStreamingLink", { magnet: contextmenuTorrent!.magnet })
+                                const stremioStreamingLink = await typedIpcRequest.getStremioStreamingLink({ magnet: contextmenuTorrent!.magnet })
                                 void shell.openExternal(stremioStreamingLink);
                             },
                             icon: <DownloadIcon />
@@ -158,25 +184,27 @@ const FilmPage: React.FC<ComponentProps> = () => {
                         return settingsStore.settings.ui.trackerSorting === "bySize" ? o.sizeInBytes : o.seeders;
                     }).reverse().map(item => {
                         const { title, magnet, torrentID, seeders, displaySize, pageURL, torrentURL } = item
-                        const playTorrent = (playIndex = 0) => {
+                        const playTorrent = (playIndex = 0, playbackName = title) => {
                             typedIpcRenderer.send("playTorrent", {
                                 playIndex,
                                 magnet,
                                 data: {
-                                    playbackName: title,
+                                    playbackName,
                                 },
                             });
                         };
                         const handleTorrentClick = async () => {
                             showModalLoader.value = true
-                            const alwaysDisplaySelector = true
-                            const data = await typedIpcRequest.getTorrentInfo({ magnet })
-                            showModalLoader.value = false
+                            const alwaysDisplaySelector = false
+                            const data = await typedIpcRequest.getTorrentInfo({ magnet }).finally(() => {
+                                showModalLoader.value = false
+                            })
                             if (!data) throw new Error("No torrent data (most probably it doesn't exist)")
                             // printing for advanced use cases or debugging
                             console.log("torrentInfo", data)
                             // if (files.length === 0) todo display err
-                            data.files = data.files.map((file, index) => ({ ...file, index })).filter(file => ignoreFilesExtensions.every(ext => !file.name.endsWith(ext)))
+                            data.files = _.sortBy(data.files.map((file, index) => ({ ...file, index }))
+                                .filter(file => ignoreFilesExtensions.every(ext => !file.name.endsWith(ext))), ({ path }) => path)
                             if (!alwaysDisplaySelector && data.files.length === 1) {
                                 playTorrent()
                             } else {

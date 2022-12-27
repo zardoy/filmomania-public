@@ -3,14 +3,14 @@ import { shell } from "electron";
 import { tmpdir } from "os";
 import { join } from "path";
 import { typedIpcMain } from "typed-ipc";
-import { SettingsStore } from "../lib/electron-settings";
 import { settingsStore } from "../react/electron-shared/settings";
+import { initHooksFile } from "./hooksFile";
 
 import { setupProxy } from "./proxy";
-import playTorrent from "./requests/playTorrent";
+import playTorrent, { sendMpvCommand } from "./requests/playTorrent";
 import torrentInfo from "./requests/torrentInfo";
 import { requestTorrentsList } from "./requests/torrentsList";
-import { makeStremioServerRequest, getStremioStremaingUrlFromTorrent, startStremioServer } from "./stremio";
+import { getStremioStremaingUrlFromTorrent, startStremioServer, checkStremioServerIsStarted, killStremioServer } from "./stremio";
 
 export const bindIPC = () => {
     typedIpcMain.handleAllRequests({
@@ -22,7 +22,13 @@ export const bindIPC = () => {
         getStremioStreamingLink(_, { magnet }) {
             return getStremioStremaingUrlFromTorrent(magnet)
         },
-        getTorrentInfo: torrentInfo
+        getTorrentInfo: torrentInfo,
+        mpvCommand(_, { args }) {
+            return sendMpvCommand(args)
+        },
+        reloadHooksFile() {
+            return initHooksFile()
+        }
     })
 
     typedIpcMain.bindAllEventListeners({
@@ -37,13 +43,16 @@ export const bindIPC = () => {
             shell.showItemInFolder(join(tempDir, "temp.torrent"))
         },
         async openSettingsFile() {
-            await shell.openExternal(SettingsStore.filePath)
+            await shell.openExternal(settingsStore.filePath)
         },
         async stremioServerStatus() {
-            await makeStremioServerRequest()
+            await checkStremioServerIsStarted()
         },
         async startStremioServer() {
             await startStremioServer()
+        },
+        killStremioServer() {
+            killStremioServer()
         }
     })
 }

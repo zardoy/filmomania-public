@@ -18,7 +18,7 @@ I know, design is bad. I'll use [arwes](https://playground.arwes.dev/core) in fu
 
 - Clone this via git / download ZIP
 - Install dependencies (just run `pnpm i` in terminal) and then run `pnpm build-app`
-- If everything is okay, you will find installer in `build-app` folder
+- If everything is okay, you will find installer in `release` folder
 
 ## Features
 
@@ -46,15 +46,16 @@ I know, design is bad. I'll use [arwes](https://playground.arwes.dev/core) in fu
 }
 ```
 
+### Customizability & Extendability
+
+Settings are defined in schema.json (after installation) or in electron-shared/settings.ts in src
+
 ## TODO
-
-### Soon
-
-- [ ] investigate other frameworks / solutions: Tauri, [Neutralino](https://neutralino.js.org/docs/#/)
 
 ### Stale
 
+- [ ] investigate other frameworks / solutions: Tauri, [Neutralino](https://neutralino.js.org/docs/#/)
 - [ ] Rename project
-- [ ] A lot of integrations!
-- [ ] Razer and aura sdk integration (light effects) with player integration
+- [X] A lot of integrations! (hooks file)
+- [X] Razer and aura sdk integration (light effects) with player integration (you can do it yourself with hooks file)
 - [ ] Movie scenes parser

@@ -9,6 +9,7 @@ import Notification from "./Notification";
 import { Button } from "@mui/material";
 import { useSettings } from "../electron-shared/settings";
 import { proxy, useSnapshot } from "valtio";
+import { typedIpcRequest } from "../utils/ipc";
 
 interface ComponentProps {
 }
@@ -16,7 +17,7 @@ interface ComponentProps {
 export const isSettingProxy = proxy({ value: false, })
 export const setupAppProxy = async () => {
     isSettingProxy.value = true
-    await typedIpcRenderer.request("setupProxy")
+    await typedIpcRequest.setupProxy()
     isSettingProxy.value = false
 }
 

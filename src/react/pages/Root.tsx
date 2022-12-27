@@ -52,7 +52,7 @@ let App: React.FC<ComponentProps> = () => {
                 outline: "none"
             }
         }} />
-        {showLoader && <div className='fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center'>
+        {showLoader && <div className='fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-40'>
             <CircularProgress />
         </div>}
         <Global styles={css`

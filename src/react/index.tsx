@@ -7,11 +7,13 @@ import Backend, { HttpBackendOptions } from "i18next-http-backend";
 import { initReactI18next } from "react-i18next"
 
 import "tailwindcss/tailwind.css"
+import "./main.css"
 
 import "@fontsource/roboto"
 import "@fontsource/roboto/300.css"
 import "@fontsource/roboto/500.css"
 import "@fontsource/roboto/700.css"
+import { typedIpcRequest } from "./utils/ipc"
 
 await settingsStore.init()
 
@@ -22,6 +24,15 @@ if (import.meta.env.DEV) {
     window.seturl = () => {
         localStorage.setItem("dev:lastSavedUrl", location.href)
     }
+}
+// mpv command like await mpv('get_property', 'audio-params')
+//@ts-ignore
+window.mpv = async (...args) => {
+    return await typedIpcRequest.mpvCommand({ args })
+}
+//@ts-ignore
+window.reloadHooksFile = () => {
+    return typedIpcRequest.reloadHooksFile()
 }
 
 void i18next

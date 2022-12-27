@@ -46,6 +46,7 @@ specifiers:
   esbuild: ^0.16.9
   eslint: ^7.32.0
   eslint-plugin-react: ^7.25.1
+  exit-hook: ^3.1.4
   filesize: ^8.0.0
   framer-motion: ^4.1.17
   git-remote-origin-url: ^3.1.0
@@ -54,6 +55,7 @@ specifiers:
   i18next-http-backend: ^2.1.0
   is-online: ^9.0.1
   json-schema-typed: ^7.0.3
+  kill-port: ^2.0.1
   lodash: ^4.17.21
   material-ui-popup-state: ^5.0.4
   modify-json-file: ^1.1.0
@@ -69,6 +71,8 @@ specifiers:
   react-use: ^17.3.1
   rimraf: ^3.0.2
   sanitize-filename: ^1.6.3
+  slash: ^5.0.0
+  systeminformation: ^5.16.9
   tabbable: ^6.0.1
   tailwindcss: ^3.2.4
   ts-node: ^10.9.1
@@ -93,7 +97,7 @@ dependencies:
   '@mui/icons-material': 5.0.0-rc.0_77ps5balpglnouavlcpx7xaugq
   '@mui/material': 5.0.0-rc.0_jmzct2evviwr6uysiqddyjjckm
   '@vitejs/plugin-react-refresh': 1.3.6
-  '@zardoy/electron-esbuild': 0.1.0_electron@22.0.0
+  '@zardoy/electron-esbuild': 0.1.1_electron@22.0.0
   '@zardoy/proxy-util': github.com/zardoy/proxy-utils/dc0682d7f7a4d18c839783826914cb120a443fe2
   '@zardoy/react-util': 0.2.0_sfoxds7t5ydpegc3knd667wn6m
   '@zardoy/simple-formik': github.com/zardoy/simple-formik/576dd9c5b4e5ba177e7007e637d7332dce8b4583_react@17.0.2
@@ -111,6 +115,7 @@ dependencies:
   electron-util: 0.17.2
   electron-window-keeper: github.com/zardoy/electron-window-keeper/3869d069e363b67abdcde86703a4693c1ad54183_electron@22.0.0
   esbuild: 0.16.9
+  exit-hook: 3.1.4
   filesize: 8.0.0
   framer-motion: 4.1.17_sfoxds7t5ydpegc3knd667wn6m
   git-remote-origin-url: 3.1.0
@@ -119,6 +124,7 @@ dependencies:
   i18next-http-backend: 2.1.0
   is-online: 9.0.1
   json-schema-typed: 7.0.3
+  kill-port: 2.0.1
   lodash: 4.17.21
   material-ui-popup-state: 5.0.4_jmzct2evviwr6uysiqddyjjckm
   modify-json-file: 1.1.0
@@ -133,6 +139,8 @@ dependencies:
   react-use: 17.3.1_sfoxds7t5ydpegc3knd667wn6m
   rimraf: 3.0.2
   sanitize-filename: 1.6.3
+  slash: 5.0.0
+  systeminformation: 5.16.9
   tabbable: 6.0.1
   twin.macro: 3.1.0_tailwindcss@3.2.4
   typed-ipc: 0.0.3_electron@22.0.0
@@ -2139,8 +2147,8 @@ packages:
     resolution: {integrity: sha512-N8tkAACJx2ww8vFMneJmaAgmjAG1tnVBZJRLRcx061tmsLRZHSEZSLuGWnwPtunsSLvSqXQ2wfp7Mgqg1I+2dQ==}
     dev: false
 
-  /@zardoy/electron-esbuild/0.1.0_electron@22.0.0:
-    resolution: {integrity: sha512-ENtmsnGDfcy1nHmtqgpap8CwqUBiRRaDQv2/vsz1nDeX48XcridZp6TKvUrd/MDCCpf50F4bZXJoYgq/X9tLOw==}
+  /@zardoy/electron-esbuild/0.1.1_electron@22.0.0:
+    resolution: {integrity: sha512-8Cr7iehlPuVpQPSTgbKKtkOxjnlme3jNbWKzUUa0Tu94lD/1FcpGAR9VbaG/kB/TDfDnwX+/zpDu8TUXA+pEFg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -4642,6 +4650,10 @@ packages:
     engines: {node: '>=10'}
     dev: false
 
+  /get-them-args/1.3.2:
+    resolution: {integrity: sha512-LRn8Jlk+DwZE4GTlDbT3Hikd1wSHgLMme/+7ddlqKd7ldwR6LjJgTVWzBnR01wnYGe4KgrXjg287RaI22UHmAw==}
+    dev: false
+
   /git-remote-origin-url/3.1.0:
     resolution: {integrity: sha512-yVSfaTMO7Bqk6Xx3696ufNfjdrajX7Ig9GuAeO2V3Ji7stkDoBNFldnWIAsy0qviUd0Z+X2P6ziJENKztW7cBQ==}
     engines: {node: '>=8'}
@@ -5431,6 +5443,14 @@ packages:
     resolution: {integrity: sha512-zdGa2TOpSZPq5mU6iowDARnMBZgtCqJ11dJROFi6tg6kTn4nuUdU09lFyLFSaHrWqpIJ+EBq4E8/Dc0Vx5vLdA==}
     dependencies:
       json-buffer: 3.0.1
+
+  /kill-port/2.0.1:
+    resolution: {integrity: sha512-e0SVOV5jFo0mx8r7bS29maVWp17qGqLBZ5ricNSajON6//kmb7qqqNnml4twNE8Dtj97UQD+gNFOaipS/q1zzQ==}
+    hasBin: true
+    dependencies:
+      get-them-args: 1.3.2
+      shell-exec: 1.0.2
+    dev: false
 
   /lazy-val/1.0.5:
     resolution: {integrity: sha512-0/BnGCCfyUMkBpeDgWihanIAF9JmZhHBgUhEqzvf+adhNGLoP6TaiI5oF8oyb3I45P+PcnrqihSf01M0l0G5+Q==}
@@ -6840,6 +6860,10 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
 
+  /shell-exec/1.0.2:
+    resolution: {integrity: sha512-jyVd+kU2X+mWKMmGhx4fpWbPsjvD53k9ivqetutVW/BQ+WIZoDoP4d8vUMGezV6saZsiNoW2f9GIhg9Dondohg==}
+    dev: false
+
   /side-channel/1.0.4:
     resolution: {integrity: sha512-q5XPytqFEIKHkGdiMIrY10mvLRvnQh42/+GoBlFW3b2LXLE2xxJpZFdm94we0BaoV3RwJyGqg5wS7epxTv0Zvw==}
     dependencies:
@@ -6882,6 +6906,11 @@ packages:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
     engines: {node: '>=8'}
     dev: true
+
+  /slash/5.0.0:
+    resolution: {integrity: sha512-n6KkmvKS0623igEVj3FF0OZs1gYYJ0o0Hj939yc1fyxl2xt+xYpLnzJB6xBSqOfV9ZFLEWodBBN/heZJahuIJQ==}
+    engines: {node: '>=14.16'}
+    dev: false
 
   /slice-ansi/3.0.0:
     resolution: {integrity: sha512-pSyv7bSTC7ig9Dcgbw9AuRNUb5k5V6oDudjZoMBSr13qpLBG7tB+zgCkARjq7xIUgdz5P1Qe8u+rSGdouOOIyQ==}
@@ -7170,6 +7199,13 @@ packages:
   /supports-preserve-symlinks-flag/1.0.0:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
+
+  /systeminformation/5.16.9:
+    resolution: {integrity: sha512-QTlv3GGSromPeLVW3pzM6uxU8RbkacW9e0+ZX23GAXaX+XE0UToSygAxCJDHSty6RB9lAFHCHg+FfiXFChi/+w==}
+    engines: {node: '>=8.0.0'}
+    os: [darwin, linux, win32, freebsd, openbsd, netbsd, sunos, android]
+    hasBin: true
+    dev: false
 
   /tabbable/6.0.1:
     resolution: {integrity: sha512-SYJSIgeyXW7EuX1ytdneO5e8jip42oHWg9xl/o3oTYhmXusZVgiA+VlPvjIN+kHii9v90AmzTZEBcsEvuAY+TA==}
@@ -7868,7 +7904,7 @@ packages:
       axios: 0.21.1_debug@4.3.4
       cheerio: 1.0.0-rc.10
       debug: 4.3.4
-      got: 11.8.2
+      got: 11.8.6
       is-online: 9.0.1
       jsonfile: 6.1.0
       p-any: 4.0.0

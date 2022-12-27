@@ -10,16 +10,30 @@
     "build": {
         "productName": "FilmoMania Beta",
         "appId": "com.zardoy.filmomania",
+        "artifactName": "${productName}-${version}-${platform}-${arch}.${ext}",
         "win": {
             "target": "nsis"
         },
+        "mac": {
+            "target": {
+                "target": "default",
+                "arch": [
+                    "arm64"
+                ]
+            }
+        },
+        "nsis": {},
         "files": [
             "build/**/*",
             "dist/**/*"
         ],
         "directories": {
             "buildResources": "assets",
-            "output": "build-app"
+            "output": "release"
+        },
+        "publish": {
+            "provider": "github",
+            "releaseType": "release"
         }
     },
     "dependencies": {
@@ -48,6 +62,7 @@
         "electron-util": "^0.17.2",
         "electron-window-keeper": "github:zardoy/electron-window-keeper#build",
         "esbuild": "^0.16.9",
+        "exit-hook": "^3.1.4",
         "filesize": "^8.0.0",
         "framer-motion": "^4.1.17",
         "git-remote-origin-url": "^3.1.0",
@@ -56,6 +71,7 @@
         "i18next-http-backend": "^2.1.0",
         "is-online": "^9.0.1",
         "json-schema-typed": "^7.0.3",
+        "kill-port": "^2.0.1",
         "lodash": "^4.17.21",
         "material-ui-popup-state": "^5.0.4",
         "modify-json-file": "^1.1.0",
@@ -70,6 +86,8 @@
         "react-use": "^17.3.1",
         "rimraf": "^3.0.2",
         "sanitize-filename": "^1.6.3",
+        "slash": "^5.0.0",
+        "systeminformation": "^5.16.9",
         "tabbable": "^6.0.1",
         "twin.macro": "^3.1.0",
         "typed-ipc": "^0.0.3",

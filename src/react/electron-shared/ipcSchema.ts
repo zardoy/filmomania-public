@@ -17,6 +17,7 @@ declare module "typed-ipc" {
         openSettingsFile: {}
         stremioServerStatus: {}
         startStremioServer: {}
+        killStremioServer: {}
     }
 
     interface IpcMainRequests {
@@ -47,6 +48,15 @@ declare module "typed-ipc" {
                 index?: number
             }
             response: TorrentStatsResponse
+        }
+        mpvCommand: {
+            variables: {
+                args: (string | number | boolean)[]
+            }
+            response: any
+        }
+        reloadHooksFile: {
+            response: boolean
         }
     }
 

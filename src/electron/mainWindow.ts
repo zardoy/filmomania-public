@@ -2,6 +2,7 @@ import { BrowserWindow } from "electron";
 import electronIsDev from "electron-is-dev";
 import ElectronWindowKeeper from "electron-window-keeper";
 import { getFileFromPublic } from "@zardoy/electron-esbuild/build/client"
+import { silentAllErrors } from "./handleErrors";
 
 export let mainWindow: BrowserWindow | null;
 
@@ -58,6 +59,14 @@ export const createMainWindow = () => {
     if (electronIsDev) {
         mainWindow.showInactive();
     }
+
+    mainWindow.on("focus", () => {
+        silentAllErrors.value = false
+    })
+    mainWindow.on("blur", () => {
+        // first of all it was done to not be annoying while player is playing, but also not need to annoy when something bad is happened while window wasnt focused
+        silentAllErrors.value = true
+    })
 
     mainWindow.setMenu(null);
     void mainWindow.loadURL(electronIsDev ? "http://localhost:3500" : getFileFromPublic("index.html"));

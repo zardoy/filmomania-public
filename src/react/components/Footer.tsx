@@ -17,7 +17,7 @@ export default () => {
         }
     }, []);
 
-    return <div className='flex justify-between px-3'>
+    return <div className='flex justify-between px-3 center-all-flex'>
         <div></div>
         <div className='flex justify-center mb-5 opacity-90 transition-opacity hover:opacity-100 divide-x-2 divide-gray-600'>
             <Link className='px-2' onClick={() => {
@@ -28,9 +28,16 @@ export default () => {
                 void setupAppProxy()
             }}>Reset proxies (speedup)</Link>
         </div>
-        <div><span className='opacity-50'>Stremio server status: </span><span className='opacity-90' title={stremioServerStarted ? "" : "Click to start server"} style={{ color: stremioServerStarted ? "limegreen" : "red" }} onClick={() => {
-            if (stremioServerStarted) return
-            typedIpcRenderer.send("startStremioServer", {})
-        }}>{stremioServerStarted ? "UP" : "DOWN"}</span></div>
+        <div className='flex flex-row-reverse'>
+            <div>
+                <span className='opacity-50'>Stremio server status: </span><span className='opacity-90' title={stremioServerStarted ? "Click to kill server" : "Click to start server"} style={{ color: stremioServerStarted ? "limegreen" : "red" }} onClick={() => {
+                    if (stremioServerStarted) {
+                        typedIpcRenderer.send("killStremioServer", {})
+                    } else {
+                        typedIpcRenderer.send("startStremioServer", {})
+                    }
+                }}>{stremioServerStarted ? "UP" : "DOWN"}</span>
+            </div>
+        </div>
     </div>
 }

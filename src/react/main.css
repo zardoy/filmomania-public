@@ -1,0 +1,8 @@
+.mui-dialog {
+    min-width: 400px;
+}
+
+.center-all-flex > div {
+    flex-grow: 1;
+    flex-basis: 0;
+}

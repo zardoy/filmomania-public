@@ -2,7 +2,7 @@ import { ipcMain, ipcRenderer } from "electron";
 import { JSONSchema } from "json-schema-typed";
 import _ from "lodash";
 import { ReadonlyDeep } from "type-fest";
-import createStore, { UseStore } from "zustand";
+import slash from "slash"
 
 /**
  * @TODO
@@ -120,8 +120,12 @@ export const makeSchema = <T extends SettingsSchema>(settingsSchema: T) => setti
 
 // todo-high refactor types
 export class SettingsStore<S extends SettingsSchema> extends EventTarget {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    static filePath = ipcMain ? require("path").join(require("electron").app.getPath("userData"), "settings.json") as string : undefined!
+    static settingsDevBaseName = "settings"
+
+    get filePath() {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        return ipcMain ? require("path").join(require("electron").app.getPath("userData"), `${SettingsStore.settingsDevBaseName}.json`) as string : undefined!
+    }
 
     static throwInitError = () => {
         throw new Error(`Call init on store first`)
@@ -186,23 +190,23 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
             let innerChange = false
             const initInner = async () => {
                 try {
-                    if (!fs.existsSync(SettingsStore.filePath)) {
-                        fs.writeFileSync(SettingsStore.filePath, JSON.stringify({
-                            "$schema": path.join(__dirname, "settingsSchema.json"),
+                    if (!fs.existsSync(this.filePath)) {
+                        fs.writeFileSync(this.filePath, JSON.stringify({
+                            "$schema": slash(path.join(__dirname, "settingsSchema.json")),
                         }, undefined, 4), "utf8")
                     }
                     // eslint-disable-next-line no-empty
                 } catch { }
-                console.log("settings file path", SettingsStore.filePath)
+                console.log("settings file path", this.filePath)
                 try {
                     attemp++
                     const ElectronStore = (await import("electron-store")).default
                     const store = new ElectronStore({
                         schema: getRootPropertiesJsonSchema(this.settingsSchema),
-                        name: "settings",
+                        name: SettingsStore.settingsDevBaseName,
                         watch: true
                     })
-                    store.onDidAnyChange(newSettings => {
+                    store.onDidAnyChange(() => {
                         if (innerChange) {
                             innerChange = false
                             return
@@ -249,7 +253,7 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
                     // Either fix the error manually or click the button below.
                     console.error(message)
 
-                    await fs.promises.unlink(SettingsStore.filePath)
+                    await fs.promises.unlink(this.filePath)
                     return await initInner()
                 }
             }

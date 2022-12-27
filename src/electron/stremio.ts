@@ -8,6 +8,9 @@ import { mainWindow } from "./mainWindow";
 import { existsSync } from "fs";
 import got, { } from "got"
 import { app } from "electron";
+import onExit from "exit-hook"
+import killPort from "kill-port"
+import electronIsDev from "electron-is-dev";
 
 const isWin = process.platform === "win32";
 
@@ -20,6 +23,20 @@ export const getHashFromMagnet = (magnet: string,) => {
 export const getStremioStremaingUrlFromTorrent = async (magnet: string, index = 0) => {
     await ensureStremioServerIsStarted()
     return `${getStremioServerUrl()}/${getHashFromMagnet(magnet)}/${index}?external=1`
+}
+
+let stremioServerChild: ChildProcess | undefined
+
+onExit(() => {
+    stremioServerChild?.kill()
+})
+
+app.on("window-all-closed", () => {
+    stremioServerChild?.kill()
+})
+
+export const killStremioServer = () => {
+    stremioServerChild?.kill()
 }
 
 export const startStremioServer = async () => {
@@ -43,6 +60,7 @@ export const startStremioServer = async () => {
         const nodeExec = isWin ? join(stremioExecPath, "../stremio-runtime.exe") : join(serverJs, "../node");
         child = spawn(`nodeExec`, [serverJs], { cwd: join(nodeExec, "..") })
     }
+    stremioServerChild = child
     if (!child) return
     await new Promise<void>((resolve, reject) => {
         child.stderr!.on("data", data => {
