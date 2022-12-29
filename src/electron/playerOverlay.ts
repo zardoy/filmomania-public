@@ -3,23 +3,23 @@ import { BrowserWindow } from "electron"
 
 export const playerOverlay = async (coord: Partial<{ x, y }> = {}) => {
     const browserWindow = new BrowserWindow({
-        show: false,
-        skipTaskbar: true,
-        alwaysOnTop: true,
+        // show: false,
+        // skipTaskbar: true,
+        focusable: false,
         frame: false,
-        transparent: true,
         fullscreen: true,
+        transparent: true,
+        alwaysOnTop: true,
         webPreferences: {
             contextIsolation: false,
             nodeIntegration: true,
         },
-        focusable: false,
         ...coord
     })
     // osc-visibility
-    browserWindow.showInactive()
-    await browserWindow.loadFile(getFileFromPublic("./overlay.html"))
     browserWindow.setIgnoreMouseEvents(true)
+    await browserWindow.loadFile(getFileFromPublic("./overlay.html"))
+    // browserWindow.showInactive()
 
     return browserWindow
 }

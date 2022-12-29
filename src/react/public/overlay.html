@@ -10,13 +10,19 @@
         body {
             color: white;
             font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            font-size: 16px;
         }
 
         #info {
             position: fixed;
             top: 0;
             left: 0;
-            font-size: 18px;
+        }
+
+        #infoTemp {
+            position: fixed;
+            top: 30px;
+            left: 0;
         }
 
         #time {
@@ -34,6 +40,7 @@
 
 <body>
     <div id="info"></div>
+    <div id="infoTemp"></div>
     <div id="time"></div>
 
     <script>
@@ -42,8 +49,16 @@
             for (const normalizeKey of ["downloading", "downloaded", "uploading", "uploaded"]) {
                 data[normalizeKey] = (data[normalizeKey] / 1024 / 1024).toFixed(2)
             }
-            const { downloading, downloaded, uploading, uploaded } = data
-            info.textContent = `Downloading: ${downloading}Mb/s Downloaded: ${downloaded}Mb Uploading: ${uploading}Mb/s Uploaded: ${uploaded}Mb`
+            const { downloading, downloaded, uploading, uploaded, isBad } = data
+            info.textContent = `Downloading: ${downloading}Mb/s${isBad ? '(bad)' : ''} Downloaded: ${downloaded}Mb Uploading: ${uploading}Mb/s Uploaded: ${uploaded}Mb`
+        })
+        let prevTimeout
+        ipcRenderer.on('data-temp', (_, text) => {
+            if (prevTimeout) clearTimeout(prevTimeout)
+            infoTemp.textContent = text
+            prevTimeoutData = setTimeout(() => {
+                infoTemp.textContent = ''
+            }, 6000)
         })
 
         const formatter = new Intl.DateTimeFormat(undefined, {//using system locale

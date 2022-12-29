@@ -66,8 +66,9 @@ export const sendMpvCommand = (args: IpcMainRequests["mpvCommand"]["variables"][
 }
 
 const ChangePropertyId = {
-    FULLSCREEN: 1,
-    PAUSE: 2
+    "FULLSCREEN": 1,
+    "PAUSE": 2,
+    "audio-params": 3
 }
 
 // todo refactor
@@ -78,52 +79,61 @@ const mpvPostActions = async (child: ChildProcess, { magnet, playIndex }: IpcMai
     if (mpvSocket) return
     const { player } = settingsStore.settings;
     const enableOverlay = false || player.fullscreen/*  && player.overlay */
+    if (!enableOverlay && !hooksFile) return
+
+    console.log("spawning socket")
+    let overlay: BrowserWindow | undefined
+    const socket: Socket & { send, on } = new MpvSocket(socketPath, () => {
+        socket.emit("connection-close")
+        observePropertiesCallbacks.clear()
+        // if it didn't happen for some reason
+        child.kill()
+        mpvSocket = undefined
+        console.log("mpv socket closed")
+    })
+    socket.on("event", (_, e: { event, id, data, name }) => {
+        if (e.event !== "property-change") return
+        for (const callback of observePropertiesCallbacks.get(e.name) ?? []) {
+            callback(e.data)
+        }
+        if (e.id === ChangePropertyId.FULLSCREEN) {
+            if (!overlay) return
+            if (e.data) {
+                overlay.showInactive()
+            } else {
+                overlay.hide()
+            }
+        }
+        if (e.id === ChangePropertyId["audio-params"] && e.data) {
+            overlay?.webContents.send("data-temp", `[audio] Channels: ${e.data["channel-count"]}`)
+        }
+    })
+    let i = 5
+    hooksFile?.mpvStarted(socket, {
+        async observeProperty(prop, callback) {
+            if (!observePropertiesCallbacks.has(prop)) observePropertiesCallbacks.set(prop, [])
+            observePropertiesCallbacks.get(prop)!.push(callback)
+            if (Object.keys(!ChangePropertyId).some(p => p.toLowerCase() === prop)) {
+                await sendMpvCommand(["observe_property", i++, prop])
+            }
+        },
+        onClose(callback) {
+            socket.addListener("connection-close", callback)
+        },
+    })
+    mpvSocket = socket
+    const [mpvDisplayName] = await sendMpvCommand(["get_property", "display-names"])
+    await sendMpvCommand(["observe_property", ChangePropertyId.FULLSCREEN, "fullscreen"])
+    await sendMpvCommand(["observe_property", ChangePropertyId.PAUSE, "pause"])
+
     if (enableOverlay) {
-        let overlay: BrowserWindow | undefined
-        const socket: Socket & { send, on } = new MpvSocket(socketPath, () => {
-            socket.emit("connection-close")
-            observePropertiesCallbacks.clear()
-            // if it didn't happen for some reason
-            child.kill()
-            mpvSocket = undefined
-            console.log("mpv socket closed")
-        })
-        socket.on("event", (_, e: { event, id, data, name }) => {
-            if (e.event !== "property-change") return
-            for (const callback of observePropertiesCallbacks.get(e.name) ?? []) {
-                callback(e.data)
-            }
-            if (e.id === ChangePropertyId.FULLSCREEN) {
-                if (!overlay) return
-                if (e.data) {
-                    overlay.showInactive()
-                } else {
-                    overlay.hide()
-                }
-            }
-        })
-        let i = 5
-        hooksFile?.mpvStarted(socket, {
-            async observeProperty(prop, callback) {
-                if (!observePropertiesCallbacks.has(prop)) observePropertiesCallbacks.set(prop, [])
-                observePropertiesCallbacks.get(prop)!.push(callback)
-                if (Object.keys(!ChangePropertyId).some(p => p.toLowerCase() === prop)) {
-                    await sendMpvCommand(["observe_property", i++, prop])
-                }
-            },
-            onClose(callback) {
-                socket.addListener("connection-close", callback)
-            },
-        })
-        mpvSocket = socket
-        const [mpvDisplayName] = await sendMpvCommand(["get_property", "display-names"])
-        await sendMpvCommand(["observe_property", ChangePropertyId.FULLSCREEN, "fullscreen"])
-        await sendMpvCommand(["observe_property", ChangePropertyId.PAUSE, "pause"])
         const { displays } = await graphics()
+        console.log(`spawning overlay on display ${displays.findIndex(({ deviceName }) => deviceName === mpvDisplayName)}`)
         const mpvDisplayData = displays.find(({ deviceName }) => deviceName === mpvDisplayName)
 
         let updateInterval: NodeJS.Timer
         child.on("exit", () => {
+            console.log("player exited.")
             globalShortcut.unregister("Shift+F5")
             overlay?.destroy()
             clearInterval(updateInterval)
@@ -132,12 +142,14 @@ const mpvPostActions = async (child: ChildProcess, { magnet, playIndex }: IpcMai
             x: mpvDisplayData.positionX,
             y: mpvDisplayData.positionY,
         } : undefined)
+        await sendMpvCommand(["observe_property", ChangePropertyId["audio-params"], "audio-params"])
         globalShortcut.register("Shift+F5", () => {
             if (!overlay) return
             if (overlay.isVisible()) {
                 overlay.hide()
             } else {
-                overlay.showInactive()
+                overlay.webContents.reload()
+                overlay.show()
             }
         })
         updateInterval = setInterval(async () => {
