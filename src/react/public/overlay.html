@@ -42,6 +42,11 @@
     <div id="info"></div>
     <div id="infoTemp"></div>
     <div id="time"></div>
+    <div id="loadStats">
+        <span data-stat="cpu"></span>
+        <span data-stat="gpu"></span>
+        <span data-stat="ram"></span>
+    </div>
 
     <script>
         const { ipcRenderer } = require('electron')
@@ -51,6 +56,15 @@
             }
             const { downloading, downloaded, uploading, uploaded, isBad } = data
             info.textContent = `Downloading: ${downloading}Mb/s${isBad ? '(bad)' : ''} Downloaded: ${downloaded}Mb Uploading: ${uploading}Mb/s Uploaded: ${uploaded}Mb`
+
+            if (typeof loadStats !== 'undefined') {
+                for (const type of ['cpu', 'gpu', 'ram']) {
+                    const elem = [].find.call(loadStats.children, (elem) => elem.dataset.stat === type)
+                    if (!elem) continue
+                    // eg cpuLoad
+                    elem.textContent = `${data[`${type}Load`]}%`
+                }
+            }
         })
         let prevTimeout
         ipcRenderer.on('data-temp', (_, text) => {
@@ -72,6 +86,10 @@
         setInterval(() => {
             updateTime()
         }, 1000)
+
+        if (typeof loadStats !== 'undefined') {
+            // send interested
+        }
     </script>
 </body>
 

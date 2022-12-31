@@ -45,6 +45,10 @@ const settingsSchema = makeSchema({
             type: "toggle",
             defaultValue: true
         },
+        enableAdvancedOverlay: {
+            type: "toggle",
+            defaultValue: true,
+        },
         // TODO presets in welcome
         remoteControlServer: {
             type: "toggle",

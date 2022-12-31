@@ -9,7 +9,7 @@ import { PlayerInputData } from "../../react/electron-shared/ipcSchema";
 import MpvSocket from "mpv/socket.js"
 import { Socket } from "net";
 import electronIsDev from "electron-is-dev";
-import { graphics } from "systeminformation"
+import { currentLoad, graphics, mem } from "systeminformation"
 import { hooksFile } from "../hooksFile";
 import { GracefulError, silentAllErrors } from "../handleErrors";
 
@@ -78,7 +78,7 @@ const mpvPostActions = async (child: ChildProcess, { magnet, playIndex }: IpcMai
     // mpv: assuming single instance is enabled
     if (mpvSocket) return
     const { player } = settingsStore.settings;
-    const enableOverlay = false || player.fullscreen/*  && player.overlay */
+    const enableOverlay = false || player.fullscreen && player.enableAdvancedOverlay
     if (!enableOverlay && !hooksFile) return
 
     console.log("spawning socket")
@@ -136,6 +136,7 @@ const mpvPostActions = async (child: ChildProcess, { magnet, playIndex }: IpcMai
             console.log("player exited.")
             globalShortcut.unregister("Shift+F5")
             overlay?.destroy()
+            overlay = undefined
             clearInterval(updateInterval)
         })
         overlay = await playerOverlay(mpvDisplayData ? {
@@ -155,13 +156,21 @@ const mpvPostActions = async (child: ChildProcess, { magnet, playIndex }: IpcMai
         updateInterval = setInterval(async () => {
             if (!overlay) return
             const info = await torrentInfo({} as any, { magnet, index: playIndex, })
+            if (overlay.isDestroyed()) return
             const infoPlaceholder = { downloading: 0, downloaded: 0, uploading: 0, uploaded: 0 }
+            const cpuLoad = await currentLoad()
+            const { controllers } = await graphics()
+            const gpuLoad = controllers.map(controller => controller.utilizationGpu ?? -1).join(", ")
+            const { total, used } = await mem()
+            if (overlay.isDestroyed()) return
             overlay.webContents.send("data", info === null ? infoPlaceholder : {
                 downloading: info.downloadSpeed,
                 downloaded: info.downloaded,
                 uploading: info.uploadSpeed,
-                uploaded: info.uploaded
-                // uploaded: info.uploaded
+                uploaded: info.uploaded,
+                cpuLoad,
+                gpuLoad,
+                ramLoad: Math.round(total / used)
             })
         }, 1000)
     }
