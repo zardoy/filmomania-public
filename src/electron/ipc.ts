@@ -1,8 +1,9 @@
+import parseTorrent, { toMagnetURI } from "parse-torrent"
 import downloadFile from "download";
 import { shell } from "electron";
 import { tmpdir } from "os";
 import { join } from "path";
-import { typedIpcMain } from "typed-ipc";
+import { typedIpcMain, typedIpcRenderer } from "typed-ipc";
 import { settingsStore } from "../react/electron-shared/settings";
 import { initHooksFile } from "./hooksFile";
 
@@ -11,6 +12,7 @@ import playTorrent, { sendMpvCommand } from "./requests/playTorrent";
 import torrentInfo from "./requests/torrentInfo";
 import { requestTorrentsList } from "./requests/torrentsList";
 import { getStremioStremaingUrlFromTorrent, startStremioServer, checkStremioServerIsStarted, killStremioServer } from "./stremio";
+import { sendRemoteUiServerStatus } from "./remoteUiControl";
 
 export const bindIPC = () => {
     typedIpcMain.handleAllRequests({
@@ -28,6 +30,10 @@ export const bindIPC = () => {
         },
         reloadHooksFile() {
             return initHooksFile()
+        },
+        parseTorrentFile(_, { buffer }) {
+            const parsed = parseTorrent(Buffer.from(buffer))
+            return { ...parsed, magnet: toMagnetURI(parsed) }
         }
     })
 
@@ -45,8 +51,9 @@ export const bindIPC = () => {
         async openSettingsFile() {
             await shell.openExternal(settingsStore.filePath)
         },
-        async stremioServerStatus() {
+        async sendServersStatus() {
             await checkStremioServerIsStarted()
+            sendRemoteUiServerStatus()
         },
         async startStremioServer() {
             await startStremioServer()

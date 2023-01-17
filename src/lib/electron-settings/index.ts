@@ -4,14 +4,9 @@ import _ from "lodash";
 import { ReadonlyDeep } from "type-fest";
 import slash from "slash"
 
-/**
- * @TODO
- * - [ ] Ensure that groups always created in settings
- * - [ ] Try to fix TypeScript errors
- * - [ ] Readonly settings
- */
 import { filterValues, isStringOneOf } from "./util";
 
+// TODO make settings readonly
 // using custom schema provider because ajv and electron-store doesn't allow to define strictly-typed schemas easily
 
 // its actually settings ui schema creator
@@ -185,14 +180,14 @@ export class SettingsStore<S extends SettingsSchema> extends EventTarget {
         }
         if (ipcMain) {
             const fs = (await import("fs")).default
-            const path = (await import("path")).default
+            const path = await import("path")
             let attemp = 0
             let innerChange = false
             const initInner = async () => {
                 try {
                     if (!fs.existsSync(this.filePath)) {
                         fs.writeFileSync(this.filePath, JSON.stringify({
-                            "$schema": slash(path.join(__dirname, "settingsSchema.json")),
+                            "$schema": `file:${slash(path.join(__dirname, "../../app.asar.unpacked/build/settingsSchema.json"))}`,
                         }, undefined, 4), "utf8")
                     }
                     // eslint-disable-next-line no-empty

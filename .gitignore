@@ -19,6 +19,7 @@
 /build
 /build-*
 /dist
+/dist-*
 /out
 /release
 

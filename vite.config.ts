@@ -15,6 +15,7 @@ export default defineVitConfig({
     },
     server: {
         port: 3500,
+        strictPort: true,
         open: false,
     },
 })

@@ -1,21 +1,23 @@
 import "./handleErrors";
 
-// todo-high electron-reloader
-import { app, screen } from "electron";
+import { app } from "electron";
 import electronDebug from "electron-debug";
 
 import { bindIPC } from "./ipc";
 import { createMainWindow, mainWindow } from "./mainWindow";
 import { settingsStore } from "../react/electron-shared/settings";
 import electronIsDev from "electron-is-dev";
-import { registerProtocol } from "./protocol";
+// import { registerProtocol } from "./protocol";
 import { SettingsStore } from "../lib/electron-settings";
 import killPort from "kill-port"
 import { initHooksFile } from "./hooksFile";
+import { startRemoteServer } from "./remoteUiControl";
 
-// electronDebug({
-//     showDevTools: false
-// });
+electronDebug({
+    showDevTools: false,
+    // todo enable in both
+    isEnabled: !electronIsDev
+});
 
 export const debug = console.log;
 
@@ -43,12 +45,11 @@ const loadApp = async () => {
     }
     createMainWindow();
     settingsStore.windowIpcMain = mainWindow!
+    void startRemoteServer()
 };
 
 app.on("ready", loadApp);
 
 app.on("window-all-closed", () => {
-    // do not close server
-    if (settingsStore.settings.builtinStremioServer.enabled) return
     app.quit()
 })

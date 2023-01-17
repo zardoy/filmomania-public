@@ -24,9 +24,14 @@ let SearchBox: React.FC<ComponentProps> = () => {
 
     useEventListener(window, "keyup", ({ code, target }) => {
         // eslint-disable-next-line no-extra-parens
-        if ((target as Element).tagName.toLowerCase() === "input") {
+        const t = (target as HTMLInputElement);
+        if (t.tagName.toLowerCase() === "input") {
             if (code === "ArrowDown") {
                 focusNextElemOnPage()
+            }
+            if (code === "Escape") {
+                setQuery("")
+                doSearch()
             }
             return;
         }

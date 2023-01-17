@@ -17,11 +17,14 @@ import FilmPage from "./Movie";
 import WelcomePage from "./Welcome/Welcome";
 import { css, Global } from "@emotion/react";
 import { proxy, useSnapshot } from "valtio";
+import { TorrentSelectFileDialog } from "./TorrentSelectFileDialog";
+import PlaybackHistory from "./PlaybackHistory";
 
 interface ComponentProps {
 }
 
 export const showModalLoader = proxy({ value: false, })
+export const currentModalCancel = { value: null as (() => any) | null }
 
 let App: React.FC<ComponentProps> = () => {
     const settings = useSettings()
@@ -52,12 +55,12 @@ let App: React.FC<ComponentProps> = () => {
                 outline: "none"
             }
         }} />
-        {showLoader && <div className='fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-40'>
-            <CircularProgress />
-        </div>}
         <Global styles={css`
             ${settings.ui.cssOverrides ?? ""}
         `} />
+        {showLoader && <div className='fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-40' onClick={() => currentModalCancel.value?.()}>
+            <CircularProgress />
+        </div>}
         <CssBaseline />
         <div className="select-none">
             <ErrorBoundary>
@@ -77,6 +80,14 @@ let App: React.FC<ComponentProps> = () => {
                                         <FilmPage />
                                     </WithBackButton>
                                 </Route>
+                                <Route path={pageURLS.FILM}>
+                                    <WithBackButton>
+                                        <FilmPage />
+                                    </WithBackButton>
+                                </Route>
+                                <Route path={pageURLS.PLAYBACK_HISTORY}>
+                                    <PlaybackHistory />
+                                </Route>
                                 <Route path="*">
                                     <CenterContent>
                                         <Typography variant="h3">404</Typography>
@@ -89,6 +100,7 @@ let App: React.FC<ComponentProps> = () => {
                 </HashRouter>
             </ErrorBoundary>
         </div>
+        <TorrentSelectFileDialog />
     </ThemeProvider>
 }
 

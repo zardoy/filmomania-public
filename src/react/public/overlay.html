@@ -7,16 +7,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FilmoMania Overlay</title>
     <style>
+        html {
+            cursor: none;
+        }
+
         body {
             color: white;
             font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
             font-size: 16px;
+            opacity: 0.8;
         }
 
         #info {
             position: fixed;
             top: 0;
             left: 0;
+            opacity: 0.65;
         }
 
         #infoTemp {
@@ -60,9 +66,10 @@
             if (typeof loadStats !== 'undefined') {
                 for (const type of ['cpu', 'gpu', 'ram']) {
                     const elem = [].find.call(loadStats.children, (elem) => elem.dataset.stat === type)
-                    if (!elem) continue
                     // eg cpuLoad
-                    elem.textContent = `${data[`${type}Load`]}%`
+                    const stat = data[`${type}Load`]
+                    if (!elem || stat === undefined) continue
+                    elem.textContent = `${stat}%`
                 }
             }
         })
@@ -86,10 +93,6 @@
         setInterval(() => {
             updateTime()
         }, 1000)
-
-        if (typeof loadStats !== 'undefined') {
-            // send interested
-        }
     </script>
 </body>
 

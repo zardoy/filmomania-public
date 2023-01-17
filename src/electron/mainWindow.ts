@@ -1,4 +1,4 @@
-import { BrowserWindow } from "electron";
+import { app, BrowserWindow } from "electron";
 import electronIsDev from "electron-is-dev";
 import ElectronWindowKeeper from "electron-window-keeper";
 import { getFileFromPublic } from "@zardoy/electron-esbuild/build/client"
@@ -7,12 +7,7 @@ import { silentAllErrors } from "./handleErrors";
 export let mainWindow: BrowserWindow | null;
 
 export const createMainWindow = () => {
-    // todo electron general cmd: --fullscreen (<-- boolean) --settingsFile "path_to_file" --mergeSettings
-    // --navigateTo "url e.g.: /settings /film/{filmID} /film/{filmID}/download?path=path_to_save&OPTIONS /film/{filmID}/play?player=path_to_exec /search/film_keywords?FILTERS"
-    //
     // todo command usage on electron apps. for this one: --hidden (<-- download or play without opening filmomania)
-    // todo make a lot of bots for auto. choco-n--- deploy
-    // todo add fullscreenable to electron general settings
 
     // todo manage update on resize and move if is in development
     const windowState = new ElectronWindowKeeper({
@@ -36,7 +31,8 @@ export const createMainWindow = () => {
             nodeIntegration: true,
             contextIsolation: false
         },
-        show: false
+        show: false,
+        title: app.getName()
     });
     if (electronIsDev) {
         // otherwise devtools getting focused
@@ -55,6 +51,9 @@ export const createMainWindow = () => {
     } else {
         mainWindow.show()
     }
+    mainWindow.on("close", () => {
+        app.quit()
+    })
     windowState.manage(mainWindow);
     if (electronIsDev) {
         mainWindow.showInactive();

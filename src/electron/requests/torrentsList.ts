@@ -18,7 +18,7 @@ export const requestTorrentsList: IpcMainHandler<"torrentsList"> = async (_event
             return await requestSiteWithProxies(proxies.split(","), encodeURI(requestUrl))
         } catch (err: any) {
             // todo compare code
-            if (retry < 1 && err.message.includes("ETIMEDOUT")) {
+            if (retry < 1 && (err.message.includes("ETIMEDOUT") || err.message.includes("ECONNREFUSED"))) {
                 await setupProxy()
                 return await fetchData(retry + 1)
             }

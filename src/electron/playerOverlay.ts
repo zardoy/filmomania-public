@@ -1,15 +1,15 @@
 import { getFileFromPublic } from "@zardoy/electron-esbuild/build/client"
 import { BrowserWindow } from "electron"
+import electronIsDev from "electron-is-dev"
+import { join } from "path"
 
 export const playerOverlay = async (coord: Partial<{ x, y }> = {}) => {
     const browserWindow = new BrowserWindow({
-        // show: false,
-        // skipTaskbar: true,
+        alwaysOnTop: true,
         focusable: false,
         frame: false,
-        fullscreen: true,
         transparent: true,
-        alwaysOnTop: true,
+        fullscreen: true,
         webPreferences: {
             contextIsolation: false,
             nodeIntegration: true,
@@ -18,8 +18,12 @@ export const playerOverlay = async (coord: Partial<{ x, y }> = {}) => {
     })
     // osc-visibility
     browserWindow.setIgnoreMouseEvents(true)
-    await browserWindow.loadFile(getFileFromPublic("./overlay.html"))
+    await browserWindow.loadFile(electronIsDev ? getFileFromPublic("./overlay.html") : getFileFromUnpacked("./dist/overlay.html"))
     // browserWindow.showInactive()
 
     return browserWindow
+}
+
+export const getFileFromUnpacked = (path: string,) => {
+    return join(__dirname, "../../app.asar.unpacked/", path)
 }

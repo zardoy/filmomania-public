@@ -1,5 +1,6 @@
 import { TorrentEngineParseResult } from "./TorrentTypes";
 import type { TorrentStatsResponse } from "../../electron/requests/torrentInfo"
+import type { PlayerStatusReport } from "../../electron/remoteUiControl"
 
 declare module "typed-ipc" {
     interface IpcMainEvents {
@@ -15,7 +16,7 @@ declare module "typed-ipc" {
         }
 
         openSettingsFile: {}
-        stremioServerStatus: {}
+        sendServersStatus: {}
         startStremioServer: {}
         killStremioServer: {}
     }
@@ -33,6 +34,12 @@ declare module "typed-ipc" {
                 },
                 parseResult: TorrentEngineParseResult
             }
+        }
+        parseTorrentFile: {
+            variables: {
+                buffer: ArrayBuffer
+            }
+            response: any
         }
         setupProxy: {}
         test: {}
@@ -65,6 +72,9 @@ declare module "typed-ipc" {
             url: string
         }
 
+        updatePlayerState: PlayerStatusReport
+        playerExit: {}
+
         // events could be seen in bottom right corner
         showEvent: {
             type: "proxy"
@@ -77,6 +87,10 @@ declare module "typed-ipc" {
         }
         stremioServerStatus: {
             up: boolean,
+        }
+        remoteUiServerStatus: {
+            up: boolean,
+            ip?: string
         }
     }
 }

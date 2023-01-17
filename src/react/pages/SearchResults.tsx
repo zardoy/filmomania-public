@@ -29,6 +29,7 @@ import { useTranslation } from "react-i18next";
 import ContextMenu from "../components/ContextMenu";
 import { shell } from "electron";
 import ButtonsList from "../components/ButtonsList";
+import { getFilmsHistory } from "../playHistory";
 
 const getRatingColor = (rating: number) =>
     rating === 0 ? "#6c757d" :// gray
@@ -40,11 +41,16 @@ interface FilmItemProps extends React.ComponentProps<typeof ListItemButton> {
     data: Pick<ParsedFilmInfo, "posterUrl" | "description" | "rating" | "filmLengthRaw">
     title: string;
     year?: string;
+    watchProgress?: number
 }
 
-const FilmItem: React.FC<FilmItemProps> = ({ title, year, data, ...rootProps }) => {
+const FilmItem: React.FC<FilmItemProps> = ({ title, year, data, watchProgress, ...rootProps }) => {
     const { description, filmLengthRaw, rating, posterUrl, } = data
-    return <ListItemButton divider {...rootProps}>
+    return <ListItemButton divider {...rootProps} classes={{
+        root: css`
+            position: relative;
+        `
+    }}>
         <Grid container wrap="nowrap" spacing={2}>
             {
                 posterUrl && <Grid item xs={2}>
@@ -84,6 +90,9 @@ const FilmItem: React.FC<FilmItemProps> = ({ title, year, data, ...rootProps }) 
                 </Grid>
             </Grid>
         </Grid>
+        {watchProgress &&
+            <div className="absolute bottom-0 w-full bg-gradient-to-r from-transparent to-green-400"
+                style={{ width: 300, height: 6, left: `calc(${watchProgress * 100}% - 300px)` }} />}
     </ListItemButton>;
 };
 
@@ -92,6 +101,7 @@ export const filmsSearchResult = proxy({ value: undefined as undefined | FilmsSe
 let previousScrollY = null as null | number
 
 let SearchResults: React.FC = () => {
+    const [filmsHistory] = useState(getFilmsHistory())
     const { t } = useTranslation()
     const routerHistory = useHistory();
 
@@ -163,6 +173,15 @@ let SearchResults: React.FC = () => {
                                 };
                                 const displayYear = restInfo.type === "film" ? restInfo.year :
                                     restInfo.yearTo === "nowadays" ? `From ${restInfo.yearFrom}` : `${restInfo.yearFrom} — ${restInfo.yearTo}`;
+                                let watchProgress: number | undefined
+                                if (filmsHistory[filmId]) {
+                                    const execResult = /(\d{1,2})\s?:\s?(\d{1,2})/.exec((restInfo.filmLength ?? "").trim())
+                                    if (execResult) {
+                                        const [, hours, minutes] = execResult
+                                        watchProgress = filmsHistory[filmId]!.time / 60 / (+hours! * 60 + +minutes!)
+                                    }
+                                }
+
                                 return <FilmItem
                                     key={filmId}
                                     title={nameRu || nameEn}
@@ -176,6 +195,7 @@ let SearchResults: React.FC = () => {
                                         setDropdownFilmId(filmId)
                                         contextmenuPopoverState.open(e)
                                     }}
+                                    watchProgress={watchProgress}
                                 />;
                             }) : <CenterContent><Typography>{t("No results for")} {query}</Typography></CenterContent>
                     }

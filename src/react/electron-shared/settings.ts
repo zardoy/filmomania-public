@@ -36,10 +36,11 @@ const settingsSchema = makeSchema({
         // when player is custom or mpv
         playerExecutable: {
             type: "input",
-            dependsOn: {
-                property: "defaultPlayer",
-                value: "custom"
-            }
+        },
+        killPrevious: {
+            type: "toggle",
+            defaultValue: true,
+            descrioption: "Ensure previous instance is killed before starting a new one",
         },
         fullscreen: {
             type: "toggle",
@@ -49,10 +50,24 @@ const settingsSchema = makeSchema({
             type: "toggle",
             defaultValue: true,
         },
-        // TODO presets in welcome
-        remoteControlServer: {
+        advancedOverlayLoadStats: {
             type: "toggle",
             defaultValue: false,
+        },
+        // TODO presets in welcome
+        remoteUiControl: {
+            type: "toggle",
+            defaultValue: false,
+        },
+        remoteUiControlPort: {
+            type: "custom",
+            schema: {
+                type: "number",
+            }
+        },
+        rememberFilmPosition: {
+            type: "toggle",
+            defaultValue: true
         }
     },
     builtinStremioServer: {

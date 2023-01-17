@@ -8,6 +8,8 @@ import { initReactI18next } from "react-i18next"
 
 import "tailwindcss/tailwind.css"
 import "./main.css"
+import "./dragndrop"
+import { bindPlayerStateListeners } from "./playHistory"
 
 import "@fontsource/roboto"
 import "@fontsource/roboto/300.css"
@@ -16,6 +18,7 @@ import "@fontsource/roboto/700.css"
 import { typedIpcRequest } from "./utils/ipc"
 
 await settingsStore.init()
+bindPlayerStateListeners()
 
 if (import.meta.env.DEV) {
     const url = localStorage.getItem("dev:lastSavedUrl")
