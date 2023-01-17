@@ -8,6 +8,7 @@ import { TorrentStatsResponse } from "../../electron/requests/torrentInfo";
 import { typedIpcRenderer } from "typed-ipc";
 import _ from "lodash";
 import { addPlaybackHistoryEntry } from "../playHistory";
+import { INDEX_START } from "./PlaybackHistory";
 
 type TorrentDisplayData = Pick<TorrentStatsResponse, "files"> & { magnet: string, name: string, filmId: string | undefined }
 
@@ -24,11 +25,11 @@ const FadeTransition = React.forwardRef((
 });
 
 export const TorrentSelectFileDialog = () => {
-    const data = useSnapshot(torrentSelectFilesData);
+    const { value } = useSnapshot(torrentSelectFilesData);
 
     const { t } = useTranslation();
 
-    if (!data.value) return null;
+    if (!value) return null;
 
     return <Dialog
         maxWidth="lg"
@@ -42,10 +43,10 @@ export const TorrentSelectFileDialog = () => {
         <DialogTitle>{t("Select file to play")}</DialogTitle>
         <div>
             <ButtonsList>
-                {data.value.files.map((file, i) => {
+                {value.files.map((file, i) => {
                     return <ListItemButton key={file.path}
                         // tech limitation?
-                        onClick={() => playTorrent(data.value!.magnet, file.path, file["index"])} className="block">
+                        onClick={() => playTorrent(value!.magnet, file.path, file["index"], undefined, value?.filmId)} className="block">
                         <div className='flex justify-between w-full'>
                             <span>
                                 <span className='text-gray-600'>{i + 1}.</span> {file.name}
@@ -63,10 +64,7 @@ export const TorrentSelectFileDialog = () => {
 
 const ignoreFilesExtensions = [".srt"]
 
-let selectedFilmId: string | undefined
-
 export const handleTorrentOpen = (data: TorrentDisplayData, resumeTimeIfSingle?: number, singleFileCallback?: () => any) => {
-    selectedFilmId = data.filmId
     const alwaysDisplaySelector = false
     // printing for advanced use cases or debugging
     console.log("torrentInfo", data)
@@ -75,15 +73,15 @@ export const handleTorrentOpen = (data: TorrentDisplayData, resumeTimeIfSingle?:
         .filter(file => ignoreFilesExtensions.every(ext => !file.name.endsWith(ext))), ({ path }) => path)
     if (!alwaysDisplaySelector && data.files.length === 1) {
         singleFileCallback?.()
-        playTorrent(data.magnet, data.name, undefined, resumeTimeIfSingle)
+        playTorrent(data.magnet, data.name, undefined, resumeTimeIfSingle, data.filmId)
     } else {
         torrentSelectFilesData.value = data
     }
 }
 
-export const playTorrent = (magnet: string, playbackName: string, playIndex = 0, resumeTime?: number) => {
+export const playTorrent = (magnet: string, playbackName: string, playIndex = 0, resumeTime?: number, filmId?: string) => {
     addPlaybackHistoryEntry({
-        entryPath: playIndex === 0 ? "/" : playbackName, magnet, filmId: selectedFilmId, lastTime: Date.now(), playbackName
+        entryPath: playIndex === 0 ? "/" : `${INDEX_START}${playIndex}`, magnet, filmId, lastTime: Date.now(), playbackName
     })
     typedIpcRenderer.send("playTorrent", {
         playIndex,

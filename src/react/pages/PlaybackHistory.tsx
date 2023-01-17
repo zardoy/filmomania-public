@@ -1,9 +1,12 @@
-import { HighlightOff } from "@mui/icons-material"
+import { HighlightOff, Menu } from "@mui/icons-material"
 import { IconButton, List, ListItemButton } from "@mui/material"
 import React, { useState } from "react"
 import WithBackButton from "../components/WithBackButton"
 import { getPlaybackHistory } from "../playHistory"
+import { handleTorrentClick } from "./Movie"
 import { playTorrent } from "./TorrentSelectFileDialog"
+
+export const INDEX_START = "#index/";
 
 // eslint-disable-next-line react/display-name
 export default () => {
@@ -22,11 +25,20 @@ export default () => {
                 <HighlightOff />
             </IconButton>
         </div>
-        <List>{playbackHistory.map(({ filmId, entryPath, playbackName, lastTime, magnet }, i) =>
-            <ListItemButton key={`${playbackName}${i}`} className='block' onClick={() => playTorrent(magnet, playbackName, entryPath.startsWith("#index/") ? +entryPath.slice("#index/".length) : undefined, undefined)}>
+        <List>{[...playbackHistory].reverse().map(({ filmId, entryPath, playbackName, lastTime, magnet }, i) =>
+            <ListItemButton key={`${playbackName}${i}`} className='block' onClick={() => {
+                playTorrent(magnet, playbackName, entryPath.startsWith(INDEX_START) ? +entryPath.slice(INDEX_START.length) : undefined, undefined, filmId);
+            }}>
                 <div className='flex justify-between'>
                     <div>{playbackName}</div>
-                    <div>{formatter.format(lastTime)} {filmId === undefined && "(external)"}</div>
+                    <div>{formatter.format(lastTime)} {filmId === undefined && "(external)"} {entryPath !== "/" && <IconButton onClick={e => {
+                        e.stopPropagation()
+                        void handleTorrentClick({
+                            filmId,
+                            magnet,
+                            title: playbackName
+                        });
+                    }}><Menu /></IconButton>}</div>
                 </div>
             </ListItemButton>)
         }</List>

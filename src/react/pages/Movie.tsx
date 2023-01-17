@@ -24,6 +24,33 @@ import { TorrentStatsResponse } from "../../electron/requests/torrentInfo";
 interface ComponentProps {
 }
 
+export const handleTorrentClick = async ({ title, magnet, filmId }: { title: string, magnet: string, filmId?: string }) => {
+    showModalLoader.value = true
+    const data = await Promise.race<TorrentStatsResponse>([
+        typedIpcRequest.getTorrentInfo({ magnet }).finally(() => {
+            showModalLoader.value = false
+        }),
+        new Promise(resolve => {
+            currentModalCancel.value = () => {
+                resolve(null as any)
+            }
+        })
+    ])
+    currentModalCancel.value = null
+    showModalLoader.value = false
+    if (data === null) return
+    if (!data) throw new Error("No torrent data (most probably it doesn't exist)")
+    sessionStorage.removeItem("currentPlayingId")
+    handleTorrentOpen({ ...data, magnet, name: title, filmId, }, filmId !== undefined ? getFilmsHistory()[filmId]?.time : undefined, () => {
+        if (filmId) sessionStorage.setItem("currentPlayingId", filmId)
+        const playerExitHandler = () => {
+            sessionStorage.removeItem("currentPlayingId")
+            typedIpcRenderer.removeEventListener("playerExit", playerExitHandler)
+        };
+        typedIpcRenderer.addEventListener("playerExit", playerExitHandler)
+    })
+}
+
 
 let abortController = new AbortController()
 const FilmPage: React.FC<ComponentProps> = () => {
@@ -134,38 +161,13 @@ const FilmPage: React.FC<ComponentProps> = () => {
                         return settingsStore.settings.ui.trackerSorting === "bySize" ? o.sizeInBytes : o.seeders;
                     }).reverse().map(item => {
                         const { title, magnet, torrentID, seeders, displaySize, pageURL, torrentURL } = item
-                        const handleTorrentClick = async () => {
-                            showModalLoader.value = true
-                            const data = await Promise.race<TorrentStatsResponse>([
-                                typedIpcRequest.getTorrentInfo({ magnet }).finally(() => {
-                                    showModalLoader.value = false
-                                }),
-                                new Promise(resolve => {
-                                    currentModalCancel.value = () => {
-                                        resolve(null as any)
-                                    }
-                                })
-                            ])
-                            currentModalCancel.value = null
-                            showModalLoader.value = false
-                            if (data === null) return
-                            if (!data) throw new Error("No torrent data (most probably it doesn't exist)")
-                            sessionStorage.removeItem("currentPlayingId")
-                            handleTorrentOpen({ ...data, magnet, name: title, filmId: selectedFilmId, }, getFilmsHistory()[selectedFilmId]?.time, () => {
-                                sessionStorage.setItem("currentPlayingId", selectedFilmId)
-                                const playerExitHandler = () => {
-                                    sessionStorage.removeItem("currentPlayingId")
-                                    typedIpcRenderer.removeEventListener("playerExit", playerExitHandler)
-                                };
-                                typedIpcRenderer.addEventListener("playerExit", playerExitHandler)
-                            })
-                        }
+
 
                         const contextMenu = (event: React.MouseEvent<HTMLElement>) => {
                             setContextmenuTorrent(item);
                             contextmenuState.open(event);
                         };
-                        return <ListItem key={torrentID} divider button onClick={() => handleTorrentClick()} onContextMenu={contextMenu}>
+                        return <ListItem key={torrentID} divider button onClick={() => handleTorrentClick({ magnet, title, filmId: selectedFilmId, })} onContextMenu={contextMenu}>
                             <div className="flex flex-nowrap justify-between w-full">
                                 <Typography>{title}</Typography>
                                 <div className='flex'>
