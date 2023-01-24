@@ -9,7 +9,6 @@ import { existsSync } from "fs";
 import got, { } from "got"
 import { app } from "electron";
 import onExit from "exit-hook"
-import killPort from "kill-port"
 import electronIsDev from "electron-is-dev";
 
 const isWin = process.platform === "win32";
@@ -41,10 +40,24 @@ export const killStremioServer = () => {
 
 export const startStremioServer = async () => {
     const builtinServerFile = join(__dirname, "./server.js")
-    let child: ChildProcess
+    let child!: ChildProcess
     const { enabled: builtinEnabled, overrideRootPath } = settingsStore.settings.builtinStremioServer
+    let forkServerFilePath: string | undefined
     if (builtinEnabled && existsSync(builtinServerFile)) {
-        child = fork(builtinServerFile, {
+        forkServerFilePath = builtinServerFile;
+    } else {
+        const stremioExecPath = getStremioExecPath()
+        if (!existsSync(stremioExecPath)) throw new Error("Stremio is not installed")
+        const serverJs = isWin ? join(stremioExecPath, "../server.js") : join(stremioExecPath, "Contents/MacOS/server.js");
+        if (process.platform === 'win32') {
+            const nodeExec = isWin ? join(stremioExecPath, "../stremio-runtime.exe") : join(serverJs, "../node");
+            child = spawn(`nodeExec`, [serverJs], { cwd: join(nodeExec, "..") })
+        } else {
+            forkServerFilePath = serverJs
+        }
+    }
+    if (forkServerFilePath) {
+        child = fork(forkServerFilePath, {
             detached: true,
             stdio: "pipe",
             env: {
@@ -53,15 +66,10 @@ export const startStremioServer = async () => {
                 ...process.env
             }
         })
-    } else {
-        const stremioExecPath = getStremioExecPath()
-        if (!existsSync(stremioExecPath)) throw new Error("Stremio is not installed")
-        const serverJs = isWin ? join(stremioExecPath, "../server.js") : join(stremioExecPath, "Contents/MacOS/server.js");
-        const nodeExec = isWin ? join(stremioExecPath, "../stremio-runtime.exe") : join(serverJs, "../node");
-        child = spawn(`nodeExec`, [serverJs], { cwd: join(nodeExec, "..") })
     }
     stremioServerChild = child
     if (!child) return
+
     await new Promise<void>((resolve, reject) => {
         child.stderr!.on("data", data => {
             console.log(`[error stremio server] ${String(data).trim()}`)

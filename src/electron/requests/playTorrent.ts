@@ -53,7 +53,6 @@ const handler = (async (_, playData) => {
         if (defaultPlayer === "mpv" && enableAdvancedOverlay && settings.player.fullscreen) {
             // todo rep electron bug, required to init before fullscreen application focus
             overlay = await playerOverlay();
-
         }
         const child = previousChild = exec(execCommand);
         child.on("exit", code => {
@@ -64,8 +63,12 @@ const handler = (async (_, playData) => {
             await mpvPostActions(child, playData);
         }
         return;
-    } else {
+    } else if(defaultPlayer === "nativeMangetApp") {
         await shell.openExternal(magnet);
+    } else {
+        const stremioStremaingUrl = await getStremioStremaingUrlFromTorrent(magnet, playIndex ?? 0);
+        console.log("stremioStremaingUrl", stremioStremaingUrl)
+        await shell.openExternal(stremioStremaingUrl)
     }
 }) satisfies IpcMainEventListener<"playTorrent">;
 

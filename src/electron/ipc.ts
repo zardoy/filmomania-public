@@ -49,7 +49,7 @@ export const bindIPC = () => {
             shell.showItemInFolder(join(tempDir, "temp.torrent"))
         },
         async openSettingsFile() {
-            await shell.openExternal(settingsStore.filePath)
+            await shell.openPath(settingsStore.filePath)
         },
         async sendServersStatus() {
             await checkStremioServerIsStarted()

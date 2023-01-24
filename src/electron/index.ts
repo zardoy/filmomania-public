@@ -41,7 +41,7 @@ const loadApp = async () => {
     await settingsStore.init();
     if (electronIsDev) {
         // todo resolve root issue instead of that workaround
-        if (settingsStore.settings.builtinStremioServer.enabled && settingsStore.settings.player.stremioServerUrl === "http://127.0.0.1:11470") await killPort(11470)
+        if (settingsStore.settings.builtinStremioServer.enabled && settingsStore.settings.player.stremioServerUrl === "http://127.0.0.1:11470") await killPort(11470).catch(() => {})
     }
     createMainWindow();
     settingsStore.windowIpcMain = mainWindow!

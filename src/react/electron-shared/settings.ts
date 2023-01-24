@@ -25,6 +25,7 @@ const settingsSchema = makeSchema({
             stremio: true,
             custom: true,
             mpv: true,
+            nativeMangetApp: true,
             native: true
         }, "mpv"),
         stremioServerUrl: {
