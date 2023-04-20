@@ -39,7 +39,7 @@ export const startRemoteServer = async () => {
             ]
         })
     })
-    const remoteHttpPort = settingsStore.settings.player.remoteUiControlPort ?? 3720;
+    const remoteHttpPort = settingsStore.settings.player.remoteUiControlPort ?? settingsStore.settingsSchema.player.remoteUiControlPort.schema.default;
     server.listen(remoteHttpPort, () => {
         console.log(`[remote-ui] Running http server at ${remoteHttpPort} port`)
     })
@@ -93,7 +93,8 @@ export const startRemoteServer = async () => {
 }
 
 export const sendRemoteUiServerStatus = () => {
-    typedIpcMain.sendToWindow(mainWindow, "remoteUiServerStatus", { up: serverListening, ip: getLocalIp() })
+    const localIp = getLocalIp();
+    typedIpcMain.sendToWindow(mainWindow, "remoteUiServerStatus", { up: serverListening, ip: localIp && `${localIp}:${settingsStore.settings.player.remoteUiControlPort}` })
 }
 
 export const sendRemoteUi = data => {

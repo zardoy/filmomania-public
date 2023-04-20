@@ -63,6 +63,7 @@ const settingsSchema = makeSchema({
         remoteUiControlPort: {
             type: "custom",
             schema: {
+                default: 3720,
                 type: "number",
             }
         },

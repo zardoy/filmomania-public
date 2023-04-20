@@ -4,11 +4,12 @@ import React, { useEffect, useState } from "react"
 import { typedIpcRenderer } from "typed-ipc"
 import { isSettingProxy, setupAppProxy } from "./ElectronEvents"
 import { useHistory } from "react-router-dom"
+import { settingsStore } from "../electron-shared/settings"
 
 // eslint-disable-next-line react/display-name
 export default () => {
     const [stremioServerStarted, setStremioServerStarted] = useState(false)
-    const [remoteUiServer, setRemoteUiServer] = useState(false as false | string)
+    const [remoteUiServer, setRemoteUiServer] = useState(settingsStore.settings.player.remoteUiControl ? "down" : "Disabled. Enable in settings: player.remoteUiControl")
     const history = useHistory()
 
     useEffect(() => {
@@ -16,7 +17,7 @@ export default () => {
             setStremioServerStarted(up)
         })
         typedIpcRenderer.addEventListener("remoteUiServerStatus", (_, { up, ip }) => {
-            setRemoteUiServer(up ? ip ?? "<unknown>" : false)
+            setRemoteUiServer(up ? ip ?? "<unknown>" : "down")
         })
         typedIpcRenderer.send("sendServersStatus", {})
         return () => {
