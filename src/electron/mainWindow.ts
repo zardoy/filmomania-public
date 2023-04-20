@@ -68,7 +68,7 @@ export const createMainWindow = () => {
     })
 
     mainWindow.setMenu(null);
-    void mainWindow.loadURL(electronIsDev ? "http://localhost:3500" : getFileFromPublic("index.html"));
+    void mainWindow.loadURL(electronIsDev ? "http://localhost:3500" : `file:///${getFileFromPublic("index.html")}`);
 
     mainWindow.on("closed", () => mainWindow = null);
 };

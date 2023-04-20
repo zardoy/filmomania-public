@@ -75,9 +75,6 @@ dependencies:
   electron-window-keeper:
     specifier: github:zardoy/electron-window-keeper#build
     version: github.com/zardoy/electron-window-keeper/3869d069e363b67abdcde86703a4693c1ad54183(electron@22.0.0)
-  esbuild:
-    specifier: ^0.16.9
-    version: 0.16.9
   exit-hook:
     specifier: ^3.1.4
     version: 3.1.4
@@ -248,6 +245,9 @@ devDependencies:
   electron-builder-squirrel-windows:
     specifier: '23'
     version: 23.6.0
+  esbuild:
+    specifier: ^0.16.9
+    version: 0.16.9
   eslint:
     specifier: ^7.32.0
     version: 7.32.0
