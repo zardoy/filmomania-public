@@ -107,7 +107,6 @@
         "zustand": "^3.5.10"
     },
     "devDependencies": {
-        "esbuild": "^0.16.9",
         "@codeshift/utils": "^0.1.2",
         "@types/ffmpeg-static": "^3.0.0",
         "@types/lodash": "^4.14.172",
@@ -126,6 +125,7 @@
         "electron": "^22.0.0",
         "electron-builder": "23",
         "electron-builder-squirrel-windows": "23",
+        "esbuild": "^0.16.9",
         "eslint": "^7.32.0",
         "eslint-plugin-react": "^7.25.1",
         "postcss": "^8.4.20",

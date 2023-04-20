@@ -8,6 +8,7 @@ import { Grow, Typography } from "@mui/material";
 import { useSettings } from "../../electron-shared/settings";
 import ModernStepper from "../../mui-extras/ModernStepper";
 import { PlayerStep, SearchEngineStep } from "./Steps";
+import { oneOf } from "@zardoy/utils";
 
 const useWelcomeCompleteSteps = () => {
     const settings = useSettings()
@@ -15,7 +16,7 @@ const useWelcomeCompleteSteps = () => {
     return {
         movieSearch: !!settings.movieSearchEngine.endpoint &&
         !!settings.movieSearchEngine.apiKey,
-        player: true,
+        player: oneOf(settings.player.defaultPlayer, "custom", "mpv") && !settings.player.playerExecutable,
     }
 }
 
@@ -53,7 +54,7 @@ const WeclomePage: React.FC<{onSetupFinish?: () => any}> = ({onSetupFinish}) => 
                         },
                         {
                             title: "Player",
-                            isComplete: welcomeCompleteSteps.player,
+                            isComplete: true/* welcomeCompleteSteps.player */,
                             component: PlayerStep
                         },
                         // {

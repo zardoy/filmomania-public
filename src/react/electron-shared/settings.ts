@@ -34,9 +34,9 @@ const settingsSchema = makeSchema({
         stremioExec: {
             type: "input",
         },
-        // when player is custom or mpv
         playerExecutable: {
             type: "input",
+            descrioption: "Can be overriden when player is custom or mpv. By default the best installation is choicen"
         },
         killPrevious: {
             type: "toggle",
@@ -49,6 +49,7 @@ const settingsSchema = makeSchema({
         },
         enableAdvancedOverlay: {
             type: "toggle",
+            descrioption: "(windows only) Wether to enable custom overlay with stats and time when in mpv fullscreen",
             defaultValue: true,
         },
         advancedOverlayLoadStats: {

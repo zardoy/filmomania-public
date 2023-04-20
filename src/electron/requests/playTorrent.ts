@@ -14,6 +14,7 @@ import { GracefulError, } from "../handleErrors";
 import { screen } from "electron/main";
 import { mainWindow } from "../mainWindow";
 import { makePlayerStateUpdate } from "../remoteUiControl";
+import { getBestMpvPlayer } from "../detectPlayer";
 
 let mpvSocket
 
@@ -26,19 +27,26 @@ let lastOpenPlayData
 const handler = (async (_, playData) => {
     const { magnet, data, playIndex } = playData;
     const { settings } = settingsStore;
-    const { player: { defaultPlayer, playerExecutable, enableAdvancedOverlay, killPrevious } } = settings;
+    const { player: { defaultPlayer, playerExecutable, killPrevious } } = settings;
+    let { player: { enableAdvancedOverlay } } = settings
     if (defaultPlayer === "stremio") {
         const stremioExecPath = getStremioExecPath();
         exec(`"${stremioExecPath}" "${magnet}"`);
     } else if (defaultPlayer === "custom" || defaultPlayer === "mpv") {
-        let prog = playerExecutable;
+        let prog = playerExecutable ?? /* defaultPlayer === "mpv" &&  */getBestMpvPlayer();
         if (!prog)
-            throw new GracefulError("defaultPlayer is mpv or custom, but playerExecutable is missing in settings");
-        if (!prog.includes("\""))
-            prog = `"${prog}"`;
+            throw new GracefulError("defaultPlayer is mpv or custom and mpv or INNA (mac) could not be found. Try setting playerExecutable in settings");
         const stremioStremaingUrl = await getStremioStremaingUrlFromTorrent(magnet, playIndex ?? 0);
-        const playerArgs = getCustomPlayerArgs(data);
-        const execCommand = `${prog} "${stremioStremaingUrl}" ${playerArgs}`;
+        let playerArgs = getCustomPlayerArgs(data);
+
+        const isWin = process.platform === "win32"
+        const isMac = process.platform === "darwin"
+        if (!isWin) enableAdvancedOverlay = false as true
+        if (isMac && (prog.endsWith("iina-cli") || prog.toLowerCase().endsWith("iina"))) {
+            playerArgs = [...playerArgs.map(arg => arg.startsWith("--") ? `--mpv-${arg.slice(2)}` : arg), "--no-resume-playback"]
+        }
+        if (!prog.includes("\"")) prog = `"${prog}"`;
+        const execCommand = `${prog} "${stremioStremaingUrl}" ${playerArgs.join(" ")}`;
         console.log("execCommand", execCommand);
         if (killPrevious && previousChild) {
             if (mpvSocket) {
@@ -62,8 +70,9 @@ const handler = (async (_, playData) => {
         if (defaultPlayer === "mpv") {
             await mpvPostActions(child, playData);
         }
+
         return;
-    } else if(defaultPlayer === "nativeMangetApp") {
+    } else if (defaultPlayer === "nativeMangetApp") {
         await shell.openExternal(magnet);
     } else {
         const stremioStremaingUrl = await getStremioStremaingUrlFromTorrent(magnet, playIndex ?? 0);
@@ -92,9 +101,9 @@ const getCustomPlayerArgs = ({ playbackName, startTime }: PlayerInputData) => {
             // "--audio-spdif=ac3,dts,eac3",
             ...startTime ? [`--start="+0:0:${startTime}"`] : [],
             ...fullscreen ? ["--fullscreen"] : []
-        ].join(" ")
+        ]
     }
-    return ""
+    return []
 }
 
 export const sendMpvCommand = (args: IpcMainRequests["mpvCommand"]["variables"]["args"], reportError = true) => {

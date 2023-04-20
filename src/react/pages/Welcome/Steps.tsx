@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import normalizeUrl from "normalize-url";
 
-import { Button, FormControl, FormLabel, RadioGroup, TextField, Typography } from "@mui/material";
+import { Button, FormControl, FormLabel, MenuItem, RadioGroup, Select, TextField, Typography } from "@mui/material";
 import { useSimpleFormik } from "@zardoy/simple-formik";
 
 import { settingsStore } from "../../electron-shared/settings";
@@ -51,7 +51,16 @@ export const SearchEngineStep: StepComponent = ({ onStepCompleted }) => {
 }
 
 export const PlayerStep: StepComponent = () => {
-    return null
+    return <>
+        <div className="pt-2" />
+        <div className="grid grid-cols-2">
+            <Typography className='flex items-center' title="with http streaming supported">Detected supported player</Typography>
+            <Select variant='outlined'>
+                <MenuItem hidden={!navigator.userAgent.includes("Mac")}>IINA</MenuItem>
+                <MenuItem hidden={navigator.userAgent.includes("Mac")}>mpv</MenuItem>
+            </Select>
+        </div>
+    </>
 }
 
 export const ProxyStep: StepComponent = () => {
