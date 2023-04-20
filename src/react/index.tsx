@@ -9,6 +9,7 @@ import { initReactI18next } from "react-i18next"
 import "tailwindcss/tailwind.css"
 import "./main.css"
 import "./dragndrop"
+import "./globalKeybindings"
 import { bindPlayerStateListeners } from "./playHistory"
 
 import "@fontsource/roboto"

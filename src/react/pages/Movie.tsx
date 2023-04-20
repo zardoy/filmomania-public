@@ -40,6 +40,7 @@ export const handleTorrentClick = async ({ title, magnet, filmId }: { title: str
     showModalLoader.value = false
     if (data === null) return
     if (!data) throw new Error("No torrent data (most probably it doesn't exist)")
+    if (!title) title = data.files.length === 1 ? data.files[0]!.name : magnet
     sessionStorage.removeItem("currentPlayingId")
     handleTorrentOpen({ ...data, magnet, name: title, filmId, }, filmId !== undefined ? getFilmsHistory()[filmId]?.time : undefined, () => {
         if (filmId) sessionStorage.setItem("currentPlayingId", filmId)
