@@ -1,3 +1,4 @@
+import { typedIpcRenderer } from "typed-ipc";
 import { handleTorrentClick } from "./pages/Movie"
 
 // shift+f5 is a global shortcut for toggling overlay when enabled
@@ -16,4 +17,11 @@ window.addEventListener("keydown", async e => {
             })
         }
     }
+})
+
+typedIpcRenderer.addEventListener("playManget", async (e, { magnet }) => {
+    await handleTorrentClick({
+        magnet,
+        title: "",
+    })
 })

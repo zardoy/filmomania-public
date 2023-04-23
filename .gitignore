@@ -17,7 +17,7 @@
 
 # production
 /build
-/build-*
+/build-*/
 /dist
 /dist-*
 /out

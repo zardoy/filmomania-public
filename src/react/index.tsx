@@ -38,6 +38,19 @@ window.mpv = async (...args) => {
 window.reloadHooksFile = () => {
     return typedIpcRequest.reloadHooksFile()
 }
+//@ts-ignore
+window.settings = Object.fromEntries(Object.entries(settingsStore.settings).map(([group, values]) => {
+    if (!values || typeof values !== "object") return
+    return [
+        group,
+        new Proxy(values, {
+            set(target, p, newValue, receiver) {
+                settingsStore.set(group, p as never, newValue)
+                return true
+            },
+        })
+    ];
+}).filter(Boolean))
 
 void i18next
     .use(Backend)

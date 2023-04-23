@@ -33,7 +33,7 @@ export default () => {
             </IconButton>
         </div>
         <div className='flex justify-center mb-5 opacity-90 transition-opacity hover:opacity-100 divide-x-2 divide-gray-600'>
-            <Link className='px-2' onClick={() => {
+            <Link title='Hint: you can edit settings without editor right in devtools console!' className='px-2' onClick={() => {
                 typedIpcRenderer.send("openSettingsFile", {})
             }}>Edit settings</Link>
             <Link className='px-2' onClick={() => {

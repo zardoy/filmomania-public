@@ -3,10 +3,17 @@ import { makeSchema, menuField, SettingsStore, SettingTypeGeneral } from "../../
 
 const settingsSchema = makeSchema({
     core: {
-        autoUpdate: menuField({
-            disable: true,
-            enable: true
-        }, "enable")
+        autoUpdate: {
+            ...menuField({
+                disable: true,
+                enable: true
+            }, "enable"),
+            descrioption: "Not implemented for now, but can be disabled for future",
+        },
+        handleMagnetProtocol: {
+            type: "toggle",
+            defaultValue: false,
+        }
     },
     movieSearchEngine: {
         endpoint: {

@@ -92,6 +92,9 @@ declare module "typed-ipc" {
             up: boolean,
             ip?: string
         }
+        playManget: {
+            magnet: string
+        }
     }
 }
 
