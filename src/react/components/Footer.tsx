@@ -19,7 +19,7 @@ export default () => {
         typedIpcRenderer.addEventListener("remoteUiServerStatus", (_, { up, ip }) => {
             setRemoteUiServer(up ? ip ?? "<unknown>" : "down")
         })
-        typedIpcRenderer.send("sendServersStatus", {})
+        typedIpcRenderer.send("init", {})
         return () => {
             typedIpcRenderer.removeAllListeners("stremioServerStatus")
             typedIpcRenderer.removeAllListeners("remoteUiServerStatus")

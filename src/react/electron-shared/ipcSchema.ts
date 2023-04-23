@@ -16,7 +16,7 @@ declare module "typed-ipc" {
         }
 
         openSettingsFile: {}
-        sendServersStatus: {}
+        init: {}
         startStremioServer: {}
         killStremioServer: {}
     }

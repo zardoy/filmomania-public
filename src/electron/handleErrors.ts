@@ -36,7 +36,7 @@ process.on = (event, listener) => {
     };
     oldProcessOn.call(process, event, handler)
     // initialization error, kill the app
-    if (mainWindow === null) app.quit()
+    if (mainWindow === null) app.exit()
 }
 
 unhandled({

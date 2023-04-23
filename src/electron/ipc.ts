@@ -51,7 +51,7 @@ export const bindIPC = () => {
         async openSettingsFile() {
             await shell.openPath(settingsStore.filePath)
         },
-        async sendServersStatus() {
+        async init() {
             await checkStremioServerIsStarted()
             sendRemoteUiServerStatus()
         },
