@@ -1,16 +1,6 @@
 # 🎞️ FILMOMANIA
 
-Project development freezed :( Going to work on it this summer.
-
-<details>
-<summary>Screenshots</summary>
-
-![screenshot-main-screen](./docs-assets/screenshot-main-screen.png)
-![screenshot-films-search](./docs-assets/screenshot-films-search.png)
-![screenshot-torrents-select.png](./docs-assets/screenshot-torrents-select.png)
-
-I know, design is bad. I'll use [arwes](https://playground.arwes.dev/core) in future releases.
-</details>
+The project is basically done.
 
 ## Build EXE
 
@@ -22,10 +12,13 @@ I know, design is bad. I'll use [arwes](https://playground.arwes.dev/core) in fu
 
 ## Features
 
-- Its pretty fast and stable
+- Fast and stable
 - Good & modern UI / UX
 - Probably no alternatives for now
+- Integrated stremio client + integration with mpv (remote control)
 - And even more good surprises inside!
+
+You can look at screenshots in docs-assets directory.
 
 ### Builtin Stremio Defaults
 
