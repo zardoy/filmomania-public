@@ -33,7 +33,7 @@ const handler = (async (_, playData) => {
         const stremioExecPath = getStremioExecPath();
         exec(`"${stremioExecPath}" "${magnet}"`);
     } else if (defaultPlayer === "custom" || defaultPlayer === "mpv") {
-        let prog = playerExecutable ?? /* defaultPlayer === "mpv" &&  */getBestMpvPlayer();
+        let prog = playerExecutable || /* defaultPlayer === "mpv" &&  */getBestMpvPlayer();
         if (!prog)
             throw new GracefulError("defaultPlayer is mpv or custom and mpv or INNA (mac) could not be found. Try setting playerExecutable in settings");
         const stremioStremaingUrl = await getStremioStremaingUrlFromTorrent(magnet, playIndex ?? 0);

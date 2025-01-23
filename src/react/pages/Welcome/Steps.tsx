@@ -17,7 +17,7 @@ export const SearchEngineStep: StepComponent = ({ onStepCompleted }) => {
         },
         onSubmit(values) {
             Object.entries(values).forEach(([key, value]) => {
-                settingsStore.set("movieSearchEngine", key, value)
+                settingsStore.set("movieSearchEngine", key as any, value)
             })
             onStepCompleted()
         },

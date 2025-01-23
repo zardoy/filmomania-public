@@ -22,6 +22,7 @@ declare module "typed-ipc" {
     }
 
     interface IpcMainRequests {
+        openModal: {}
         torrentsList: {
             variables: {
                 searchQuery: string

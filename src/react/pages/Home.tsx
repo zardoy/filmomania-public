@@ -4,6 +4,7 @@ import { Typography } from "@mui/material";
 
 import SearchBox from "../components/SearchBox";
 import Footer from "../components/Footer";
+import Switches from '../components/Switches';
 
 interface ComponentProps {
 }
@@ -14,7 +15,10 @@ let HomePage: React.FC<ComponentProps> = () => {
             <Typography sx={{ fontWeight: 900 }} variant="h1" align="center">FILMOMANIA</Typography>
             <SearchBox />
         </div>
-        <Footer />
+        <div>
+            <Switches />
+            <Footer />
+        </div>
     </div>;
 };
 

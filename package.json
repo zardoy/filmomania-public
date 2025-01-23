@@ -1,11 +1,26 @@
 {
     "name": "filmomania",
     "author": "Vitaly Turovsky",
-    "version": "0.0.1-beta",
+    "version": "0.0.2",
     "repository": "https://github.com/zardoy/filmomania-public.git",
     "description": "best hub for movies",
     "license": "MIT",
     "private": true,
+    "scripts": {
+        "start": "run-p start-main start-renderer",
+        "start-main": "electron-esbuild --debug",
+        "start-renderer": "vite",
+        "start-remote-control-ui": "vite --config vite.config.remote-ui.ts --host",
+        "build-main": "tsc -p ./src/electron && node build-electron.mjs && tsx buildSettingsSchema.ts",
+        "build-renderer": "tsc -p ./src/react && vite build",
+        "build-remote-control-ui": "tsc -p ./src/remote-control/ && vite --config vite.config.remote-ui.ts build",
+        "analyze-renderer": "source-map-explorer 'build/static/js/*.js'",
+        "lint": "eslint src/**",
+        "build-app": "pnpm build-main && pnpm build-renderer && pnpm build-remote-control-ui",
+        "build-pack": "pnpm build-app && pnpm electron-pack",
+        "rebuild-core-pack": "pnpm build-main && pnpm electron-pack",
+        "electron-pack": "electron-builder --win"
+    },
     "main": "build/index.js",
     "build": {
         "productName": "FilmoMania Beta",
@@ -49,7 +64,6 @@
         "@fontsource/roboto": "^4.5.0",
         "@mui/icons-material": "^5.0.0-rc.0",
         "@mui/material": "^5.0.0-rc.0",
-        "@vitejs/plugin-react-refresh": "^1.3.6",
         "@zardoy/electron-esbuild": "^0.1.0",
         "@zardoy/proxy-util": "github:zardoy/proxy-utils#build",
         "@zardoy/react-util": "^0.2.0",
@@ -83,7 +97,9 @@
         "modify-json-file": "^1.1.0",
         "mpv": "^1.0.0",
         "normalize-url": "^7.0.1",
+        "npm-run-all": "^4.1.5",
         "parse-torrent": "^10.0.1",
+        "rage-edit": "^1.2.0",
         "react": "^17.0.2",
         "react-dom": "^17.0.2",
         "react-i18next": "^12.1.1",
@@ -101,7 +117,7 @@
         "underscore": "^1.13.1",
         "use-typed-event-listener": "^3.0.0",
         "valtio": "^1.7.6",
-        "vite-plugin-externals": "^0.5.1",
+        "vite-plugin-externals": "^0.6.2",
         "ws": "^8.11.0",
         "xbytes": "^1.7.0",
         "zustand": "^3.5.10"
@@ -121,8 +137,9 @@
         "@types/ws": "^8.5.4",
         "@typescript-eslint/eslint-plugin": "^4.33.0",
         "@typescript-eslint/parser": "^4.30.0",
+        "@vitejs/plugin-react": "^4.3.4",
         "autoprefixer": "^10.3.4",
-        "electron": "^22.0.0",
+        "electron": "^34.0.1",
         "electron-builder": "23",
         "electron-builder-squirrel-windows": "23",
         "esbuild": "^0.16.9",
@@ -135,19 +152,7 @@
         "tsx": "^3.12.1",
         "type-fest": "^2.1.0",
         "typescript": "^4.9.4",
-        "vite": "^4.0.2"
-    },
-    "scripts": {
-        "start-main": "electron-esbuild --debug",
-        "start-renderer": "vite",
-        "start-remote-control-ui": "vite --config vite.config.remote-ui.ts --host",
-        "build-main": "tsc -p ./src/electron && node build-electron.mjs && tsx buildSettingsSchema.ts",
-        "build-renderer": "tsc -p ./src/react && vite build",
-        "build-remote-control-ui": "tsc -p ./src/remote-control/ && vite --config vite.config.remote-ui.ts build",
-        "analyze-renderer": "source-map-explorer 'build/static/js/*.js'",
-        "lint": "eslint src/**",
-        "build-app": "pnpm build-main && pnpm build-renderer && pnpm build-remote-control-ui && pnpm electron-pack",
-        "electron-pack": "electron-builder --win"
+        "vite": "^6.0.11"
     },
     "eslintConfig": {
         "extends": "react-app"

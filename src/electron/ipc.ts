@@ -34,6 +34,9 @@ export const bindIPC = () => {
         parseTorrentFile(_, { buffer }) {
             const parsed = parseTorrent(Buffer.from(buffer))
             return { ...parsed, magnet: toMagnetURI(parsed) }
+        },
+        openModal() {
+            return shell.openExternal("magnet:")
         }
     })
 

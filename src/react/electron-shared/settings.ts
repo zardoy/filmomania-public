@@ -95,6 +95,7 @@ const settingsSchema = makeSchema({
     internal: {
         activeProxies: {
             type: "input",
+            defaultValue: "[]"
         }
     },
     ui: {

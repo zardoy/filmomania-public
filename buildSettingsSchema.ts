@@ -8,4 +8,4 @@ fs.writeFileSync('./build/settingsSchema.json', JSON.stringify({
     type: 'object',
     // allowTrailingCommas
     properties: { ...props, dev: undefined },
-}), 'utf8')
+}, null, 4), 'utf8')

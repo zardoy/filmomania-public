@@ -47,11 +47,11 @@ const WeclomePage: React.FC<{onSetupFinish?: () => any}> = ({onSetupFinish}) => 
                 <ModernStepper
                     onSetupFinish={onSetupFinish}
                     steps={[
-                        {
-                            title: "Search engine",
-                            isComplete:welcomeCompleteSteps.movieSearch,
-                            component: SearchEngineStep
-                        },
+                        // {
+                        //     title: "Search engine",
+                        //     isComplete:welcomeCompleteSteps.movieSearch,
+                        //     component: SearchEngineStep
+                        // },
                         {
                             title: "Player",
                             isComplete: true/* welcomeCompleteSteps.player */,

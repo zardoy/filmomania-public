@@ -39,8 +39,20 @@ window.reloadHooksFile = () => {
     return typedIpcRequest.reloadHooksFile()
 }
 //@ts-ignore
-window.settings = Object.fromEntries(Object.entries(settingsStore.settings).map(([group, values]) => {
-    if (!values || typeof values !== "object") return
+window.settings = Object.fromEntries(Object.entries(settingsStore.settingsSchema).map(([group, valuesSchema]) => {
+    const values = Object.fromEntries(Object.entries(valuesSchema).map(([key, def]: [string, any]) => {
+        let val = settingsStore.settings[group][key];
+        if (val === undefined) {
+            if (def.type === 'input' || def.type === 'menu') {
+                val = ''
+            }
+        }
+        if (def.type === 'menu') {
+            val += ` : ${Object.keys(def.values).join('|')}`
+        }
+        return [key, val]
+    }))
+    // if (!values || typeof values !== "object") return
     return [
         group,
         new Proxy(values, {
@@ -51,6 +63,14 @@ window.settings = Object.fromEntries(Object.entries(settingsStore.settings).map(
         })
     ];
 }).filter(Boolean))
+
+const registerMagnetProtocol = () => {
+}
+
+//@ts-ignore
+window.openProtocolModal = () => {
+    typedIpcRequest.openModal()
+}
 
 void i18next
     .use(Backend)

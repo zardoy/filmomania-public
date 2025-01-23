@@ -1,13 +1,16 @@
-import { defineVitConfig } from '@zardoy/vit'
 import { viteExternalsPlugin } from 'vite-plugin-externals'
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
 
-export default defineVitConfig({
+export default defineConfig({
     root: './src/react',
+    base: './',
     envDir: __dirname,
     plugins: [
         viteExternalsPlugin({
             electron: 'electron',
         }),
+        react()
     ],
     build: {
         target: 'chrome108',
