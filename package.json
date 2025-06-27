@@ -19,7 +19,9 @@
         "build-app": "pnpm build-main && pnpm build-renderer && pnpm build-remote-control-ui",
         "build-pack": "pnpm build-app && pnpm electron-pack",
         "rebuild-core-pack": "pnpm build-main && pnpm electron-pack",
-        "electron-pack": "electron-builder --mac"
+        "electron-pack": "electron-builder",
+        "electron-pack-mac": "electron-builder --mac",
+        "electron-pack-win": "electron-builder --win"
     },
     "main": "build/index.js",
     "build": {

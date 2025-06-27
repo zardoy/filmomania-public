@@ -1,0 +1,183 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ dev ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Build app
+      run: pnpm run build-app
+
+    - name: Build Windows executable
+      run: pnpm run electron-pack-win
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Windows artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: filmomania-windows
+        path: release/FilmoMania*.exe
+        retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Build app
+      run: pnpm run build-app
+
+    - name: Build macOS DMG
+      run: pnpm run electron-pack-mac
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload macOS artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: filmomania-macos
+        path: release/FilmoMania*.dmg
+        retention-days: 30
+
+  release:
+    needs: [build-windows, build-macos]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download Windows artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: filmomania-windows
+        path: ./release-artifacts/
+
+    - name: Download macOS artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: filmomania-macos
+        path: ./release-artifacts/
+
+    - name: Get version from package.json
+      id: package-version
+      run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+    - name: List artifacts
+      run: |
+        echo "=== Release artifacts ==="
+        ls -la ./release-artifacts/
+        echo "=== Finding exact filenames ==="
+        WIN_FILE=$(find ./release-artifacts/ -name "*.exe" -type f | head -n 1)
+        MAC_FILE=$(find ./release-artifacts/ -name "*.dmg" -type f | head -n 1)
+        echo "WIN_FILE=${WIN_FILE}" >> $GITHUB_ENV
+        echo "MAC_FILE=${MAC_FILE}" >> $GITHUB_ENV
+        echo "Windows file: ${WIN_FILE}"
+        echo "macOS file: ${MAC_FILE}"
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.package-version.outputs.version }}-dev-${{ github.run_number }}
+        release_name: FilmoMania Beta v${{ steps.package-version.outputs.version }} (Dev Build #${{ github.run_number }})
+        body: |
+          🚀 **Development Build**
+
+          This is an automated development build from the `dev` branch.
+
+          **Changes in this build:**
+          - Latest development features and fixes
+          - Remote torrent/magnet playing functionality
+          - QR code support for mobile remote control
+
+          **Downloads:**
+          - Windows: See attached assets
+          - macOS (Apple Silicon): See attached assets
+
+          ⚠️ **Note:** This is a development build and may contain bugs or unstable features.
+        draft: false
+        prerelease: true
+
+    - name: Upload Windows Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ env.WIN_FILE }}
+        asset_name: FilmoMania-Beta-${{ steps.package-version.outputs.version }}-Windows.exe
+        asset_content_type: application/octet-stream
+
+    - name: Upload macOS Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ env.MAC_FILE }}
+        asset_name: FilmoMania-Beta-${{ steps.package-version.outputs.version }}-macOS-ARM64.dmg
+        asset_content_type: application/octet-stream
