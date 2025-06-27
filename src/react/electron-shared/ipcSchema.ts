@@ -96,6 +96,11 @@ declare module "typed-ipc" {
         playManget: {
             magnet: string
         }
+        remotePlayTorrent: {
+            magnet: string
+            data: PlayerInputData
+            playIndex?: number
+        }
     }
 }
 

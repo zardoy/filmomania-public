@@ -1,5 +1,5 @@
-import { DoubleArrow, HighlightOff, Menu, Pause as PauseIcon, PlayArrow, Power, PowerSettingsNew, RestartAlt, Visibility } from "@mui/icons-material"
-import { CssBaseline, List, ListItemButton, Paper, Popover, Slider, Typography } from "@mui/material"
+import { DoubleArrow, HighlightOff, Menu, Pause as PauseIcon, PlayArrow, Power, PowerSettingsNew, RestartAlt, Visibility, PlayCircleOutline, Link as LinkIcon } from "@mui/icons-material"
+import { CssBaseline, List, ListItemButton, Paper, Popover, Slider, Typography, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions, ListItem, ListItemText, IconButton } from "@mui/material"
 import React, { useEffect, useRef, useState } from "react"
 import { proxy, useSnapshot } from "valtio"
 import type { PlayerStatusReport } from "../electron/remoteUiControl"
@@ -15,6 +15,16 @@ export const uiState = proxy({
         isBackwards: boolean,
     } | null
 })
+
+const torrentDialogState = proxy({
+    open: false,
+    magnetInput: "",
+    torrentInfo: null as any,
+    loading: false,
+    error: ""
+})
+
+let requestId = 0
 
 const websocketUrl = new URL(location.href)
 websocketUrl.pathname = "ws"
@@ -43,6 +53,25 @@ webSocket.onmessage = e => {
     const { type, ...rest } = data
     if (type === "updateState") {
         Object.assign(uiState, rest)
+    } else if (type === "torrentInfo") {
+        if (rest.error) {
+            torrentDialogState.error = rest.error
+        } else {
+            torrentDialogState.torrentInfo = rest.data
+        }
+        torrentDialogState.loading = false
+    } else if (type === "streamingUrl") {
+        if (rest.error) {
+            alert(`Error getting streaming URL: ${ rest.error}`)
+        } else {
+            const url = new URL(rest.url)
+            url.hostname = window.location.hostname
+            navigator.clipboard.writeText(url.toString()).then(() => {
+                alert("Streaming URL copied to clipboard!")
+            }).catch(() => {
+                prompt("Copy this streaming URL:", url.toString())
+            })
+        }
     }
 }
 webSocket.onclose = webSocket.onerror = () => {
@@ -75,6 +104,48 @@ export const setPlaybackTime = (time: number) => {
 const getHours = (time: number) => Math.floor(time / 60 / 60)
 const time = (arg: number | string) => arg.toString().padStart(2, "0")
 
+const getTorrentInfo = (magnet: string) => {
+    const currentRequestId = ++requestId
+    torrentDialogState.loading = true
+    torrentDialogState.error = ""
+    torrentDialogState.torrentInfo = null
+    sendSocket({
+        command: "getTorrentInfo",
+        magnet,
+        requestId: currentRequestId
+    })
+}
+
+const playTorrent = (magnet: string, playIndex = 0, playbackName = "Remote Torrent") => {
+    sendSocket({
+        command: "playTorrent",
+        magnet,
+        playIndex,
+        data: {
+            playbackName,
+            startTime: 0
+        }
+    })
+    torrentDialogState.open = false
+}
+
+const getStreamingUrl = (magnet: string, playIndex = 0) => {
+    const currentRequestId = ++requestId
+    sendSocket({
+        command: "getStreamingUrl",
+        magnet,
+        playIndex,
+        requestId: currentRequestId
+    })
+}
+
+const formatFileSize = (bytes: number) => {
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"]
+    if (bytes === 0) return "0 Bytes"
+    const i = Math.floor(Math.log(bytes) / Math.log(1024))
+    return `${Math.round(bytes / Math.pow(1024, i) * 100) / 100 } ${ sizes[i]}`
+}
+
 // eslint-disable-next-line react/display-name
 export default () => {
     const [tempMovingTime, setTempMovingTime] = useState(undefined as undefined | number)
@@ -89,8 +160,14 @@ export default () => {
     };
 
     const state = useSnapshot(uiState)
+    const torrentState = useSnapshot(torrentDialogState)
     const volumeSlider = useRef<HTMLElement>(null!)
     const PlayPauseComponent = state.isPlaying ? PauseIcon : PlayArrow
+
+    const handleMagnetSubmit = () => {
+        if (!torrentState.magnetInput.trim()) return
+        getTorrentInfo(torrentState.magnetInput.trim())
+    }
 
     return <div className='root-elem fixed flex w-screen h-full overflow-hidden flex-col justify-between items-center p-2 needsclick'>
         <CssBaseline />
@@ -104,6 +181,10 @@ export default () => {
             <Menu className='w-14 h-14 float-right z-20' onClick={handleClick} />
             <Popover open={!!anchorEl} anchorEl={anchorEl} onClick={handleClose} anchorOrigin={{ horizontal: "left", vertical: "bottom" }} disablePortal>
                 <List className='space-y-2'>
+                    <ListItemButton onClick={() => {
+                        torrentDialogState.open = true
+                        handleClose()
+                    }}><PlayCircleOutline className='mr-1' /> Play Torrent/Magnet</ListItemButton>
                     <ListItemButton onClick={() => sendSocket({ command: "shutdown" })}><PowerSettingsNew className='mr-1' /> Shutdown PC</ListItemButton>
                     <ListItemButton disabled={state.title === null} onClick={() => sendSocket({ command: "toggleOverlay" })}><Visibility className='mr-1' /> Toggle overlay</ListItemButton>
                     <ListItemButton disabled={state.title === null} onClick={() => sendSocket({ command: "restartPlayer" })}><RestartAlt className='mr-1' /> Restart player</ListItemButton>
@@ -131,5 +212,77 @@ export default () => {
                 setTempMovingTime(undefined)
             }} color="secondary" />
         </div>
+
+        <Dialog open={torrentState.open} onClose={() => torrentDialogState.open = false} maxWidth="md" fullWidth>
+            <DialogTitle>Play Torrent/Magnet</DialogTitle>
+            <DialogContent>
+                <TextField
+                    fullWidth
+                    label="Magnet link or torrent URL"
+                    placeholder="magnet:?xt=urn:btih:..."
+                    value={torrentState.magnetInput}
+                    onChange={e => torrentDialogState.magnetInput = e.target.value}
+                    margin="normal"
+                    multiline
+                    rows={3}
+                />
+                {torrentState.error &&
+                    <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                        {torrentState.error}
+                    </Typography>
+                }
+                {torrentState.loading &&
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                        Loading torrent information...
+                    </Typography>
+                }
+                {torrentState.torrentInfo &&
+                    <div style={{ marginTop: 16 }}>
+                        <Typography variant="h6" gutterBottom>
+                            {torrentState.torrentInfo.name}
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary" gutterBottom>
+                            Files: {torrentState.torrentInfo.files?.length || 0}
+                        </Typography>
+                        <List dense>
+                            {torrentState.torrentInfo.files?.map((file, index) =>
+                                <ListItem key={index} divider>
+                                    <ListItemText
+                                        primary={file.name}
+                                        secondary={formatFileSize(file.length)}
+                                    />
+                                    <IconButton
+                                        color="primary"
+                                        onClick={() => playTorrent(torrentState.magnetInput, index, file.name)}
+                                        title="Play on host machine"
+                                    >
+                                        <PlayCircleOutline />
+                                    </IconButton>
+                                    <IconButton
+                                        color="secondary"
+                                        onClick={() => getStreamingUrl(torrentState.magnetInput, index)}
+                                        title="Copy streaming URL"
+                                    >
+                                        <LinkIcon />
+                                    </IconButton>
+                                </ListItem>
+                            )}
+                        </List>
+                    </div>
+                }
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => torrentDialogState.open = false}>Cancel</Button>
+                {!torrentState.torrentInfo &&
+                    <Button
+                        onClick={handleMagnetSubmit}
+                        disabled={!torrentState.magnetInput.trim() || torrentState.loading}
+                        variant="contained"
+                    >
+                        Load Torrent
+                    </Button>
+                }
+            </DialogActions>
+        </Dialog>
     </div>
 }

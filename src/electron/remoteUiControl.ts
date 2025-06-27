@@ -12,6 +12,8 @@ import { join } from "path"
 import { getFileFromUnpacked } from "./playerOverlay"
 import { exec } from "child_process"
 import { app } from "electron"
+import torrentInfo from "./requests/torrentInfo"
+import { getStremioStremaingUrlFromTorrent } from "./stremio"
 
 let wsServer: Server<WebSocket> | undefined
 let serverListening = false
@@ -59,30 +61,74 @@ export const startRemoteServer = async () => {
         wsServer = undefined
         serverListening = false
     })
-    const clientMessageHandler = data => {
-        const parsed = JSON.parse(data.toString())
-        if ("mpv" in parsed) {
-            sendMpvCommand(parsed.mpv, false)
-        }
-        if ("command" in parsed) {
-            switch (parsed.command) {
-                case "shutdown":
-                    exec("shutdown /s")
-                    break
-                case "restartPlayer":
-                    restartPlayer()
-                    break
-                case "closeApp":
-                    sendMpvCommand(["quit"])
-                    app.quit()
-                    break
-                case "toggleOverlay":
-                    togglePlayerOverlay()
-                    break
+    wss.on("connection", ws => {
+        const clientMessageHandler = data => {
+            const parsed = JSON.parse(data.toString())
+            if ("mpv" in parsed) {
+                sendMpvCommand(parsed.mpv, false)
+            }
+            if ("command" in parsed) {
+                switch (parsed.command) {
+                    case "shutdown":
+                        exec("shutdown /s")
+                        break
+                    case "restartPlayer":
+                        restartPlayer()
+                        break
+                    case "closeApp":
+                        sendMpvCommand(["quit"])
+                        app.quit()
+                        break
+                    case "toggleOverlay":
+                        togglePlayerOverlay()
+                        break
+                    case "playTorrent":
+                        if (parsed.magnet && parsed.data) {
+                            mainWindow?.webContents.send("remotePlayTorrent", {
+                                magnet: parsed.magnet,
+                                data: parsed.data,
+                                playIndex: parsed.playIndex
+                            })
+                        }
+                        break
+                    case "getTorrentInfo":
+                        if (parsed.magnet) {
+                            torrentInfo({} as any, { magnet: parsed.magnet }).then(info => {
+                                ws.send(JSON.stringify({
+                                    type: "torrentInfo",
+                                    requestId: parsed.requestId,
+                                    data: info
+                                }))
+                            }).catch(error => {
+                                ws.send(JSON.stringify({
+                                    type: "torrentInfo",
+                                    requestId: parsed.requestId,
+                                    error: error.message
+                                }))
+                            })
+                        }
+                        break
+                    case "getStreamingUrl":
+                        if (parsed.magnet) {
+                            getStremioStremaingUrlFromTorrent(parsed.magnet, parsed.playIndex || 0).then(url => {
+                                ws.send(JSON.stringify({
+                                    type: "streamingUrl",
+                                    requestId: parsed.requestId,
+                                    url: url
+                                }))
+                            }).catch(error => {
+                                ws.send(JSON.stringify({
+                                    type: "streamingUrl",
+                                    requestId: parsed.requestId,
+                                    error: error.message
+                                }))
+                            })
+                        }
+                        break
+                }
             }
         }
-    }
-    wss.on("connection", ws => {
+
         ws.on("message", clientMessageHandler)
         ws.on("close", () => {
             ws.removeEventListener("message", clientMessageHandler)

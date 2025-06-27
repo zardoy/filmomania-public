@@ -30,10 +30,12 @@ let App: React.FC<ComponentProps> = () => {
     const settings = useSettings()
     const { value: showLoader } = useSnapshot(showModalLoader)
 
-    const [showWelcomePage, setShowWelcomePage] = useState(() => {
-        const { apiKey, endpoint } = settings.movieSearchEngine
-        return !apiKey || !endpoint
-    })
+    // const [showWelcomePage, setShowWelcomePage] = useState(() => {
+    //     const { apiKey, endpoint } = settings.movieSearchEngine
+    //     return !apiKey || !endpoint
+    // })
+    const showWelcomePage = false
+    const setShowWelcomePage = b => { }
 
     // MATERIAL-UI THEME
     const isDarkTheme = useMediaQuery(`(prefers-color-scheme: dark)`)

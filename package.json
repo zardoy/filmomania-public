@@ -19,7 +19,7 @@
         "build-app": "pnpm build-main && pnpm build-renderer && pnpm build-remote-control-ui",
         "build-pack": "pnpm build-app && pnpm electron-pack",
         "rebuild-core-pack": "pnpm build-main && pnpm electron-pack",
-        "electron-pack": "electron-builder --win"
+        "electron-pack": "electron-builder --mac"
     },
     "main": "build/index.js",
     "build": {
@@ -99,6 +99,7 @@
         "normalize-url": "^7.0.1",
         "npm-run-all": "^4.1.5",
         "parse-torrent": "^10.0.1",
+        "qrcode.react": "^4.2.0",
         "rage-edit": "^1.2.0",
         "react": "^17.0.2",
         "react-dom": "^17.0.2",
@@ -178,6 +179,11 @@
         ],
         "allowAny": [
             "*"
+        ],
+        "onlyBuiltDependencies": [
+            "electron",
+            "esbuild"
         ]
-    }
+    },
+    "packageManager": "pnpm@10.5.2+sha512.da9dc28cd3ff40d0592188235ab25d3202add8a207afbedc682220e4a0029ffbff4562102b9e6e46b4e3f9e8bd53e6d05de48544b0c57d4b0179e22c76d1199b"
 }

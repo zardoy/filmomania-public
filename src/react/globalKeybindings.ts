@@ -25,3 +25,11 @@ typedIpcRenderer.addEventListener("playManget", async (e, { magnet }) => {
         title: "",
     })
 })
+
+typedIpcRenderer.addEventListener("remotePlayTorrent", async (e, { magnet, data, playIndex }) => {
+    typedIpcRenderer.send("playTorrent", {
+        magnet,
+        data,
+        playIndex
+    })
+})

@@ -5,6 +5,7 @@ import { typedIpcRenderer } from "typed-ipc"
 import { isSettingProxy, setupAppProxy } from "./ElectronEvents"
 import { useHistory } from "react-router-dom"
 import { settingsStore } from "../electron-shared/settings"
+import { QRCodeSVG } from "qrcode.react"
 
 // eslint-disable-next-line react/display-name
 export default () => {
@@ -26,6 +27,10 @@ export default () => {
         }
     }, []);
 
+    const remoteUrl = remoteUiServer && remoteUiServer !== "down" && remoteUiServer !== "Disabled. Enable in settings: player.remoteUiControl"
+        ? `http://${remoteUiServer}`
+        : ""
+
     return <div className='flex justify-between px-3 center-all-flex'>
         <div>
             <IconButton title="Playback history" onClick={() => history.push("/playbackHistory")}>
@@ -41,17 +46,35 @@ export default () => {
                 void setupAppProxy()
             }}>Reset proxies (speedup)</Link>
         </div>
-        <div className='flex flex-row-reverse'>
+        <div className='flex flex-row-reverse items-center gap-4'>
             <div>
-                <div title={`Remote server ip ${remoteUiServer}`} className='align-baseline mr-1' style={{ display: "inline-block", width: 17, height: 17, borderRadius: "100%", background: remoteUiServer ? "limegreen" : "red" }} />
-                <span className='opacity-50'>Stremio server status: </span><span className='opacity-90' title={stremioServerStarted ? "Click to kill server" : "Click to start server"} style={{ color: stremioServerStarted ? "limegreen" : "red" }} onClick={() => {
-                    if (stremioServerStarted) {
-                        typedIpcRenderer.send("killStremioServer", {})
-                    } else {
-                        typedIpcRenderer.send("startStremioServer", {})
-                    }
-                }}>{stremioServerStarted ? "UP" : "DOWN"}</span>
+                <div
+                    title={`Remote server ip ${remoteUiServer}`}
+                    className='align-baseline mr-1'
+                    style={{ display: "inline-block", width: 17, height: 17, borderRadius: "100%", background: remoteUiServer && remoteUiServer !== "down" && remoteUiServer !== "Disabled. Enable in settings: player.remoteUiControl" ? "limegreen" : "red" }}
+                />
+                <span className='opacity-50'>Stremio server status: </span>
+                <span
+                    className='opacity-90'
+                    title={stremioServerStarted ? "Click to kill server" : "Click to start server"}
+                    style={{ color: stremioServerStarted ? "limegreen" : "red" }}
+                    onClick={() => {
+                        if (stremioServerStarted) {
+                            typedIpcRenderer.send("killStremioServer", {})
+                        } else {
+                            typedIpcRenderer.send("startStremioServer", {})
+                        }
+                    }}
+                >
+                    {stremioServerStarted ? "UP" : "DOWN"}
+                </span>
             </div>
+            {remoteUrl &&
+                <div className="flex flex-col items-center">
+                    <QRCodeSVG value={remoteUrl} size={80} />
+                    <div className="text-xs mt-1">{remoteUrl}</div>
+                </div>
+            }
         </div>
     </div>
 }
