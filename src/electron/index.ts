@@ -13,6 +13,7 @@ import killPort from "kill-port"
 import { initHooksFile } from "./hooksFile";
 import { startRemoteServer } from "./remoteUiControl";
 import { typedIpcMain } from "typed-ipc";
+import { isStartupEnabled } from "./startup";
 
 const locked = app.requestSingleInstanceLock()
 if (!locked) app.exit()
@@ -42,6 +43,19 @@ const loadApp = async () => {
         // })
     }
     await settingsStore.init();
+
+    // Sync startup setting with Windows registry
+    if (process.platform === "win32") {
+        try {
+            const isEnabled = await isStartupEnabled()
+            if (isEnabled !== settingsStore.settings.core.startupOnBoot) {
+                settingsStore.set("core", "startupOnBoot", isEnabled as false)
+            }
+        } catch (error) {
+            console.log("Failed to check startup status:", error)
+        }
+    }
+
     registerProtocol()
     if (electronIsDev) {
         // todo resolve root issue instead of that workaround

@@ -13,6 +13,7 @@ import torrentInfo from "./requests/torrentInfo";
 import { requestTorrentsList } from "./requests/torrentsList";
 import { getStremioStremaingUrlFromTorrent, startStremioServer, checkStremioServerIsStarted, killStremioServer } from "./stremio";
 import { sendRemoteUiServerStatus } from "./remoteUiControl";
+import { setStartupOnBoot } from "./startup";
 
 export const bindIPC = () => {
     typedIpcMain.handleAllRequests({
@@ -37,6 +38,9 @@ export const bindIPC = () => {
         },
         openModal() {
             return shell.openExternal("magnet:")
+        },
+        setStartupOnBoot(_, { enabled }) {
+            return setStartupOnBoot(enabled)
         }
     })
 

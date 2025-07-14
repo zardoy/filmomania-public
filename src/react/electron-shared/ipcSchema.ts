@@ -65,6 +65,12 @@ declare module "typed-ipc" {
         }
         reloadHooksFile: {
             response: boolean
+        },
+        setStartupOnBoot: {
+            variables: {
+                enabled: boolean
+            }
+            response: void
         }
     }
 
