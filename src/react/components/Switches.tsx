@@ -33,5 +33,12 @@ export default () => {
 
             }} />
         </div>
+        <div className='p-2 bg-gray-800 rounded-lg' onClick={() => {
+            settingsStore.set('core', 'startupOnBoot', !settings.core.startupOnBoot as false)
+        }}>
+            Startup on boot: <SettingRenderer value={settings.core.startupOnBoot} onValueChange={(val) => {
+
+            }} />
+        </div>
     </div>
 }

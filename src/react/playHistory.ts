@@ -43,6 +43,29 @@ export const addPlaybackHistoryEntry = (data: PlaybackHistoryEntry) => {
     localStorage.setItem("playbackHistory", JSON.stringify(newArr))
 }
 
+export const hasFileBeenPlayed = (magnet: string, fileIndex: number): boolean => {
+    const history = getPlaybackHistory()
+    return history.some(entry =>
+        entry.magnet === magnet &&
+        entry.entryPath === (fileIndex === 0 ? "/" : `#index/${fileIndex}`)
+    )
+}
+
+export const getLastPlayedFileIndex = (magnet: string): number | null => {
+    const history = getPlaybackHistory()
+    const lastEntry = history
+        .filter(entry => entry.magnet === magnet)
+        .sort((a, b) => b.lastTime - a.lastTime)[0]
+
+    if (!lastEntry) return null
+
+    if (lastEntry.entryPath === "/") return 0
+    if (lastEntry.entryPath.startsWith("#index/")) {
+        return parseInt(lastEntry.entryPath.slice("#index/".length))
+    }
+    return null
+}
+
 interface PlaybackHistoryEntry {
     filmId?: string
     lastTime: number

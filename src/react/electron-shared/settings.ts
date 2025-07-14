@@ -13,6 +13,11 @@ const settingsSchema = makeSchema({
         handleMagnetProtocol: {
             type: "toggle",
             defaultValue: false,
+        },
+        startupOnBoot: {
+            type: "toggle",
+            defaultValue: false,
+            descrioption: "Start FilmoMania automatically when Windows starts (Windows only)"
         }
     },
     movieSearchEngine: {

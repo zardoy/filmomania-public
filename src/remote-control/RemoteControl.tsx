@@ -1,5 +1,5 @@
 import { DoubleArrow, HighlightOff, Menu, Pause as PauseIcon, PlayArrow, Power, PowerSettingsNew, RestartAlt, Visibility, PlayCircleOutline, Link as LinkIcon } from "@mui/icons-material"
-import { CssBaseline, List, ListItemButton, Paper, Popover, Slider, Typography, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions, ListItem, ListItemText, IconButton } from "@mui/material"
+import { CssBaseline, List, ListItemButton, Paper, Popover, Slider, Typography, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions, ListItem, ListItemText, IconButton, Chip } from "@mui/material"
 import React, { useEffect, useRef, useState } from "react"
 import { proxy, useSnapshot } from "valtio"
 import type { PlayerStatusReport } from "../electron/remoteUiControl"
@@ -171,6 +171,30 @@ const formatFileSize = (bytes: number) => {
     return `${Math.round(bytes / Math.pow(1024, i) * 100) / 100 } ${ sizes[i]}`
 }
 
+// History checking functions for remote UI
+const hasFileBeenPlayed = (magnet: string, fileIndex: number): boolean => {
+    const history = JSON.parse(localStorage.getItem("playbackHistory") || "[]")
+    return history.some((entry: any) =>
+        entry.magnet === magnet &&
+        entry.entryPath === (fileIndex === 0 ? "/" : `#index/${fileIndex}`)
+    )
+}
+
+const getLastPlayedFileIndex = (magnet: string): number | null => {
+    const history = JSON.parse(localStorage.getItem("playbackHistory") || "[]")
+    const lastEntry = history
+        .filter((entry: any) => entry.magnet === magnet)
+        .sort((a: any, b: any) => b.lastTime - a.lastTime)[0]
+
+    if (!lastEntry) return null
+
+    if (lastEntry.entryPath === "/") return 0
+    if (lastEntry.entryPath.startsWith("#index/")) {
+        return parseInt(lastEntry.entryPath.slice("#index/".length))
+    }
+    return null
+}
+
 // eslint-disable-next-line react/display-name
 export default () => {
     const [tempMovingTime, setTempMovingTime] = useState(undefined as undefined | number)
@@ -325,45 +349,66 @@ export default () => {
                             {state.playlist.files.length} files in playlist
                         </Typography>
                         <List dense>
-                            {state.playlist.files.map((file, index) => (
-                                <ListItem
-                                    key={index}
-                                    divider
-                                    sx={{
-                                        backgroundColor: index === state.playlist!.currentIndex ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
-                                        borderLeft: index === state.playlist!.currentIndex ? '4px solid #1976d2' : 'none'
-                                    }}
-                                >
-                                    <ListItemText
-                                        primary={
-                                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                <span style={{ marginRight: 8, fontWeight: index === state.playlist!.currentIndex ? 'bold' : 'normal' }}>
-                                                    {index + 1}.
-                                                </span>
-                                                <span style={{ fontWeight: index === state.playlist!.currentIndex ? 'bold' : 'normal' }}>
-                                                    {file.name}
-                                                </span>
-                                                {index === state.playlist!.currentIndex && (
-                                                    <span style={{ marginLeft: 8, fontSize: '0.8em', color: '#1976d2' }}>
-                                                        (Now Playing)
-                                                    </span>
-                                                )}
-                                            </div>
-                                        }
-                                        secondary={formatFileSize(file.length)}
-                                    />
-                                    <IconButton
-                                        color="primary"
-                                        onClick={() => {
-                                            playTorrent(state.playlist!.magnet, file.index, file.name)
-                                            playlistDialogState.open = false
+                            {state.playlist.files.map((file, index) => {
+                                const hasBeenPlayed = hasFileBeenPlayed(state.playlist!.magnet, index);
+                                const isLastPlayed = getLastPlayedFileIndex(state.playlist!.magnet) === index;
+
+                                return (
+                                    <ListItem
+                                        key={index}
+                                        divider
+                                        sx={{
+                                            backgroundColor: index === state.playlist!.currentIndex ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                                            borderLeft: index === state.playlist!.currentIndex ? '4px solid #1976d2' : 'none'
                                         }}
-                                        title="Play this file"
                                     >
-                                        <PlayCircleOutline />
-                                    </IconButton>
-                                </ListItem>
-                            ))}
+                                        <ListItemText
+                                            primary={
+                                                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                    <span style={{ marginRight: 8, fontWeight: index === state.playlist!.currentIndex ? 'bold' : 'normal' }}>
+                                                        {index + 1}.
+                                                    </span>
+                                                    <span style={{ fontWeight: index === state.playlist!.currentIndex ? 'bold' : 'normal' }}>
+                                                        {file.name}
+                                                    </span>
+                                                    {index === state.playlist!.currentIndex && (
+                                                        <span style={{ marginLeft: 8, fontSize: '0.8em', color: '#1976d2' }}>
+                                                            (Now Playing)
+                                                        </span>
+                                                    )}
+                                                    {hasBeenPlayed && (
+                                                        <Chip
+                                                            label="Played"
+                                                            size="small"
+                                                            color="success"
+                                                            sx={{ ml: 1, height: 20, fontSize: '0.7rem' }}
+                                                        />
+                                                    )}
+                                                    {isLastPlayed && index !== state.playlist!.currentIndex && (
+                                                        <Chip
+                                                            label="Last"
+                                                            size="small"
+                                                            color="primary"
+                                                            sx={{ ml: 1, height: 20, fontSize: '0.7rem' }}
+                                                        />
+                                                    )}
+                                                </div>
+                                            }
+                                            secondary={formatFileSize(file.length)}
+                                        />
+                                        <IconButton
+                                            color="primary"
+                                            onClick={() => {
+                                                playTorrent(state.playlist!.magnet, file.index, file.name)
+                                                playlistDialogState.open = false
+                                            }}
+                                            title="Play this file"
+                                        >
+                                            <PlayCircleOutline />
+                                        </IconButton>
+                                    </ListItem>
+                                );
+                            })}
                         </List>
                     </div>
                 ) : (
