@@ -133,6 +133,9 @@ importers:
       parse-torrent:
         specifier: ^10.0.1
         version: 10.0.1
+      pdf-parse-new:
+        specifier: ^1.4.1
+        version: 1.4.1
       qrcode.react:
         specifier: ^4.2.0
         version: 4.2.0(react@17.0.2)
@@ -4063,6 +4066,9 @@ packages:
   node-cleanup@2.1.2:
     resolution: {integrity: sha1-esGavSl+Caf3KnFUXZUbUX5N3iw=}
 
+  node-ensure@0.0.0:
+    resolution: {integrity: sha512-DRI60hzo2oKN1ma0ckc6nQWlHU69RH6xN0sjQTjMpChPfTYvKZdcQFfdYK2RWbJcKyUizSIy/l8OTGxMAM1QDw==}
+
   node-fetch@2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
     engines: {node: 4.x || >=6.0.0}
@@ -4320,6 +4326,10 @@ packages:
 
   pause-stream@0.0.11:
     resolution: {integrity: sha1-/lo0sMvOErWqaitAPuLnO2AvFEU=}
+
+  pdf-parse-new@1.4.1:
+    resolution: {integrity: sha512-6DAySxlMpTeQ77+adv01ckUB13/bFvwaXSN38umuItHJewLhJFMOUWJlFPCu+YB+sA9gkLQL8Av5SoG5yJD5vw==}
+    engines: {node: '>=20.11.0'}
 
   pend@1.2.0:
     resolution: {integrity: sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg==}
@@ -9736,6 +9746,8 @@ snapshots:
 
   node-cleanup@2.1.2: {}
 
+  node-ensure@0.0.0: {}
+
   node-fetch@2.6.7:
     dependencies:
       whatwg-url: 5.0.0
@@ -9995,6 +10007,13 @@ snapshots:
   pause-stream@0.0.11:
     dependencies:
       through: 2.3.8
+
+  pdf-parse-new@1.4.1:
+    dependencies:
+      debug: 4.3.4(supports-color@5.5.0)
+      node-ensure: 0.0.0
+    transitivePeerDependencies:
+      - supports-color
 
   pend@1.2.0: {}
 

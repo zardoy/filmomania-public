@@ -39,7 +39,9 @@ jobs:
       run: pnpm install --frozen-lockfile
 
     - name: Build app
-      run: pnpm run build-app
+      run: pnpm run build-app-github
+      env:
+        SERVER_URL: ${{ secrets.SERVER_URL }}
 
     - name: Build Windows executable
       run: pnpm run electron-pack-win
@@ -85,12 +87,21 @@ jobs:
       run: pnpm install --frozen-lockfile
 
     - name: Build app
-      run: pnpm run build-app
+      run: pnpm run build-app-github
+      env:
+        SERVER_URL: ${{ secrets.SERVER_URL }}
 
     - name: Build macOS DMG
       run: pnpm run electron-pack-mac
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CSC_IDENTITY_AUTO_DISCOVERY: false
+
+    - name: Fix macOS app permissions
+      run: |
+        echo "🔧 Fixing macOS app permissions..."
+        find ./release -name "*.app" -exec xattr -cr {} \;
+        find ./release -name "*.dmg" -exec xattr -cr {} \;
 
     - name: Upload macOS artifacts
       uses: actions/upload-artifact@v4

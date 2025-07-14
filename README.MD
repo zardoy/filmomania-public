@@ -10,6 +10,37 @@ The project is basically done.
 - Install dependencies (just run `pnpm i` in terminal) and then run `pnpm build-app`
 - If everything is okay, you will find installer in `release` folder
 
+## macOS Installation
+
+If you get "app is damaged" error on macOS:
+
+### Option 1: Quick Fix
+
+```bash
+# Run this in Terminal after downloading the app
+xattr -cr "/Applications/FilmoMania Beta.app"
+```
+
+### Option 2: Use the provided script
+
+```bash
+# Make the script executable and run it
+chmod +x scripts/fix-macos-app.sh
+./scripts/fix-macos-app.sh
+```
+
+### Option 3: Manual steps
+
+1. Right-click the app → "Open"
+2. Click "Open" in the security dialog
+3. Or go to System Preferences → Security & Privacy → "Allow anyway"
+
+### Option 4: Disable Gatekeeper (not recommended)
+
+```bash
+sudo spctl --master-disable
+```
+
 ## Features
 
 - Fast and stable
