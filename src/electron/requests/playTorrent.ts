@@ -67,8 +67,30 @@ const handler = (async (_, playData) => {
             console.log(`Player exited ${code}`);
         });
         lastOpenPlayData = playData;
+
+        // Fetch playlist information for tracking
+        try {
+            const torrentInfoData = await torrentInfo({} as any, { magnet, index: playIndex });
+            if (torrentInfoData && torrentInfoData.files) {
+                const playlist = {
+                    files: torrentInfoData.files.map((file, index) => ({
+                        name: file.name,
+                        path: file.path,
+                        length: file.length,
+                        index: index
+                    })),
+                    currentIndex: playIndex ?? 0,
+                    magnet: magnet
+                };
+                // Store playlist data for later use
+                (playData as any).playlist = playlist;
+            }
+        } catch (error) {
+            console.log("Failed to fetch playlist info:", error);
+        }
+
         if (defaultPlayer === "mpv") {
-            await mpvPostActions(child, playData);
+            await mpvPostActions(child, playData, (playData as any).playlist);
         }
 
         return;
@@ -134,7 +156,7 @@ export const togglePlayerOverlay = (makeReload = false) => {
 // todo refactor
 const observePropertiesCallbacks = new Map<string, Array<(data) => any>>()
 
-const mpvPostActions = async (child: ChildProcess, { magnet, playIndex, data }: IpcMainEvents["playTorrent"]) => {
+const mpvPostActions = async (child: ChildProcess, { magnet, playIndex, data }: IpcMainEvents["playTorrent"], playlist?: any) => {
     // mpv: assuming single instance is enabled
     if (mpvSocket) return
     const { player } = settingsStore.settings;
@@ -204,6 +226,7 @@ const mpvPostActions = async (child: ChildProcess, { magnet, playIndex, data }: 
             title: data.playbackName,
             maxTime: fileDuration ?? 0,
             volume: 0,
+            playlist: playlist,
         });
     };
     syncPlayerState()
@@ -223,6 +246,7 @@ const mpvPostActions = async (child: ChildProcess, { magnet, playIndex, data }: 
             time: 0,
             maxTime: 0,
             volume: 0,
+            playlist: undefined,
         });
         console.log("player exited, overlay destroyed")
     })

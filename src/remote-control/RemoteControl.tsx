@@ -13,6 +13,16 @@ export const uiState = proxy({
     fastSeek: null as null as {
         time: number,
         isBackwards: boolean,
+    } | null,
+    playlist: null as {
+        files: Array<{
+            name: string
+            path: string
+            length: number
+            index: number
+        }>
+        currentIndex: number
+        magnet: string
     } | null
 })
 
@@ -22,6 +32,10 @@ const torrentDialogState = proxy({
     torrentInfo: null as any,
     loading: false,
     error: ""
+})
+
+const playlistDialogState = proxy({
+    open: false
 })
 
 let requestId = 0
@@ -53,6 +67,10 @@ webSocket.onmessage = e => {
     const { type, ...rest } = data
     if (type === "updateState") {
         Object.assign(uiState, rest)
+        // Handle playlist data if present
+        if (rest.playlist) {
+            uiState.playlist = rest.playlist
+        }
     } else if (type === "torrentInfo") {
         if (rest.error) {
             torrentDialogState.error = rest.error
@@ -72,6 +90,12 @@ webSocket.onmessage = e => {
                 prompt("Copy this streaming URL:", url.toString())
             })
         }
+    } else if (type === "playlist") {
+        if (rest.error) {
+            console.log("Playlist error:", rest.error)
+        } else if (rest.data) {
+            uiState.playlist = rest.data
+        }
     }
 }
 webSocket.onclose = webSocket.onerror = () => {
@@ -85,6 +109,7 @@ webSocket.onclose = webSocket.onerror = () => {
 const closeApp = () => {
     sendSocket({ command: "closeApp" })
     uiState.title = null
+    uiState.playlist = null
 }
 
 const sendSocket = data => {
@@ -161,6 +186,7 @@ export default () => {
 
     const state = useSnapshot(uiState)
     const torrentState = useSnapshot(torrentDialogState)
+    const playlistState = useSnapshot(playlistDialogState)
     const volumeSlider = useRef<HTMLElement>(null!)
     const PlayPauseComponent = state.isPlaying ? PauseIcon : PlayArrow
 
@@ -188,6 +214,10 @@ export default () => {
                     <ListItemButton onClick={() => sendSocket({ command: "shutdown" })}><PowerSettingsNew className='mr-1' /> Shutdown PC</ListItemButton>
                     <ListItemButton disabled={state.title === null} onClick={() => sendSocket({ command: "toggleOverlay" })}><Visibility className='mr-1' /> Toggle overlay</ListItemButton>
                     <ListItemButton disabled={state.title === null} onClick={() => sendSocket({ command: "restartPlayer" })}><RestartAlt className='mr-1' /> Restart player</ListItemButton>
+                    <ListItemButton disabled={!state.playlist} onClick={() => {
+                        playlistDialogState.open = true
+                        handleClose()
+                    }}><PlayCircleOutline className='mr-1' /> Show Playlist</ListItemButton>
                     <ListItemButton onClick={() => closeApp()}><HighlightOff className='mr-1' /> Close app</ListItemButton>
                 </List>
             </Popover>
@@ -282,6 +312,68 @@ export default () => {
                         Load Torrent
                     </Button>
                 }
+            </DialogActions>
+        </Dialog>
+
+        {/* Playlist Dialog */}
+        <Dialog open={playlistDialogState.open} onClose={() => playlistDialogState.open = false} maxWidth="md" fullWidth>
+            <DialogTitle>Current Playlist</DialogTitle>
+            <DialogContent>
+                {state.playlist ? (
+                    <div>
+                        <Typography variant="h6" gutterBottom>
+                            {state.playlist.files.length} files in playlist
+                        </Typography>
+                        <List dense>
+                            {state.playlist.files.map((file, index) => (
+                                <ListItem
+                                    key={index}
+                                    divider
+                                    sx={{
+                                        backgroundColor: index === state.playlist!.currentIndex ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                                        borderLeft: index === state.playlist!.currentIndex ? '4px solid #1976d2' : 'none'
+                                    }}
+                                >
+                                    <ListItemText
+                                        primary={
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                <span style={{ marginRight: 8, fontWeight: index === state.playlist!.currentIndex ? 'bold' : 'normal' }}>
+                                                    {index + 1}.
+                                                </span>
+                                                <span style={{ fontWeight: index === state.playlist!.currentIndex ? 'bold' : 'normal' }}>
+                                                    {file.name}
+                                                </span>
+                                                {index === state.playlist!.currentIndex && (
+                                                    <span style={{ marginLeft: 8, fontSize: '0.8em', color: '#1976d2' }}>
+                                                        (Now Playing)
+                                                    </span>
+                                                )}
+                                            </div>
+                                        }
+                                        secondary={formatFileSize(file.length)}
+                                    />
+                                    <IconButton
+                                        color="primary"
+                                        onClick={() => {
+                                            playTorrent(state.playlist!.magnet, file.index, file.name)
+                                            playlistDialogState.open = false
+                                        }}
+                                        title="Play this file"
+                                    >
+                                        <PlayCircleOutline />
+                                    </IconButton>
+                                </ListItem>
+                            ))}
+                        </List>
+                    </div>
+                ) : (
+                    <Typography variant="body2" color="textSecondary">
+                        No playlist available
+                    </Typography>
+                )}
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => playlistDialogState.open = false}>Close</Button>
             </DialogActions>
         </Dialog>
     </div>

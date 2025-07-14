@@ -125,6 +125,19 @@ export const startRemoteServer = async () => {
                             })
                         }
                         break
+                    case "getPlaylist":
+                        if (lastKnownPlayerState && lastKnownPlayerState.playlist) {
+                            ws.send(JSON.stringify({
+                                type: "playlist",
+                                data: lastKnownPlayerState.playlist
+                            }))
+                        } else {
+                            ws.send(JSON.stringify({
+                                type: "playlist",
+                                error: "No playlist available"
+                            }))
+                        }
+                        break
                 }
             }
         }
@@ -164,6 +177,16 @@ export type PlayerStatusReport = {
     time: number,
     maxTime: number
     volume: number
+    playlist?: {
+        files: Array<{
+            name: string
+            path: string
+            length: number
+            index: number
+        }>
+        currentIndex: number
+        magnet: string
+    }
 }
 
 const getLocalIpInterfaces = (): Record<string, string[]> => {
