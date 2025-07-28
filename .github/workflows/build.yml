@@ -171,7 +171,7 @@ jobs:
 
           ⚠️ **Note:** This is a development build and may contain bugs or unstable features.
         draft: false
-        prerelease: true
+        prerelease: false
 
     - name: Upload Windows Release Asset
       uses: actions/upload-release-asset@v1

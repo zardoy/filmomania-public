@@ -17,7 +17,7 @@ If you get "app is damaged" error on macOS:
 ### Option 1: Quick Fix
 
 ```bash
-# Run this in Terminal after downloading the app
+# Run this in Terminal after installing the app
 xattr -cr "/Applications/FilmoMania Beta.app"
 ```
 
