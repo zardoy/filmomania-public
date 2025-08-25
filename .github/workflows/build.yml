@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ dev ]
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -38,6 +42,10 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
 
+    - name: Prepare build metadata
+      shell: bash
+      run: node prepare.mjs ${{ github.run_number }}
+
     - name: Build app
       run: pnpm run build-app-github
       env:
@@ -52,7 +60,10 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: filmomania-windows
-        path: release/FilmoMania*.exe
+        path: |
+          release/FilmoMania*.exe
+          release/latest.yml
+          release/*.blockmap
         retention-days: 30
 
   build-macos:
@@ -86,6 +97,10 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
 
+    - name: Prepare build metadata
+      shell: bash
+      run: node prepare.mjs ${{ github.run_number }}
+
     - name: Build app
       run: pnpm run build-app-github
       env:
@@ -107,7 +122,10 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: filmomania-macos
-        path: release/FilmoMania*.dmg
+        path: |
+          release/FilmoMania*.dmg
+          release/latest-mac.yml
+          release/*.blockmap
         retention-days: 30
 
   release:
@@ -141,11 +159,17 @@ jobs:
         ls -la ./release-artifacts/
         echo "=== Finding exact filenames ==="
         WIN_FILE=$(find ./release-artifacts/ -name "*.exe" -type f | head -n 1)
+        WIN_LATEST=$(find ./release-artifacts/ -name "latest.yml" -type f | head -n 1)
         MAC_FILE=$(find ./release-artifacts/ -name "*.dmg" -type f | head -n 1)
+        MAC_LATEST=$(find ./release-artifacts/ -name "latest-mac.yml" -type f | head -n 1)
         echo "WIN_FILE=${WIN_FILE}" >> $GITHUB_ENV
+        echo "WIN_LATEST=${WIN_LATEST}" >> $GITHUB_ENV
         echo "MAC_FILE=${MAC_FILE}" >> $GITHUB_ENV
+        echo "MAC_LATEST=${MAC_LATEST}" >> $GITHUB_ENV
         echo "Windows file: ${WIN_FILE}"
+        echo "Windows latest: ${WIN_LATEST}"
         echo "macOS file: ${MAC_FILE}"
+        echo "macOS latest: ${MAC_LATEST}"
 
     - name: Create Release
       id: create_release
@@ -183,6 +207,16 @@ jobs:
         asset_name: FilmoMania-Beta-${{ steps.package-version.outputs.version }}-Windows.exe
         asset_content_type: application/octet-stream
 
+    - name: Upload Windows Latest YML
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ env.WIN_LATEST }}
+        asset_name: latest.yml
+        asset_content_type: application/x-yaml
+
     - name: Upload macOS Release Asset
       uses: actions/upload-release-asset@v1
       env:
@@ -192,3 +226,13 @@ jobs:
         asset_path: ${{ env.MAC_FILE }}
         asset_name: FilmoMania-Beta-${{ steps.package-version.outputs.version }}-macOS-ARM64.dmg
         asset_content_type: application/octet-stream
+
+    - name: Upload macOS Latest YML
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ env.MAC_LATEST }}
+        asset_name: latest-mac.yml
+        asset_content_type: application/x-yaml

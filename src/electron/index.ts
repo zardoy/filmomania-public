@@ -14,6 +14,7 @@ import { initHooksFile } from "./hooksFile";
 import { startRemoteServer } from "./remoteUiControl";
 import { typedIpcMain } from "typed-ipc";
 import { isStartupEnabled } from "./startup";
+import { initAutoUpdater } from "./autoUpdater";
 
 const locked = app.requestSingleInstanceLock()
 if (!locked) app.exit()
@@ -43,6 +44,9 @@ const loadApp = async () => {
         // })
     }
     await settingsStore.init();
+
+    // Initialize auto-updater
+    initAutoUpdater();
 
     // Sync startup setting with Windows registry
     if (process.platform === "win32") {

@@ -7,6 +7,13 @@ import { useHistory } from "react-router-dom"
 import { settingsStore } from "../electron-shared/settings"
 import { QRCodeSVG } from "qrcode.react"
 
+// Declare global variable for version
+declare global {
+    interface Window {
+        __APP_VERSION__: string | undefined
+    }
+}
+
 // eslint-disable-next-line react/display-name
 export default () => {
     const [stremioServerStarted, setStremioServerStarted] = useState(false)
@@ -68,6 +75,7 @@ export default () => {
                 >
                     {stremioServerStarted ? "UP" : "DOWN"}
                 </span>
+                <span className='opacity-50 ml-2'>v{window.__APP_VERSION__ || "unknown"}</span>
             </div>
             {remoteUrl &&
                 <div className="flex flex-col items-center">

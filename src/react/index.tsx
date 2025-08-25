@@ -18,6 +18,11 @@ import "@fontsource/roboto/500.css"
 import "@fontsource/roboto/700.css"
 import { typedIpcRequest } from "./utils/ipc"
 
+// Declare global variable for version
+declare global {
+    var __APP_VERSION__: string | undefined
+}
+
 await settingsStore.init()
 bindPlayerStateListeners()
 
@@ -34,6 +39,11 @@ if (import.meta.env.DEV) {
 window.mpv = async (...args) => {
     return await typedIpcRequest.mpvCommand({ args })
 }
+
+// Add version to global scope
+//@ts-ignore
+window.__APP_VERSION__ = globalThis.__APP_VERSION__ || "unknown"
+
 //@ts-ignore
 window.reloadHooksFile = () => {
     return typedIpcRequest.reloadHooksFile()
@@ -43,12 +53,12 @@ window.settings = Object.fromEntries(Object.entries(settingsStore.settingsSchema
     const values = Object.fromEntries(Object.entries(valuesSchema).map(([key, def]: [string, any]) => {
         let val = settingsStore.settings[group][key];
         if (val === undefined) {
-            if (def.type === 'input' || def.type === 'menu') {
-                val = ''
+            if (def.type === "input" || def.type === "menu") {
+                val = ""
             }
         }
-        if (def.type === 'menu') {
-            val += ` : ${Object.keys(def.values).join('|')}`
+        if (def.type === "menu") {
+            val += ` : ${Object.keys(def.values).join("|")}`
         }
         return [key, val]
     }))

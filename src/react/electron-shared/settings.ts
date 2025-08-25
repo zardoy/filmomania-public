@@ -8,7 +8,7 @@ const settingsSchema = makeSchema({
                 disable: true,
                 enable: true
             }, "enable"),
-            descrioption: "Not implemented for now, but can be disabled for future",
+            descrioption: "Automatically check for and download updates",
         },
         handleMagnetProtocol: {
             type: "toggle",

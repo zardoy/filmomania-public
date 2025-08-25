@@ -59,10 +59,15 @@
             "buildResources": "assets",
             "output": "release"
         },
-        "publish": {
-            "provider": "github",
-            "releaseType": "release"
-        }
+        "publish": [
+            {
+                "provider": "github",
+                "owner": "zardoy",
+                "repo": "filmomania-public",
+                "private": false,
+                "releaseType": "release"
+            }
+        ]
     },
     "dependencies": {
         "@emotion/css": "^11.1.3",
@@ -84,8 +89,10 @@
         "download": "^8.0.0",
         "electron-debug": "^3.2.0",
         "electron-is-dev": "^2.0.0",
+        "electron-log": "^5.0.1",
         "electron-store": "^8.0.0",
         "electron-unhandled": "^3.0.2",
+        "electron-updater": "^6.1.7",
         "electron-util": "^0.17.2",
         "electron-window-keeper": "github:zardoy/electron-window-keeper#build",
         "exit-hook": "^3.1.4",

@@ -4,6 +4,11 @@ import React, { useEffect, useRef, useState } from "react"
 import { proxy, useSnapshot } from "valtio"
 import type { PlayerStatusReport } from "../electron/remoteUiControl"
 
+// Declare global variable for version
+declare global {
+    var __APP_VERSION__: string | undefined
+}
+
 export const uiState = proxy({
     title: null as string | null,
     isPlaying: false,
@@ -23,7 +28,8 @@ export const uiState = proxy({
         }>
         currentIndex: number
         magnet: string
-    } | null
+    } | null,
+    version: globalThis.__APP_VERSION__ || "unknown"
 })
 
 const torrentDialogState = proxy({
@@ -164,6 +170,21 @@ const getStreamingUrl = (magnet: string, playIndex = 0) => {
     })
 }
 
+const getCurrentStreamingUrl = () => {
+    if (!uiState.playlist || uiState.playlist.currentIndex === undefined) {
+        alert("No file is currently playing")
+        return
+    }
+
+    const currentRequestId = ++requestId
+    sendSocket({
+        command: "getStreamingUrl",
+        magnet: uiState.playlist.magnet,
+        playIndex: uiState.playlist.currentIndex,
+        requestId: currentRequestId
+    })
+}
+
 const formatFileSize = (bytes: number) => {
     const sizes = ["Bytes", "KB", "MB", "GB", "TB"]
     if (bytes === 0) return "0 Bytes"
@@ -226,6 +247,9 @@ export default () => {
             <h1 className='text-2xl break-words' style={{ width: "calc(100% - 50px)" }}>
                 {state.title === null ? "Nothing is playing..." : state.title}
             </h1>
+            <div className='flex flex-col items-end text-sm text-gray-400'>
+                <div>v{state.version}</div>
+            </div>
             {/*
             //@ts-ignore */}
             <Menu className='w-14 h-14 float-right z-20' onClick={handleClick} />
@@ -242,6 +266,10 @@ export default () => {
                         playlistDialogState.open = true
                         handleClose()
                     }}><PlayCircleOutline className='mr-1' /> Show Playlist</ListItemButton>
+                    <ListItemButton disabled={!state.playlist} onClick={() => {
+                        getCurrentStreamingUrl()
+                        handleClose()
+                    }}><LinkIcon className='mr-1' /> Copy Current Streaming Link</ListItemButton>
                     <ListItemButton onClick={() => closeApp()}><HighlightOff className='mr-1' /> Close app</ListItemButton>
                 </List>
             </Popover>
@@ -343,7 +371,7 @@ export default () => {
         <Dialog open={playlistDialogState.open} onClose={() => playlistDialogState.open = false} maxWidth="md" fullWidth>
             <DialogTitle>Current Playlist</DialogTitle>
             <DialogContent>
-                {state.playlist ? (
+                {state.playlist ?
                     <div>
                         <Typography variant="h6" gutterBottom>
                             {state.playlist.files.length} files in playlist
@@ -358,40 +386,40 @@ export default () => {
                                         key={index}
                                         divider
                                         sx={{
-                                            backgroundColor: index === state.playlist!.currentIndex ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
-                                            borderLeft: index === state.playlist!.currentIndex ? '4px solid #1976d2' : 'none'
+                                            backgroundColor: index === state.playlist!.currentIndex ? "rgba(25, 118, 210, 0.08)" : "transparent",
+                                            borderLeft: index === state.playlist!.currentIndex ? "4px solid #1976d2" : "none"
                                         }}
                                     >
                                         <ListItemText
                                             primary={
-                                                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-                                                    <span style={{ marginRight: 8, fontWeight: index === state.playlist!.currentIndex ? 'bold' : 'normal' }}>
+                                                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
+                                                    <span style={{ marginRight: 8, fontWeight: index === state.playlist!.currentIndex ? "bold" : "normal" }}>
                                                         {index + 1}.
                                                     </span>
-                                                    <span style={{ fontWeight: index === state.playlist!.currentIndex ? 'bold' : 'normal' }}>
+                                                    <span style={{ fontWeight: index === state.playlist!.currentIndex ? "bold" : "normal" }}>
                                                         {file.name}
                                                     </span>
-                                                    {index === state.playlist!.currentIndex && (
-                                                        <span style={{ marginLeft: 8, fontSize: '0.8em', color: '#1976d2' }}>
+                                                    {index === state.playlist!.currentIndex &&
+                                                        <span style={{ marginLeft: 8, fontSize: "0.8em", color: "#1976d2" }}>
                                                             (Now Playing)
                                                         </span>
-                                                    )}
-                                                    {hasBeenPlayed && (
+                                                    }
+                                                    {hasBeenPlayed &&
                                                         <Chip
                                                             label="Played"
                                                             size="small"
                                                             color="success"
-                                                            sx={{ ml: 1, height: 20, fontSize: '0.7rem' }}
+                                                            sx={{ ml: 1, height: 20, fontSize: "0.7rem" }}
                                                         />
-                                                    )}
-                                                    {isLastPlayed && index !== state.playlist!.currentIndex && (
+                                                    }
+                                                    {isLastPlayed && index !== state.playlist!.currentIndex &&
                                                         <Chip
                                                             label="Last"
                                                             size="small"
                                                             color="primary"
-                                                            sx={{ ml: 1, height: 20, fontSize: '0.7rem' }}
+                                                            sx={{ ml: 1, height: 20, fontSize: "0.7rem" }}
                                                         />
-                                                    )}
+                                                    }
                                                 </div>
                                             }
                                             secondary={formatFileSize(file.length)}
@@ -411,11 +439,11 @@ export default () => {
                             })}
                         </List>
                     </div>
-                ) : (
+                    :
                     <Typography variant="body2" color="textSecondary">
                         No playlist available
                     </Typography>
-                )}
+                }
             </DialogContent>
             <DialogActions>
                 <Button onClick={() => playlistDialogState.open = false}>Close</Button>
