@@ -149,6 +149,10 @@ jobs:
         name: filmomania-macos
         path: ./release-artifacts/
 
+    - name: Prepare build version
+      shell: bash
+      run: node prepare.mjs ${{ github.run_number }}
+
     - name: Get version from package.json
       id: package-version
       run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
@@ -177,8 +181,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v${{ steps.package-version.outputs.version }}-dev-${{ github.run_number }}
-        release_name: FilmoMania Beta v${{ steps.package-version.outputs.version }} (Dev Build #${{ github.run_number }})
+        tag_name: v${{ steps.package-version.outputs.version }}
+        release_name: FilmoMania Beta v${{ steps.package-version.outputs.version }}
         body: |
           🚀 **Development Build**
 
@@ -188,6 +192,7 @@ jobs:
           - Latest development features and fixes
           - Remote torrent/magnet playing functionality
           - QR code support for mobile remote control
+          - Auto-update support enabled
 
           **Downloads:**
           - Windows: See attached assets
@@ -197,7 +202,7 @@ jobs:
         draft: false
         prerelease: false
 
-    - name: Upload Windows Release Asset
+    - name: Upload Windows Setup
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -11,7 +11,7 @@ const pkgRaw = fs.readFileSync(pkgPath, 'utf-8');
 const pkg = JSON.parse(pkgRaw);
 
 const baseVersion = pkg.version || '0.0.0';
-const appVersion = runNumber ? `0.0.0-alpha.${runNumber}` : baseVersion;
+const appVersion = runNumber ? `0.0.2-beta.${runNumber}` : baseVersion;
 
 // Patch package.json version
 pkg.version = appVersion;
